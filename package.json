@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "server": "tsx server/index.ts",
+    "web-client": "parcel web-client/index.html --dist-dir server/dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -17,6 +19,17 @@
   },
   "homepage": "https://github.com/spkerkela/group-survivors#readme",
   "devDependencies": {
-    "tsc": "^2.0.4"
+    "parcel": "^2.8.2",
+    "playwright": "^1.29.1",
+    "prettier": "^2.8.1",
+    "socket.io": "^4.5.4",
+    "tsc": "^2.0.4",
+    "tsx": "^3.12.1",
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "socket.io-client": "^4.5.4"
   }
 }
