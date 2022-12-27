@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/spkerkela/group-survivors/issues"
   },
-  "homepage": "https://github.com/spkerkela/group-survivors#readme"
+  "homepage": "https://github.com/spkerkela/group-survivors#readme",
+  "devDependencies": {
+    "tsc": "^2.0.4"
+  }
 }
