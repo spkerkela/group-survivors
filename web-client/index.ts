@@ -1,7 +1,6 @@
 import { io } from "socket.io-client";
 import { GameState } from "../common/types";
 import Game from "./Game";
-const playersId = document.getElementById("players");
 const canvasElement = document.getElementById("canvas") as HTMLCanvasElement;
 const socket = io();
 
@@ -12,13 +11,29 @@ let gameState: GameState = {
 
 let game: Game | null = null;
 
-socket.on("connect", () => {
-  console.log("connected");
-});
+let inputInterval: NodeJS.Timeout | null = null;
+
+function getInputState(game: Game) {
+  const { up, down, left, right } = game.getInputState();
+  return { up, down, left, right };
+}
 
 socket.on("begin", (newGameState: GameState) => {
   gameState = newGameState;
-  new Game(canvasElement, gameState);
+  game = new Game(canvasElement, gameState);
+  inputInterval = setInterval(() => {
+    if (game) {
+      const { up, down, left, right } = getInputState(game);
+      socket.emit("move", { up, down, left, right, id: gameState.id });
+    }
+  }, 16);
+});
+
+socket.on("disconnect", () => {
+  game = null;
+  if (inputInterval) {
+    clearInterval(inputInterval);
+  }
 });
 
 socket.on("disconnected", (disconnectedIds: string[]) => {
@@ -32,7 +47,6 @@ socket.on("disconnected", (disconnectedIds: string[]) => {
   });
 });
 
-socket.on("players", (data) => {
-  playersId!.innerHTML = JSON.stringify(data.map((p) => p.id));
-  gameState.players = data;
+socket.on("update", (newState: GameState) => {
+  gameState.players = newState.players;
 });

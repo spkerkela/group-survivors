@@ -16,7 +16,20 @@ const host = process.env.HOST || "localhost";
 const port = process.env.PORT || 3000;
 
 let players: { id: string; x: number; y: number }[] = [];
+// create 50 bot players
+for (let i = 0; i < 50; i++) {
+  players.push({
+    id: `bot-${i}`,
+    x: Math.random() * GAME_WIDTH,
+    y: Math.random() * GAME_HEIGHT,
+  });
+}
 let disconnects: string[] = [];
+interface PlayerUpdate {
+  x: number;
+  y: number;
+}
+let updates: { [key: string]: PlayerUpdate } = {};
 io.on("connection", (socket) => {
   const id = socket.id;
   players.push({ id, x: GAME_WIDTH / 2, y: GAME_HEIGHT / 2 });
@@ -26,7 +39,7 @@ io.on("connection", (socket) => {
   };
   socket.emit("begin", newGameState);
   let interval = setInterval(() => {
-    socket.emit("players", players);
+    socket.emit("update", { players, id });
     if (disconnects.length > 0) {
       socket.emit("disconnected", disconnects);
       disconnects = [];
@@ -37,6 +50,21 @@ io.on("connection", (socket) => {
     disconnects.push(id);
     clearInterval(interval);
   });
+  socket.on("move", (data) => {
+    if (data.id !== id) return;
+    const player = players.find((p) => p.id === id);
+    if (player) {
+      const { up, down, left, right } = data;
+      const moveVector = {
+        x: (right ? 1 : 0) - (left ? 1 : 0),
+        y: (down ? 1 : 0) - (up ? 1 : 0),
+      };
+      updates[id] = {
+        x: player.x + moveVector.x,
+        y: player.y + moveVector.y,
+      };
+    }
+  });
 });
 
 httpServer.listen(port, () => {
@@ -44,12 +72,16 @@ httpServer.listen(port, () => {
 });
 
 setInterval(() => {
-  // move players in a circle:
-
   players.forEach((p) => {
-    let x = p.x + Math.cos(p.y / 100) * 2;
-    let y = p.y + Math.sin(p.x / 100) * 2;
-    p.x = x;
-    p.y = y;
+    if (updates[p.id]) {
+      p.x = updates[p.id].x;
+      p.y = updates[p.id].y;
+    }
+    if (p.id.startsWith("bot-")) {
+      let x = p.x + Math.cos(p.y / 100) * 2;
+      let y = p.y + Math.sin(p.x / 100) * 2;
+      p.x = x;
+      p.y = y;
+    }
   });
 }, 16);

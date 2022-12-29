@@ -9,11 +9,19 @@ const assets = [
   },
 ];
 
+let pressedKeys = {};
+window.onkeyup = function (e) {
+  pressedKeys[e.keyCode] = false;
+};
+window.onkeydown = function (e) {
+  pressedKeys[e.keyCode] = true;
+};
+
 export default class Game {
   game: Phaser.Game;
+
   constructor(canvas: HTMLCanvasElement, gameState: GameState) {
     const sceneConfig: Phaser.Types.Scenes.CreateSceneFromObjectConfig = {
-      init: function () {},
       preload: function () {
         assets.forEach(({ id, url }) => {
           this.load.image(id, url);
@@ -66,5 +74,13 @@ export default class Game {
     if (player instanceof Phaser.GameObjects.Sprite) {
       player.destroy();
     }
+  }
+
+  getInputState() {
+    const up = pressedKeys[38] || pressedKeys[87];
+    const down = pressedKeys[40] || pressedKeys[83];
+    const left = pressedKeys[37] || pressedKeys[65];
+    const right = pressedKeys[39] || pressedKeys[68];
+    return { up, down, left, right };
   }
 }
