@@ -112,7 +112,7 @@ export class GameServer {
       }
       if (Math.random() < 0.01) {
         this.connector.pushEvent("damage", p.id, {
-          amount: randomBetweenExclusive(1, 10),
+          amount: randomBetweenExclusive(1, 50000),
           damageType: chooseRandom(["physical", "fire", "cold", "poison"]),
         });
       }

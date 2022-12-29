@@ -45,6 +45,7 @@ socket.on("damage", ({ amount, damageType }) => {
     }
   })();
   game.showDamage(amount, player.x, player.y, color);
+  game.flashWhite(player.id);
 });
 
 socket.on("disconnect", () => {

@@ -1,5 +1,9 @@
 import Phaser from "phaser";
-import { GAME_HEIGHT, GAME_WIDTH } from "../common/constants";
+import {
+  GAME_HEIGHT,
+  GAME_WIDTH,
+  INVLUNERABILITY_FRAMES,
+} from "../common/constants";
 import { chooseRandom } from "../common/random";
 import { GameState } from "../common/types";
 const playerAsset = new URL("assets/pixel_player.png", import.meta.url);
@@ -73,7 +77,7 @@ export default class Game {
       canvas: canvas,
       width: GAME_WIDTH,
       height: GAME_HEIGHT,
-      type: Phaser.CANVAS,
+      type: Phaser.WEBGL,
       roundPixels: false,
       pixelArt: true,
       scene: sceneConfig,
@@ -105,13 +109,15 @@ export default class Game {
     const scene = this.currentScene();
     const text = scene.add.text(x, y, `${amount}`, {
       color: color,
-      font: "bold 16px Arial",
+      font: "bold 24px Arial",
+      stroke: "#000000",
+      strokeThickness: 2,
     });
     text.setOrigin(0.5, 0.5);
     text.setShadow(2, 2, "#333333", 2, true, true);
     scene.tweens.add({
       targets: text,
-      y: y - chooseRandom([10, 25, 50]),
+      y: y - chooseRandom([20, 50, 75]),
       x: x + chooseRandom([-10, 0, 10]),
       alpha: 0,
       duration: 1000,
@@ -120,5 +126,22 @@ export default class Game {
         text.destroy();
       },
     });
+  }
+
+  flashWhite(id: string) {
+    const player = this.currentScene().children.getByName(id);
+    if (player instanceof Phaser.GameObjects.Sprite) {
+      player.setTintFill(0xffffff);
+      this.currentScene().tweens.add({
+        targets: player,
+        alpha: 0,
+        duration: INVLUNERABILITY_FRAMES,
+        ease: "Linear",
+        onComplete: () => {
+          player.clearTint();
+          player.setAlpha(1);
+        },
+      });
+    }
   }
 }
