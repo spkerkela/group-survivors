@@ -1,5 +1,5 @@
 export interface GameState {
-  players: { x: number; y: number; id: string }[];
+  players: Player[];
   id: string;
 }
 
@@ -8,4 +8,9 @@ export interface InputState {
   down: boolean;
   left: boolean;
   right: boolean;
+}
+export interface Player {
+  id: string;
+  x: number;
+  y: number;
 }

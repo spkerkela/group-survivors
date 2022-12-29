@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "server": "tsx server/index.ts",
+    "server": "tsx watch server/index.ts",
     "web-client": "parcel web-client/index.html --dist-dir server/dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
