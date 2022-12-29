@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+npm ci
 # Create a new tmux session
 tmux new-session -s survivors -d
 
