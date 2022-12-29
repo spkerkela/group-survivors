@@ -62,9 +62,11 @@ export class SocketIOConnector implements Connector {
       socket.emit("begin", newGameState);
       let interval = setInterval(() => {
         socket.emit("update", { players: this.players, id });
-        this.events[id].forEach((e) => {
-          socket.emit(e.name, e.data);
-        });
+        if (this.events[id] != null) {
+          this.events[id].forEach((e) => {
+            socket.emit(e.name, e.data);
+          });
+        }
         this.events[id] = [];
       }, SERVER_UPDATE_RATE);
       socket.on("disconnect", () => {
