@@ -1,5 +1,7 @@
 {
-  "buildOptions": {
-    "esModuleInterop": true
+  "compilerOptions": {
+    "module": "esnext",
+    "esModuleInterop": true,
+    "moduleResolution": "node"
   }
 }

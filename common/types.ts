@@ -3,14 +3,36 @@ export interface GameState {
   id: string;
 }
 
+export interface Position {
+  x: number;
+  y: number;
+}
+
+export interface Circle extends Position {
+  radius: number;
+}
+
+export interface Rectangle extends Position {
+  width: number;
+  height: number;
+}
+
 export interface InputState {
   up: boolean;
   down: boolean;
   left: boolean;
   right: boolean;
 }
-export interface Player {
+
+export interface Player extends Position {
   id: string;
-  x: number;
-  y: number;
+  speed: number;
+}
+
+export interface MoveUpdate {
+  id: string;
+  up: boolean;
+  down: boolean;
+  left: boolean;
+  right: boolean;
 }

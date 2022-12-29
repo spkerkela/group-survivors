@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { GAME_HEIGHT, GAME_WIDTH } from "../common/constants";
+import { chooseRandom } from "../common/random";
 import { GameState } from "../common/types";
 const playerAsset = new URL("assets/pixel_player.png", import.meta.url);
 const assets = [
@@ -19,8 +20,10 @@ window.onkeydown = function (e) {
 
 export default class Game {
   game: Phaser.Game;
+  playerId: string;
 
   constructor(canvas: HTMLCanvasElement, gameState: GameState) {
+    this.playerId = gameState.id;
     const sceneConfig: Phaser.Types.Scenes.CreateSceneFromObjectConfig = {
       preload: function () {
         assets.forEach(({ id, url }) => {
@@ -40,6 +43,13 @@ export default class Game {
           const player = this.children.getByName(p.id);
           if (player instanceof Phaser.GameObjects.Sprite) {
             player.setPosition(p.x, p.y);
+            this.tweens.add({
+              targets: player,
+              x: p.x,
+              y: p.y,
+              duration: 100,
+              ease: "Linear",
+            });
           } else if (player == null) {
             const newPlayer = this.add.sprite(p.x, p.y, "player");
             newPlayer.setName(p.id);
@@ -69,8 +79,11 @@ export default class Game {
       scene: sceneConfig,
     });
   }
+  private currentScene() {
+    return this.game.scene.scenes[0];
+  }
   removePlayer(id: string) {
-    const player = this.game.scene.scenes[0].children.getByName(id);
+    const player = this.currentScene().children.getByName(id);
     if (player instanceof Phaser.GameObjects.Sprite) {
       player.destroy();
     }
@@ -82,5 +95,30 @@ export default class Game {
     const left = pressedKeys[37] || pressedKeys[65];
     const right = pressedKeys[39] || pressedKeys[68];
     return { up, down, left, right };
+  }
+
+  getActivePlayer() {
+    return this.currentScene().children.getByName(this.playerId);
+  }
+
+  showDamage(amount: number, x: number, y: number, color: string = "red") {
+    const scene = this.currentScene();
+    const text = scene.add.text(x, y, `${amount}`, {
+      color: color,
+      font: "bold 16px Arial",
+    });
+    text.setOrigin(0.5, 0.5);
+    text.setShadow(2, 2, "#333333", 2, true, true);
+    scene.tweens.add({
+      targets: text,
+      y: y - chooseRandom([10, 25, 50]),
+      x: x + chooseRandom([-10, 0, 10]),
+      alpha: 0,
+      duration: 1000,
+      ease: "Power1",
+      onComplete: () => {
+        text.destroy();
+      },
+    });
   }
 }

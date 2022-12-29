@@ -21,7 +21,7 @@ httpServer.listen(port, () => {
 const io = new Server(httpServer);
 const gameServer = new GameServer(new SocketIOConnector(io), {
   name: "Level 1",
-  bots: 50,
+  bots: 1,
   playerStartPosition: { x: GAME_WIDTH / 2, y: GAME_HEIGHT / 2 },
 });
 

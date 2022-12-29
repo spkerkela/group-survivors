@@ -1,6 +1,11 @@
-import { GAME_HEIGHT, GAME_WIDTH } from "../common/constants";
-import { GameState, Player } from "../common/types";
-import { PlayerUpdate, update } from "./game";
+import {
+  GAME_HEIGHT,
+  GAME_WIDTH,
+  SERVER_UPDATE_RATE,
+} from "../common/constants";
+import { chooseRandom, randomBetweenExclusive } from "../common/random";
+import { GameState, MoveUpdate, Player } from "../common/types";
+import { createMoveUpdate, PlayerUpdate, updatePlayers } from "./game-logic";
 
 export interface Connector {
   start: (levelData: LevelData) => void;
@@ -8,21 +13,29 @@ export interface Connector {
   updates: {
     moves: { [key: string]: PlayerUpdate };
   };
+  pushEvent: (name: string, playerId: string, data: any) => void;
 }
 
 export class SocketIOConnector implements Connector {
-  onPlayerConnected: () => void;
   io: any;
   players: Player[];
-  disconnects: string[];
   updates: {
     moves: { [key: string]: PlayerUpdate };
+  };
+  events: {
+    [key: string]: { name: string; data: any }[];
   };
   constructor(io) {
     this.io = io;
     this.players = [];
-    this.disconnects = [];
     this.updates = { moves: {} };
+    this.events = {};
+  }
+  pushEvent(name: string, playerId: string, data: any) {
+    this.events[playerId].push({ name, data });
+  }
+  getPlayer(id: string) {
+    return this.players.find((p) => p.id === id);
   }
   start(levelData: LevelData) {
     for (let i = 0; i < levelData.bots; i++) {
@@ -30,14 +43,17 @@ export class SocketIOConnector implements Connector {
         id: `bot-${i}`,
         x: Math.random() * GAME_WIDTH,
         y: Math.random() * GAME_HEIGHT,
+        speed: 2,
       });
     }
     this.io.on("connection", (socket) => {
       const id = socket.id;
+      this.events[id] = [];
       this.players.push({
         id,
         x: levelData.playerStartPosition.x,
         y: levelData.playerStartPosition.y,
+        speed: 5,
       });
       const newGameState: GameState = {
         players: this.players,
@@ -46,29 +62,21 @@ export class SocketIOConnector implements Connector {
       socket.emit("begin", newGameState);
       let interval = setInterval(() => {
         socket.emit("update", { players: this.players, id });
-        if (this.disconnects.length > 0) {
-          socket.emit("disconnected", this.disconnects);
-          this.disconnects = [];
-        }
-      }, 16);
+        this.events[id].forEach((e) => {
+          socket.emit(e.name, e.data);
+        });
+        this.events[id] = [];
+      }, SERVER_UPDATE_RATE);
       socket.on("disconnect", () => {
         this.players = this.players.filter((p) => p.id !== id);
-        this.disconnects.push(id);
+        delete this.events[id];
         clearInterval(interval);
       });
-      socket.on("move", (data) => {
+      socket.on("move", (data: MoveUpdate) => {
         if (data.id !== id) return;
-        const player = this.players.find((p) => p.id === id);
-        if (player) {
+        if (this.getPlayer(id)) {
           const { up, down, left, right } = data;
-          const moveVector = {
-            x: (right ? 1 : 0) - (left ? 1 : 0),
-            y: (down ? 1 : 0) - (up ? 1 : 0),
-          };
-          this.updates.moves[id] = {
-            x: player.x + moveVector.x,
-            y: player.y + moveVector.y,
-          };
+          this.updates.moves[id] = createMoveUpdate({ up, down, left, right });
         }
       });
     });
@@ -92,9 +100,20 @@ export class GameServer {
     this.connector.start(this.levelData);
     setInterval(() => {
       this.update();
-    }, 16);
+    }, SERVER_UPDATE_RATE);
   }
   update() {
-    update(this.connector.players, this.connector.updates.moves);
+    updatePlayers(this.connector.players, this.connector.updates);
+    this.connector.players.forEach((p) => {
+      if (p.id.startsWith("bot-")) {
+        return;
+      }
+      if (Math.random() < 0.01) {
+        this.connector.pushEvent("damage", p.id, {
+          amount: randomBetweenExclusive(1, 10),
+          damageType: chooseRandom(["physical", "fire", "cold", "poison"]),
+        });
+      }
+    });
   }
 }
