@@ -4,7 +4,9 @@ import { GameState } from "../common/types";
 import Game from "./Game";
 import { sendMoveMessage } from "./messages";
 const canvasElement = document.getElementById("canvas") as HTMLCanvasElement;
-const socket = io();
+import parser from "socket.io-msgpack-parser";
+
+const socket = io({ parser });
 
 let gameState: GameState = {
   players: [],

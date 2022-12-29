@@ -4,6 +4,7 @@ import { Server } from "socket.io";
 import path from "path";
 import { GAME_HEIGHT, GAME_WIDTH } from "../common/constants";
 import { GameServer, SocketIOConnector } from "./GameServer";
+import parser from "socket.io-msgpack-parser";
 
 const app = express();
 
@@ -18,7 +19,9 @@ httpServer.listen(port, () => {
   console.log(`Server listening on http://${host}:${port}`);
 });
 
-const io = new Server(httpServer);
+const io = new Server(httpServer, {
+  parser,
+});
 const gameServer = new GameServer(new SocketIOConnector(io), {
   name: "Level 1",
   bots: 100,
