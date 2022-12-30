@@ -47,13 +47,6 @@ export default class Game {
           const player = this.children.getByName(p.id);
           if (player instanceof Phaser.GameObjects.Sprite) {
             player.setPosition(p.x, p.y);
-            this.tweens.add({
-              targets: player,
-              x: p.x,
-              y: p.y,
-              duration: 100,
-              ease: "Linear",
-            });
           } else if (player == null) {
             const newPlayer = this.add.sprite(p.x, p.y, "player");
             newPlayer.setName(p.id);
