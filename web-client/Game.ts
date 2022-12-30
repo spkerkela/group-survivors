@@ -6,12 +6,21 @@ import {
 } from "../common/constants";
 import { chooseRandom } from "../common/random";
 import { GameState } from "../common/types";
-const playerAsset = new URL("assets/pixel_player.png", import.meta.url);
+const playerAsset = new URL("assets/jyrki.png", import.meta.url);
+const batAsset = new URL("assets/bat.png", import.meta.url);
+const zombieAsset = new URL("assets/zombie.png", import.meta.url);
+const skeletonAsset = new URL("assets/skull.png", import.meta.url);
 const assets = [
   {
     id: "player",
     url: playerAsset.href,
   },
+  {
+    id: "bat",
+    url: batAsset.href,
+  },
+  { id: "zombie", url: zombieAsset.href },
+  { id: "skeleton", url: skeletonAsset.href },
 ];
 
 let pressedKeys = {};
@@ -38,7 +47,6 @@ export default class Game {
         gameState.players.forEach((p) => {
           const player = this.add.sprite(p.x, p.y, "player");
           player.setName(p.id);
-          player.setScale(3);
           player.setOrigin(0.5, 0.5);
         });
       },
@@ -50,7 +58,6 @@ export default class Game {
           } else if (player == null) {
             const newPlayer = this.add.sprite(p.x, p.y, "player");
             newPlayer.setName(p.id);
-            newPlayer.setScale(3);
             newPlayer.setOrigin(0.5, 0.5);
           }
         });
@@ -64,6 +71,16 @@ export default class Game {
             child.destroy();
           }
         });
+        gameState.enemies.forEach((e) => {
+          const enemy = this.children.getByName(e.id);
+          if (enemy instanceof Phaser.GameObjects.Sprite) {
+            enemy.setPosition(e.x, e.y);
+          } else if (enemy == null) {
+            const newEnemy = this.add.sprite(e.x, e.y, e.type);
+            newEnemy.setName(e.id);
+            newEnemy.setOrigin(0.5, 0.5);
+          }
+        });
       },
     };
     this.game = new Phaser.Game({
@@ -74,6 +91,7 @@ export default class Game {
       roundPixels: false,
       pixelArt: true,
       scene: sceneConfig,
+      backgroundColor: "#170332",
     });
   }
   private currentScene() {

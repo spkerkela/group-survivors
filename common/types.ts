@@ -1,5 +1,6 @@
 export interface GameState {
   players: Player[];
+  enemies: Enemy[];
   id: string;
 }
 
@@ -26,7 +27,12 @@ export interface InputState {
 
 export interface Player extends Position {
   id: string;
+  level: number;
+  experience: number;
   speed: number;
+  hp: number;
+  invulnerabilityFrames: number;
+  alive: boolean;
 }
 
 export interface MoveUpdate {
@@ -35,4 +41,14 @@ export interface MoveUpdate {
   down: boolean;
   left: boolean;
   right: boolean;
+}
+
+export interface Enemy extends Position {
+  id: string;
+  hp: number;
+  speed: number;
+  type: string;
+  damageType: string;
+  damageMin: number;
+  damageMax: number;
 }

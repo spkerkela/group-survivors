@@ -10,6 +10,7 @@ const socket = io({ parser });
 
 let gameState: GameState = {
   players: [],
+  enemies: [],
   id: "",
 };
 
@@ -58,4 +59,5 @@ socket.on("disconnect", () => {
 socket.on("update", (newState: GameState) => {
   if (newState.id !== gameState.id) return;
   gameState.players = newState.players;
+  gameState.enemies = newState.enemies;
 });
