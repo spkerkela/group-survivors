@@ -6,7 +6,8 @@ import {
 } from "../common/constants";
 import { normalize } from "../common/math";
 import { randomBetweenExclusive } from "../common/random";
-import { Enemy, InputState, Player } from "../common/types";
+import { Enemy, InputState, Player, Position } from "../common/types";
+import { SpellData, spellDB } from "./data";
 export interface PlayerUpdate {
   x: number;
   y: number;
@@ -55,6 +56,7 @@ export function updateEnemies(enemies: Enemy[], players: Player[]) {
   let events = [];
   for (let i = 0; i < enemies.length; i++) {
     const enemy = enemies[i];
+    if (!enemy.alive) continue;
     const nearestPlayer = players.reduce(
       (nearest, player) => {
         const distance = Math.sqrt(
@@ -100,4 +102,89 @@ export function updateEnemies(enemies: Enemy[], players: Player[]) {
   }
 
   return events;
+}
+
+export interface SpellDamageEvent {
+  fromId: string;
+  targetId: string;
+  damage: number;
+  damageType: string;
+  critical: boolean;
+}
+
+function tickAura(
+  spellData: SpellData,
+  position: Position,
+  fromId: string,
+  enemies: Enemy[]
+): SpellDamageEvent[] {
+  const enemiesInRange = enemies.filter((enemy) => {
+    const distance = Math.sqrt(
+      Math.pow(enemy.x - position.x, 2) + Math.pow(enemy.y - position.y, 2)
+    );
+    return distance < spellData.range * spellData.rangeMultiplier;
+  });
+  return enemiesInRange.map((enemy) => {
+    const critical = Math.random() < spellData.critChance;
+    const damage = critical
+      ? spellData.baseDamage * spellData.critMultiplier
+      : spellData.baseDamage;
+    return {
+      fromId: fromId,
+      targetId: enemy.id,
+      damage: damage,
+      damageType: spellData.damageType,
+      critical: critical,
+    };
+  });
+}
+
+export function castSpell(
+  spell: string,
+  player: Player,
+  enemies: Enemy[]
+): SpellDamageEvent[] {
+  const spellData = spellDB[spell];
+  switch (spellData.type) {
+    case "aura":
+      const events = tickAura(
+        spellData,
+        { x: player.x, y: player.y },
+        player.id,
+        enemies
+      );
+      return events;
+    default:
+      return [];
+  }
+}
+export function updateSpells(
+  players: Player[],
+  enemies: Enemy[]
+): SpellDamageEvent[] {
+  let events = [];
+  for (let i = 0; i < players.length; i++) {
+    const player = players[i];
+    if (player.alive) {
+      const spells = Object.keys(player.spells);
+      for (let j = 0; j < spells.length; j++) {
+        const spell = spells[j];
+        const spellData = player.spells[spell];
+        if (spellData.cooldown > 0) {
+          spellData.cooldown -= SERVER_UPDATE_RATE;
+        } else {
+          spellData.cooldown = Math.max(
+            spellDB[spell].cooldown * spellDB[spell].cooldownMultiplier,
+            0.01
+          );
+          events = events.concat(castSpell(spell, player, enemies));
+        }
+      }
+    }
+  }
+  return events;
+}
+
+export function removeDeadEnemies(enemies: Enemy[]) {
+  return enemies.filter((enemy) => enemy.alive);
 }

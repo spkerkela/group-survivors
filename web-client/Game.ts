@@ -10,6 +10,8 @@ const playerAsset = new URL("assets/jyrki.png", import.meta.url);
 const batAsset = new URL("assets/bat.png", import.meta.url);
 const zombieAsset = new URL("assets/zombie.png", import.meta.url);
 const skeletonAsset = new URL("assets/skull.png", import.meta.url);
+const tombstoneAsset = new URL("assets/tombstone.png", import.meta.url);
+const diamondAsset = new URL("assets/diamond.png", import.meta.url);
 const assets = [
   {
     id: "player",
@@ -21,6 +23,8 @@ const assets = [
   },
   { id: "zombie", url: zombieAsset.href },
   { id: "skeleton", url: skeletonAsset.href },
+  { id: "tombstone", url: tombstoneAsset.href },
+  { id: "diamond", url: diamondAsset.href },
 ];
 
 let pressedKeys = {};
@@ -53,6 +57,15 @@ export default class Game {
       update: function () {
         gameState.players.forEach((p) => {
           const player = this.children.getByName(p.id);
+          if (!p.alive) {
+            if (
+              player instanceof Phaser.GameObjects.Sprite &&
+              player.texture.key !== "tombstone"
+            ) {
+              player.setTexture("tombstone");
+            }
+            return;
+          }
           if (player instanceof Phaser.GameObjects.Sprite) {
             player.setPosition(p.x, p.y);
           } else if (player == null) {
@@ -79,6 +92,17 @@ export default class Game {
             const newEnemy = this.add.sprite(e.x, e.y, e.type);
             newEnemy.setName(e.id);
             newEnemy.setOrigin(0.5, 0.5);
+          }
+        });
+        gameState.gems.forEach((g) => {
+          const gem = this.children.getByName(g.id);
+          if (gem instanceof Phaser.GameObjects.Sprite) {
+            gem.setPosition(g.x, g.y);
+          } else if (gem == null) {
+            const newGem = this.add.sprite(g.x, g.y, "diamond");
+            newGem.setName(g.id);
+            newGem.setScale(0.5);
+            newGem.setOrigin(0.5, 0.5);
           }
         });
       },
@@ -116,8 +140,21 @@ export default class Game {
     return this.currentScene().children.getByName(this.playerId);
   }
 
+  showDamageToTarget(targetId: string, amount: number, color: string = "red") {
+    const scene = this.currentScene();
+    if (scene == null) {
+      return;
+    }
+    const target = this.currentScene().children.getByName(targetId);
+    if (target instanceof Phaser.GameObjects.Sprite) {
+      this.showDamage(amount, target.x, target.y, color);
+    }
+  }
   showDamage(amount: number, x: number, y: number, color: string = "red") {
     const scene = this.currentScene();
+    if (scene == null) {
+      return;
+    }
     const text = scene.add.text(x, y, `${amount}`, {
       color: color,
       font: "bold 24px Arial",
@@ -140,17 +177,21 @@ export default class Game {
   }
 
   flashWhite(id: string) {
-    const player = this.currentScene().children.getByName(id);
-    if (player instanceof Phaser.GameObjects.Sprite) {
-      player.setTintFill(0xffffff);
+    const scene = this.currentScene();
+    if (scene == null) {
+      return;
+    }
+    const target = scene.children.getByName(id);
+    if (target instanceof Phaser.GameObjects.Sprite) {
+      target.setTintFill(0xffffff);
       this.currentScene().tweens.add({
-        targets: player,
+        targets: target,
         alpha: 0,
         duration: INVLUNERABILITY_FRAMES,
         ease: "Linear",
         onComplete: () => {
-          player.clearTint();
-          player.setAlpha(1);
+          target.clearTint();
+          target.setAlpha(1);
         },
       });
     }

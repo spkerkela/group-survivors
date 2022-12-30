@@ -20,11 +20,13 @@ export default class Spawner {
       x: randomBetweenExclusive(10, GAME_WIDTH - 10),
       y: randomBetweenExclusive(10, GAME_HEIGHT - 10),
       hp: enemyInfo.hp,
+      alive: true,
       speed: enemyInfo.speed,
       type: enemyType,
       damageType: enemyInfo.damageType,
       damageMin: enemyInfo.damageMin,
       damageMax: enemyInfo.damageMax,
+      gemType: enemyInfo.gemType,
     };
   }
 

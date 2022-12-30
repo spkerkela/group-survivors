@@ -11,6 +11,7 @@ const socket = io({ parser });
 let gameState: GameState = {
   players: [],
   enemies: [],
+  gems: [],
   id: "",
 };
 
@@ -29,22 +30,24 @@ socket.on("begin", (newGameState: GameState) => {
   }, SERVER_UPDATE_RATE);
 });
 
+const colorFromDamageType = (damageType: string) => {
+  switch (damageType) {
+    case "fire":
+      return "red";
+    case "cold":
+      return "blue";
+    case "poison":
+      return "green";
+    case "physical":
+      return "white";
+    default:
+      return "white";
+  }
+};
+
 socket.on("damage", ({ amount, damageType }) => {
   const player = gameState.players.find((p) => p.id === gameState.id);
-  const color = (function () {
-    switch (damageType) {
-      case "fire":
-        return "red";
-      case "cold":
-        return "blue";
-      case "poison":
-        return "green";
-      case "physical":
-        return "white";
-      default:
-        return "white";
-    }
-  })();
+  const color = colorFromDamageType(damageType);
   game.showDamage(amount, player.x, player.y, color);
   game.flashWhite(player.id);
 });
@@ -60,4 +63,11 @@ socket.on("update", (newState: GameState) => {
   if (newState.id !== gameState.id) return;
   gameState.players = newState.players;
   gameState.enemies = newState.enemies;
+  gameState.gems = newState.gems;
+});
+
+socket.on("spell", (data) => {
+  const color = colorFromDamageType(data.damageType);
+  game.showDamageToTarget(data.targetId, data.damage, color);
+  game.flashWhite(data.targetId);
 });

@@ -1,6 +1,7 @@
 export interface GameState {
   players: Player[];
   enemies: Enemy[];
+  gems: Gem[];
   id: string;
 }
 
@@ -25,6 +26,11 @@ export interface InputState {
   right: boolean;
 }
 
+export interface Gem extends Position {
+  id: string;
+  type: string;
+}
+
 export interface Player extends Position {
   id: string;
   level: number;
@@ -33,6 +39,7 @@ export interface Player extends Position {
   hp: number;
   invulnerabilityFrames: number;
   alive: boolean;
+  spells: { [key: string]: { cooldown: number; level: number } };
 }
 
 export interface MoveUpdate {
@@ -46,9 +53,11 @@ export interface MoveUpdate {
 export interface Enemy extends Position {
   id: string;
   hp: number;
+  alive: boolean;
   speed: number;
   type: string;
   damageType: string;
   damageMin: number;
   damageMax: number;
+  gemType: string;
 }

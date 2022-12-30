@@ -9,6 +9,8 @@ import {
   PlayerUpdate,
   updateEnemies,
   updatePlayers,
+  updateSpells,
+  removeDeadEnemies,
 } from "./game-logic";
 import Spawner from "./Spawner";
 
@@ -35,6 +37,7 @@ export class SocketIOConnector implements Connector {
     this.gameState = {
       players: [],
       enemies: [],
+      gems: [],
       id: "",
     };
     this.updates = { moves: {} };
@@ -58,6 +61,12 @@ export class SocketIOConnector implements Connector {
         alive: true,
         level: 1,
         experience: 0,
+        spells: {
+          damageAura: {
+            cooldown: 0,
+            level: 1,
+          },
+        },
       });
     }
     this.io.on("connection", (socket) => {
@@ -73,11 +82,18 @@ export class SocketIOConnector implements Connector {
         alive: true,
         level: 1,
         experience: 0,
+        spells: {
+          damageAura: {
+            cooldown: 0,
+            level: 1,
+          },
+        },
       });
       const newGameState: GameState = {
         players: this.gameState.players,
         id: id,
         enemies: [],
+        gems: [],
       };
       socket.emit("begin", newGameState);
       let interval = setInterval(() => {
@@ -133,21 +149,58 @@ export class GameServer {
     }, 1000);
   }
   update() {
+    const gemsToSpawn = this.connector.gameState.enemies
+      .filter((enemy) => !enemy.alive)
+      .map((enemy) => ({
+        id: `gem-${enemy.id}-${Math.random()}`,
+        x: enemy.x,
+        y: enemy.y,
+        type: enemy.gemType,
+      }));
+
+    this.connector.gameState.gems =
+      this.connector.gameState.gems.concat(gemsToSpawn);
+
+    this.connector.gameState.enemies = removeDeadEnemies(
+      this.connector.gameState.enemies
+    );
     updatePlayers(this.connector.gameState.players, this.connector.updates);
+    const spellEvents = updateSpells(
+      this.connector.gameState.players,
+      this.connector.gameState.enemies
+    );
+
     this.connector.gameState.players.forEach((p) => {
       if (p.id.startsWith("bot-")) {
         return;
       }
     });
-    const events = updateEnemies(
+    spellEvents.forEach((spellEvent) => {
+      const target = this.connector.gameState.enemies.find(
+        (e) => e.id === spellEvent.targetId
+      );
+      if (target) {
+        target.hp -= spellEvent.damage;
+        if (target.hp <= 0) {
+          target.alive = false;
+        }
+      }
+    });
+    const enemyEvents = updateEnemies(
       this.connector.gameState.enemies,
       this.connector.gameState.players
     );
 
-    events
+    enemyEvents
       .filter((e) => !e.data.playerId.startsWith("bot-"))
       .forEach((e) => {
         this.connector.pushEvent(e.name, e.data.playerId, e.data);
+      });
+
+    spellEvents
+      .filter((e) => !e.fromId.startsWith("bot-"))
+      .forEach((e) => {
+        this.connector.pushEvent("spell", e.fromId, e);
       });
   }
 }
