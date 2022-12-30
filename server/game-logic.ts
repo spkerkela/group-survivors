@@ -6,7 +6,7 @@ import {
 } from "../common/constants";
 import { normalize } from "../common/math";
 import { randomBetweenExclusive } from "../common/random";
-import { Enemy, InputState, Player, Position } from "../common/types";
+import { Enemy, Gem, InputState, Player, Position } from "../common/types";
 import { SpellData, spellDB } from "./data";
 export interface PlayerUpdate {
   x: number;
@@ -187,4 +187,31 @@ export function updateSpells(
 
 export function removeDeadEnemies(enemies: Enemy[]) {
   return enemies.filter((enemy) => enemy.alive);
+}
+
+export interface GemEvent {
+  playerId: string;
+  gemId: string;
+}
+
+export function updateGems(gems: Gem[], players: Player[]): GemEvent[] {
+  let events: GemEvent[] = [];
+  for (let i = 0; i < gems.length; i++) {
+    const gem = gems[i];
+    for (let j = 0; j < players.length; j++) {
+      const player = players[j];
+      if (player.alive) {
+        const distance = Math.sqrt(
+          Math.pow(player.x - gem.x, 2) + Math.pow(player.y - gem.y, 2)
+        );
+        if (distance < PLAYER_SIZE) {
+          events.push({
+            playerId: player.id,
+            gemId: gem.id,
+          });
+        }
+      }
+    }
+  }
+  return events;
 }

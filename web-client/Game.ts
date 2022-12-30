@@ -105,6 +105,17 @@ export default class Game {
             newGem.setOrigin(0.5, 0.5);
           }
         });
+        // remove gems that are no longer in the game
+        const gemIds = gameState.gems.map((g) => g.id);
+        this.children.each((child) => {
+          if (
+            child instanceof Phaser.GameObjects.Sprite &&
+            child.texture.key === "diamond" &&
+            !gemIds.includes(child.name)
+          ) {
+            child.destroy();
+          }
+        });
       },
     };
     this.game = new Phaser.Game({

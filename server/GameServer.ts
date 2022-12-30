@@ -3,7 +3,7 @@ import {
   GAME_WIDTH,
   SERVER_UPDATE_RATE,
 } from "../common/constants";
-import { GameState, MoveUpdate, Player } from "../common/types";
+import { GameState, Gem, MoveUpdate, Player } from "../common/types";
 import {
   createMoveUpdate,
   PlayerUpdate,
@@ -11,6 +11,8 @@ import {
   updatePlayers,
   updateSpells,
   removeDeadEnemies,
+  updateGems,
+  GemEvent,
 } from "./game-logic";
 import Spawner from "./Spawner";
 
@@ -202,5 +204,13 @@ export class GameServer {
       .forEach((e) => {
         this.connector.pushEvent("spell", e.fromId, e);
       });
+    const gemEvents = updateGems(
+      this.connector.gameState.gems,
+      this.connector.gameState.players
+    );
+
+    this.connector.gameState.gems = this.connector.gameState.gems.filter(
+      (g) => !gemEvents.map((e) => e.gemId).includes(g.id) // remove gems that have been picked up
+    );
   }
 }
