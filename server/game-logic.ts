@@ -6,6 +6,7 @@ import {
 } from "../common/constants";
 import { normalize } from "../common/math";
 import { randomBetweenExclusive } from "../common/random";
+import { experienceRequiredForLevel } from "../common/shared";
 import { Enemy, Gem, InputState, Player, Position } from "../common/types";
 import { enemyDB, gemDB, SpellData, spellDB } from "./data";
 export interface PlayerUpdate {
@@ -193,7 +194,7 @@ export function removeDeadEnemies(enemies: Enemy[]) {
 
 function checkPlayerExperience(player: Player): boolean {
   const nextLevel = player.level + 1;
-  if (player.experience >= nextLevel * nextLevel * 100) {
+  if (player.experience >= experienceRequiredForLevel(nextLevel)) {
     const newHp = 200 + nextLevel * 10;
     player.level = nextLevel;
     player.hp = newHp;

@@ -5,7 +5,9 @@ import {
   INVLUNERABILITY_FRAMES,
 } from "../common/constants";
 import { chooseRandom } from "../common/random";
+import { experienceRequiredForLevel } from "../common/shared";
 import { GameState, Player } from "../common/types";
+import Bar from "./Bar";
 import {
   instantiateEnemy,
   instantiateGem,
@@ -46,11 +48,22 @@ window.onkeydown = function (e: { keyCode: string | number }) {
 export default class Game {
   game: Phaser.Game;
   playerId: string;
+  experienceBar: Bar;
 
   constructor(canvas: HTMLCanvasElement, gameState: GameState) {
     this.playerId = gameState.id;
+    let gameRef = this;
+
     const sceneConfig: Phaser.Types.Scenes.CreateSceneFromObjectConfig = {
       preload: function () {
+        gameRef.experienceBar = new Bar(this, {
+          position: { x: 10, y: 10 },
+          width: 200,
+          height: 20,
+          colorHex: 0x0000ff,
+          value: 0,
+          maxValue: experienceRequiredForLevel(2),
+        });
         assets.forEach(({ id, url }) => {
           this.load.image(id, url);
         });
@@ -63,6 +76,11 @@ export default class Game {
       update: function () {
         gameState.players.forEach((p) => {
           const player = this.children.getByName(p.id);
+          if (p.id === gameRef.playerId) {
+            gameRef.experienceBar.setValue(
+              p.experience - experienceRequiredForLevel(p.level)
+            );
+          }
           if (player instanceof Phaser.GameObjects.Sprite) {
             updatePlayer(player, p);
           } else if (player == null) {
@@ -146,6 +164,10 @@ export default class Game {
     const player = this.getActivePlayer();
     player.getData("bar").setUpperBound(serverPlayer.maxHp);
     player.getData("bar").setValue(serverPlayer.hp);
+    this.experienceBar.setUpperBound(
+      experienceRequiredForLevel(serverPlayer.level + 1) -
+        experienceRequiredForLevel(serverPlayer.level)
+    );
   }
 
   showDamageToTarget(targetId: string, amount: number, color: string = "red") {
