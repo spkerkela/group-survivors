@@ -5,7 +5,15 @@ import {
   INVLUNERABILITY_FRAMES,
 } from "../common/constants";
 import { chooseRandom } from "../common/random";
-import { GameState } from "../common/types";
+import { GameState, Player } from "../common/types";
+import {
+  instantiateEnemy,
+  instantiateGem,
+  instantiatePlayer,
+  updateEnemy,
+  updateGem,
+  updatePlayer,
+} from "./middleware";
 const playerAsset = new URL("assets/jyrki.png", import.meta.url);
 const batAsset = new URL("assets/bat.png", import.meta.url);
 const zombieAsset = new URL("assets/zombie.png", import.meta.url);
@@ -28,10 +36,10 @@ const assets = [
 ];
 
 let pressedKeys = {};
-window.onkeyup = function (e) {
+window.onkeyup = function (e: { keyCode: string | number }) {
   pressedKeys[e.keyCode] = false;
 };
-window.onkeydown = function (e) {
+window.onkeydown = function (e: { keyCode: string | number }) {
   pressedKeys[e.keyCode] = true;
 };
 
@@ -49,29 +57,16 @@ export default class Game {
       },
       create: function () {
         gameState.players.forEach((p) => {
-          const player = this.add.sprite(p.x, p.y, "player");
-          player.setName(p.id);
-          player.setOrigin(0.5, 0.5);
+          instantiatePlayer(this, p);
         });
       },
       update: function () {
         gameState.players.forEach((p) => {
           const player = this.children.getByName(p.id);
-          if (!p.alive) {
-            if (
-              player instanceof Phaser.GameObjects.Sprite &&
-              player.texture.key !== "tombstone"
-            ) {
-              player.setTexture("tombstone");
-            }
-            return;
-          }
           if (player instanceof Phaser.GameObjects.Sprite) {
-            player.setPosition(p.x, p.y);
+            updatePlayer(player, p);
           } else if (player == null) {
-            const newPlayer = this.add.sprite(p.x, p.y, "player");
-            newPlayer.setName(p.id);
-            newPlayer.setOrigin(0.5, 0.5);
+            instantiatePlayer(this, p);
           }
         });
         const playerIds = gameState.players.map((p) => p.id);
@@ -87,22 +82,18 @@ export default class Game {
         gameState.enemies.forEach((e) => {
           const enemy = this.children.getByName(e.id);
           if (enemy instanceof Phaser.GameObjects.Sprite) {
+            updateEnemy(enemy, e);
             enemy.setPosition(e.x, e.y);
           } else if (enemy == null) {
-            const newEnemy = this.add.sprite(e.x, e.y, e.type);
-            newEnemy.setName(e.id);
-            newEnemy.setOrigin(0.5, 0.5);
+            instantiateEnemy(this, e);
           }
         });
         gameState.gems.forEach((g) => {
           const gem = this.children.getByName(g.id);
           if (gem instanceof Phaser.GameObjects.Sprite) {
-            gem.setPosition(g.x, g.y);
+            updateGem(gem, g);
           } else if (gem == null) {
-            const newGem = this.add.sprite(g.x, g.y, "diamond");
-            newGem.setName(g.id);
-            newGem.setScale(0.5);
-            newGem.setOrigin(0.5, 0.5);
+            instantiateGem(this, g);
           }
         });
         // remove gems that are no longer in the game
@@ -151,6 +142,12 @@ export default class Game {
     return this.currentScene().children.getByName(this.playerId);
   }
 
+  updateLevel(serverPlayer: Player) {
+    const player = this.getActivePlayer();
+    player.getData("bar").setUpperBound(serverPlayer.maxHp);
+    player.getData("bar").setValue(serverPlayer.hp);
+  }
+
   showDamageToTarget(targetId: string, amount: number, color: string = "red") {
     const scene = this.currentScene();
     if (scene == null) {
@@ -195,7 +192,7 @@ export default class Game {
     const target = scene.children.getByName(id);
     if (target instanceof Phaser.GameObjects.Sprite) {
       target.setTintFill(0xffffff);
-      this.currentScene().tweens.add({
+      scene.tweens.add({
         targets: target,
         alpha: 0,
         duration: INVLUNERABILITY_FRAMES,

@@ -6,6 +6,7 @@ import { sendMoveMessage } from "./messages";
 const canvasElement = document.getElementById("canvas") as HTMLCanvasElement;
 import parser from "socket.io-msgpack-parser";
 
+const levelIndicatorDiv = document.getElementById("level");
 const socket = io({ parser });
 
 let gameState: GameState = {
@@ -70,4 +71,10 @@ socket.on("spell", (data) => {
   const color = colorFromDamageType(data.damageType);
   game.showDamageToTarget(data.targetId, data.damage, color);
   game.flashWhite(data.targetId);
+});
+
+socket.on("level", (data) => {
+  if (data.playerId !== gameState.id) return;
+  levelIndicatorDiv.innerText = `Level ${data.player.level}`;
+  game.updateLevel(data.player);
 });

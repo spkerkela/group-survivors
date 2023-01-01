@@ -36,6 +36,7 @@ export interface Player extends Position {
   level: number;
   experience: number;
   speed: number;
+  maxHp: number;
   hp: number;
   invulnerabilityFrames: number;
   alive: boolean;

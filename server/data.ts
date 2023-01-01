@@ -64,3 +64,18 @@ export const spellDB: SpellDB = {
     type: "aura",
   },
 };
+
+export interface GemData {
+  name: string;
+  type: string;
+  value: number;
+}
+
+export type GemDB = { [key: string]: GemData };
+export const gemDB: GemDB = {
+  exp: {
+    name: "Experience",
+    type: "exp",
+    value: 100,
+  },
+};

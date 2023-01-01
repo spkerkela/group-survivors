@@ -7,7 +7,7 @@ import {
 import { normalize } from "../common/math";
 import { randomBetweenExclusive } from "../common/random";
 import { Enemy, Gem, InputState, Player, Position } from "../common/types";
-import { SpellData, spellDB } from "./data";
+import { enemyDB, gemDB, SpellData, spellDB } from "./data";
 export interface PlayerUpdate {
   x: number;
   y: number;
@@ -116,6 +116,7 @@ function tickAura(
   spellData: SpellData,
   position: Position,
   fromId: string,
+  playerLevel: number,
   enemies: Enemy[]
 ): SpellDamageEvent[] {
   const enemiesInRange = enemies.filter((enemy) => {
@@ -132,7 +133,7 @@ function tickAura(
     return {
       fromId: fromId,
       targetId: enemy.id,
-      damage: damage,
+      damage: damage * playerLevel,
       damageType: spellData.damageType,
       critical: critical,
     };
@@ -151,6 +152,7 @@ export function castSpell(
         spellData,
         { x: player.x, y: player.y },
         player.id,
+        player.level,
         enemies
       );
       return events;
@@ -189,13 +191,36 @@ export function removeDeadEnemies(enemies: Enemy[]) {
   return enemies.filter((enemy) => enemy.alive);
 }
 
+function checkPlayerExperience(player: Player): boolean {
+  const nextLevel = player.level + 1;
+  if (player.experience >= nextLevel * nextLevel * 100) {
+    const newHp = 200 + nextLevel * 10;
+    player.level = nextLevel;
+    player.hp = newHp;
+    player.maxHp = newHp;
+    return true;
+  }
+  return false;
+}
+
 export interface GemEvent {
   playerId: string;
   gemId: string;
 }
 
-export function updateGems(gems: Gem[], players: Player[]): GemEvent[] {
-  let events: GemEvent[] = [];
+export interface LevelEvent {
+  playerId: string;
+  player: Player;
+}
+
+export function updateGems(
+  gems: Gem[],
+  players: Player[]
+): { gemEvents: GemEvent[]; levelEvents: LevelEvent[] } {
+  let events: { gemEvents: GemEvent[]; levelEvents: LevelEvent[] } = {
+    gemEvents: [],
+    levelEvents: [],
+  };
   for (let i = 0; i < gems.length; i++) {
     const gem = gems[i];
     for (let j = 0; j < players.length; j++) {
@@ -204,14 +229,56 @@ export function updateGems(gems: Gem[], players: Player[]): GemEvent[] {
         const distance = Math.sqrt(
           Math.pow(player.x - gem.x, 2) + Math.pow(player.y - gem.y, 2)
         );
+
         if (distance < PLAYER_SIZE) {
-          events.push({
+          events.gemEvents.push({
             playerId: player.id,
             gemId: gem.id,
           });
+          player.experience += gemDB[gem.type].value;
+          if (checkPlayerExperience(player)) {
+            events.levelEvents.push({
+              playerId: player.id,
+              player: player,
+            });
+          }
         }
       }
     }
   }
   return events;
+}
+
+export function createPlayer(id: string, { x, y }: Position): Player {
+  return {
+    id: id,
+    x: x,
+    y: y,
+    hp: 200,
+    maxHp: 200,
+    alive: true,
+    speed: 3,
+    level: 1,
+    experience: 0,
+    invulnerabilityFrames: 0,
+    spells: {
+      damageAura: {
+        cooldown: 0,
+        level: 1,
+      },
+    },
+  };
+}
+
+export function createGem(
+  id: string,
+  gemType: string,
+  { x, y }: Position
+): Gem {
+  return {
+    id: id,
+    x: x,
+    y: y,
+    type: gemType,
+  };
 }
