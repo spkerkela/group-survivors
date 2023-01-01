@@ -58,7 +58,7 @@ export default class Game {
       preload: function () {
         gameRef.experienceBar = new Bar(this, {
           position: { x: 10, y: 10 },
-          width: 200,
+          width: GAME_WIDTH - 20,
           height: 20,
           colorHex: 0x0000ff,
           value: 0,

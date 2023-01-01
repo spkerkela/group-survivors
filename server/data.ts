@@ -76,6 +76,6 @@ export const gemDB: GemDB = {
   exp: {
     name: "Experience",
     type: "exp",
-    value: 100,
+    value: 25,
   },
 };
