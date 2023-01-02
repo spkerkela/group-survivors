@@ -73,5 +73,6 @@ export interface Projectile extends Position {
   lifetime: number;
   fromId: string;
   direction: Position;
+  maxPierceCount: number;
   hitEnemies: string[];
 }

@@ -4,12 +4,19 @@ import {
   GAME_WIDTH,
   INVLUNERABILITY_FRAMES,
   PLAYER_SIZE,
-  SERVER_UPDATE_RATE
+  SERVER_UPDATE_RATE,
 } from "../common/constants";
 import { normalize } from "../common/math";
 import { randomBetweenExclusive } from "../common/random";
 import { experienceRequiredForLevel } from "../common/shared";
-import { Enemy, Gem, InputState, Player, Position, Projectile } from "../common/types";
+import {
+  Enemy,
+  Gem,
+  InputState,
+  Player,
+  Position,
+  Projectile,
+} from "../common/types";
 import { gemDB, SpellData, spellDB } from "./data";
 
 export interface PlayerUpdate {
@@ -94,8 +101,8 @@ export function updateEnemies(enemies: Enemy[], players: Player[]) {
             data: {
               playerId: player.id,
               damageType: enemy.damageType,
-              amount: damage
-            }
+              amount: damage,
+            },
           });
           player.invulnerabilityFrames = INVLUNERABILITY_FRAMES;
           player.hp -= damage;
@@ -128,6 +135,7 @@ export interface SpellProjectileEvent {
   damageType: string;
   critical: boolean;
   lifetime: number;
+  maxPierceCount: number;
   speed: number;
 }
 
@@ -157,12 +165,16 @@ function tickAura(
       targetId: enemy.id,
       damage: damage * playerLevel,
       damageType: spellData.damageType,
-      critical: critical
+      critical: critical,
     };
   });
 }
 
-function shootAtNearestEnemy(spellData: SpellData, player: Player, enemies: Enemy[]): SpellProjectileEvent | null {
+function shootAtNearestEnemy(
+  spellData: SpellData,
+  player: Player,
+  enemies: Enemy[]
+): SpellProjectileEvent | null {
   const nearestEnemy = enemies.reduce(
     (nearest, enemy) => {
       const distance = Math.sqrt(
@@ -184,7 +196,9 @@ function shootAtNearestEnemy(spellData: SpellData, player: Player, enemies: Enem
     const { x: nx, y: ny } = normalize(x, y);
     const direction = { x: nx, y: ny };
     const critical = Math.random() < spellData.critChance + 0.01 * player.level;
-    const damage = critical ? spellData.baseDamage * spellData.critMultiplier : spellData.baseDamage;
+    const damage = critical
+      ? spellData.baseDamage * spellData.critMultiplier
+      : spellData.baseDamage;
     return {
       fromId: player.id,
       position: { x: player.x, y: player.y },
@@ -194,7 +208,8 @@ function shootAtNearestEnemy(spellData: SpellData, player: Player, enemies: Enem
       damageType: spellData.damageType,
       critical: critical,
       lifetime: spellData.lifetime,
-      speed: spellData.speed
+      speed: spellData.speed,
+      maxPierceCount: spellData.maxPierceCount + player.level - 1,
     };
   }
   return null;
@@ -213,7 +228,7 @@ export function castSpell(
   const spellData = spellDB[spell];
   let result = {
     damageEvents: [],
-    projectileEvents: []
+    projectileEvents: [],
   };
   switch (spellData.type) {
     case "aura":
@@ -243,7 +258,7 @@ export function updateSpells(
 ): SpellCastEvent {
   let events: SpellCastEvent = {
     damageEvents: [],
-    projectileEvents: []
+    projectileEvents: [],
   };
   for (let i = 0; i < players.length; i++) {
     const player = players[i];
@@ -257,12 +272,16 @@ export function updateSpells(
         } else {
           spellData.cooldown = Math.max(
             spellDB[spell].cooldown *
-            (spellDB[spell].cooldownMultiplier - player.level * 0.01),
+              (spellDB[spell].cooldownMultiplier - player.level * 0.01),
             0.01
           );
           const newEvents = castSpell(spell, player, enemies);
-          events.damageEvents = events.damageEvents.concat(newEvents.damageEvents);
-          events.projectileEvents = events.projectileEvents.concat(newEvents.projectileEvents);
+          events.damageEvents = events.damageEvents.concat(
+            newEvents.damageEvents
+          );
+          events.projectileEvents = events.projectileEvents.concat(
+            newEvents.projectileEvents
+          );
         }
       }
     }
@@ -302,7 +321,7 @@ export function updateGems(
 ): { gemEvents: GemEvent[]; levelEvents: LevelEvent[] } {
   let events: { gemEvents: GemEvent[]; levelEvents: LevelEvent[] } = {
     gemEvents: [],
-    levelEvents: []
+    levelEvents: [],
   };
   for (let i = 0; i < gems.length; i++) {
     const gem = gems[i];
@@ -316,13 +335,13 @@ export function updateGems(
         if (distance < PLAYER_SIZE) {
           events.gemEvents.push({
             playerId: player.id,
-            gemId: gem.id
+            gemId: gem.id,
           });
           player.experience += gemDB[gem.type].value;
           while (checkPlayerExperience(player)) {
             events.levelEvents.push({
               playerId: player.id,
-              player: player
+              player: player,
             });
           }
         }
@@ -332,11 +351,16 @@ export function updateGems(
   return events;
 }
 
-export function updateProjectiles(projectiles: Projectile[], enemies: Enemy[]): SpellDamageEvent[] {
+export function updateProjectiles(
+  projectiles: Projectile[],
+  enemies: Enemy[]
+): SpellDamageEvent[] {
   projectiles.forEach((projectile) => {
     projectile.lifetime -= SERVER_UPDATE_RATE;
   });
-  const aliveProjectiles = projectiles.filter((projectile) => projectile.lifetime > 0);
+  const aliveProjectiles = projectiles.filter(
+    (projectile) => projectile.lifetime > 0
+  );
   const events: SpellDamageEvent[] = [];
   aliveProjectiles.forEach((projectile) => {
     projectile.x += projectile.direction.x * projectile.speed;
@@ -344,18 +368,22 @@ export function updateProjectiles(projectiles: Projectile[], enemies: Enemy[]): 
     enemies.forEach((enemy) => {
       if (enemy.alive) {
         const distance = Math.sqrt(
-          Math.pow(enemy.x - projectile.x, 2) + Math.pow(enemy.y - projectile.y, 2)
+          Math.pow(enemy.x - projectile.x, 2) +
+            Math.pow(enemy.y - projectile.y, 2)
         );
         if (distance < ENEMY_SIZE) {
           // an enemy can only be hit once per projectile
           if (!projectile.hitEnemies.includes(enemy.id)) {
             projectile.hitEnemies.push(enemy.id);
+            if (projectile.hitEnemies.length >= projectile.maxPierceCount) {
+              projectile.lifetime = 0;
+            }
             events.push({
               fromId: projectile.fromId,
               targetId: enemy.id,
               damage: projectile.damage,
               damageType: projectile.damageType,
-              critical: projectile.critical
+              critical: projectile.critical,
             });
           }
         }
@@ -380,13 +408,13 @@ export function createPlayer(id: string, { x, y }: Position): Player {
     spells: {
       damageAura: {
         cooldown: 0,
-        level: 1
+        level: 1,
       },
       missile: {
         cooldown: 0,
-        level: 1
-      }
-    }
+        level: 1,
+      },
+    },
   };
 }
 
@@ -399,6 +427,6 @@ export function createGem(
     id: id,
     x: x,
     y: y,
-    type: gemType
+    type: gemType,
   };
 }

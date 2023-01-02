@@ -15,7 +15,7 @@ export const enemyDB: EnemyDB = {
     damageType: "cold",
     damageMin: 20,
     damageMax: 40,
-    gemType: "exp"
+    gemType: "exp",
   },
   bat: {
     hp: 20,
@@ -23,7 +23,7 @@ export const enemyDB: EnemyDB = {
     damageType: "poison",
     damageMin: 1,
     damageMax: 5,
-    gemType: "exp"
+    gemType: "exp",
   },
   skeleton: {
     hp: 200,
@@ -31,8 +31,8 @@ export const enemyDB: EnemyDB = {
     damageType: "melee",
     damageMin: 10,
     damageMax: 20,
-    gemType: "exp"
-  }
+    gemType: "exp",
+  },
 };
 
 export interface SpellData {
@@ -50,6 +50,7 @@ export interface SpellData {
   type: string;
   lifetime: number;
   speed: number;
+  maxPierceCount: number;
 }
 
 export type SpellDB = { [key: string]: SpellData };
@@ -69,7 +70,8 @@ export const spellDB: SpellDB = {
     cooldownMultiplier: 1,
     type: "aura",
     lifetime: 0,
-    speed: 0
+    speed: 0,
+    maxPierceCount: 0,
   },
   missile: {
     id: "missile",
@@ -85,8 +87,9 @@ export const spellDB: SpellDB = {
     cooldownMultiplier: 1,
     type: "projectile-target",
     lifetime: 5000,
-    speed: 10
-  }
+    speed: 10,
+    maxPierceCount: 1,
+  },
 };
 
 export interface GemData {
@@ -100,6 +103,6 @@ export const gemDB: GemDB = {
   exp: {
     name: "Experience",
     type: "exp",
-    value: 25
-  }
+    value: 25,
+  },
 };
