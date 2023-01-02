@@ -3,6 +3,7 @@ import {
   GAME_WIDTH,
   SERVER_UPDATE_RATE,
 } from "../common/constants";
+import { sanitizeName } from "../common/shared";
 import { GameState, Gem, MoveUpdate, Player } from "../common/types";
 import {
   createMoveUpdate,
@@ -25,6 +26,7 @@ export interface Connector {
   updates: {
     moves: { [key: string]: PlayerUpdate };
   };
+  lobby: string[];
   pushEvent: (name: string, playerId: string, data: any) => void;
 }
 
@@ -37,6 +39,7 @@ export class SocketIOConnector implements Connector {
   events: {
     [key: string]: { name: string; data: any }[];
   };
+  lobby: string[];
 
   constructor(io) {
     this.io = io;
@@ -49,6 +52,7 @@ export class SocketIOConnector implements Connector {
     };
     this.updates = { moves: {} };
     this.events = {};
+    this.lobby = [];
   }
 
   pushEvent(name: string, playerId: string, data: any) {
@@ -62,7 +66,7 @@ export class SocketIOConnector implements Connector {
   start(levelData: LevelData) {
     for (let i = 0; i < levelData.bots; i++) {
       this.gameState.players.push(
-        createPlayer(`bot-${i}`, {
+        createPlayer(`bot-${i}`, `Mr Bot ${i + 1}`, {
           x: Math.random() * GAME_WIDTH,
           y: Math.random() * GAME_HEIGHT,
         })
@@ -70,13 +74,20 @@ export class SocketIOConnector implements Connector {
     }
     this.io.on("connection", (socket) => {
       const id = socket.id;
+      this.lobby.push(id);
       this.events[id] = [];
-      this.gameState.players.push(
-        createPlayer(id, {
-          x: levelData.playerStartPosition.x,
-          y: levelData.playerStartPosition.y,
-        })
-      );
+      socket.on("join", (screenName: string) => {
+        if (this.lobby.includes(id)) {
+          this.lobby = this.lobby.filter((p) => p !== id);
+          this.gameState.players.push(
+            createPlayer(id, sanitizeName(screenName), {
+              x: levelData.playerStartPosition.x,
+              y: levelData.playerStartPosition.y,
+            })
+          );
+        }
+      });
+
       const newGameState: GameState = {
         players: this.gameState.players,
         id: id,
@@ -130,13 +141,21 @@ export class GameServer {
     this.spawner = new Spawner(levelData.enemyTable);
   }
 
+  private playersAlive() {
+    return this.connector.gameState.players.filter((p) => p.alive).length > 0;
+  }
+
   start() {
     this.connector.start(this.levelData);
     setInterval(() => {
-      this.update();
+      if (this.playersAlive() || this.connector.lobby.length > 0) {
+        this.update();
+      }
     }, SERVER_UPDATE_RATE);
     setInterval(() => {
-      this.spawner.spawnEnemy(this.connector.gameState);
+      if (this.playersAlive()) {
+        this.spawner.spawnEnemy(this.connector.gameState);
+      }
     }, 1000);
   }
 

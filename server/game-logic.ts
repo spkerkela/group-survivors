@@ -393,9 +393,14 @@ export function updateProjectiles(
   return events;
 }
 
-export function createPlayer(id: string, { x, y }: Position): Player {
+export function createPlayer(
+  id: string,
+  name: string,
+  { x, y }: Position
+): Player {
   return {
     id: id,
+    screenName: name,
     x: x,
     y: y,
     hp: 200,

@@ -3,6 +3,15 @@ import Bar from "./Bar";
 
 export function instantiatePlayer(scene: Phaser.Scene, player: Player) {
   const newPlayer = scene.add.sprite(player.x, player.y, "player");
+  const playerText = scene.add
+    .text(player.x, player.y - 32, player.screenName, {
+      font: "20px Arial",
+      stroke: "#000000",
+      strokeThickness: 1,
+    })
+    .setOrigin(0.5, 0.5)
+    .setShadow(2, 2, "#333333", 2, true, true);
+  newPlayer.setData("text", playerText);
   newPlayer.setData(
     "bar",
     new Bar(scene, {
@@ -32,15 +41,17 @@ export function updatePlayer(
 ) {
   if (serverPlayer.alive) {
     player.setPosition(serverPlayer.x, serverPlayer.y);
+    player.getData("text").setPosition(serverPlayer.x, serverPlayer.y - 32);
     player.setData("health", serverPlayer.hp);
     player
       .getData("bar")
-      .setPosition({ x: serverPlayer.x, y: serverPlayer.y + 16 });
+      .setPosition({ x: serverPlayer.x, y: serverPlayer.y + 26 });
   } else {
     if (player.texture.key !== "tombstone") {
       player.setTexture("tombstone");
       player.removeAllListeners();
       player.getData("bar").destroy();
+      player.getData("text").destroy();
     }
   }
 }

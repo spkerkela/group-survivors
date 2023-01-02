@@ -33,6 +33,7 @@ export interface Gem extends Position {
 }
 
 export interface Player extends Position {
+  screenName: string;
   id: string;
   level: number;
   experience: number;

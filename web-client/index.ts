@@ -6,16 +6,30 @@ import { sendMoveMessage } from "./messages";
 
 const canvasElement = document.getElementById("canvas") as HTMLCanvasElement;
 import parser from "socket.io-msgpack-parser";
+import { sanitizeName } from "../common/shared";
 
 const levelIndicatorDiv = document.getElementById("level");
 const socket = io({ parser });
+
+const startButton = document.getElementById("start") as HTMLButtonElement;
+const nameInput = document.getElementById("name") as HTMLInputElement;
+const errorDiv = document.getElementById("error") as HTMLDivElement;
+
+startButton.onclick = () => {
+  if (!nameInput.value || sanitizeName(nameInput.value) === "") {
+    errorDiv.innerText = "Please enter a name";
+    return;
+  }
+  errorDiv.innerText = "";
+  socket.emit("join", sanitizeName(nameInput.value));
+};
 
 let gameState: GameState = {
   players: [],
   enemies: [],
   gems: [],
   projectiles: [],
-  id: ""
+  id: "",
 };
 
 let game: Game | null = null;
