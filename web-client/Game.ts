@@ -94,6 +94,7 @@ export default class Game {
             child instanceof Phaser.GameObjects.Sprite &&
             !playerIds.includes(child.name)
           ) {
+            child.getData("bar")?.destroy();
             child.destroy();
           }
         });

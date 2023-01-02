@@ -24,7 +24,7 @@ const io = new Server(httpServer, {
 });
 const gameServer = new GameServer(new SocketIOConnector(io), {
   name: "Level 1",
-  bots: 1,
+  bots: 15,
   playerStartPosition: { x: GAME_WIDTH / 2, y: GAME_HEIGHT / 2 },
   enemyTable: {
     zombie: 10,

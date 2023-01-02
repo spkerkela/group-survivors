@@ -124,10 +124,13 @@ function tickAura(
     const distance = Math.sqrt(
       Math.pow(enemy.x - position.x, 2) + Math.pow(enemy.y - position.y, 2)
     );
-    return distance < spellData.range * spellData.rangeMultiplier;
+    return (
+      distance <
+      spellData.range * spellData.rangeMultiplier + 0.01 * playerLevel
+    );
   });
   return enemiesInRange.map((enemy) => {
-    const critical = Math.random() < spellData.critChance;
+    const critical = Math.random() < spellData.critChance + 0.01 * playerLevel;
     const damage = critical
       ? spellData.baseDamage * spellData.critMultiplier
       : spellData.baseDamage;
@@ -177,7 +180,8 @@ export function updateSpells(
           spellData.cooldown -= SERVER_UPDATE_RATE;
         } else {
           spellData.cooldown = Math.max(
-            spellDB[spell].cooldown * spellDB[spell].cooldownMultiplier,
+            spellDB[spell].cooldown *
+              (spellDB[spell].cooldownMultiplier - player.level * 0.01),
             0.01
           );
           events = events.concat(castSpell(spell, player, enemies));
@@ -237,7 +241,7 @@ export function updateGems(
             gemId: gem.id,
           });
           player.experience += gemDB[gem.type].value;
-          if (checkPlayerExperience(player)) {
+          while (checkPlayerExperience(player)) {
             events.levelEvents.push({
               playerId: player.id,
               player: player,
