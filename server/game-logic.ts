@@ -1,8 +1,9 @@
 import {
+  GAME_HEIGHT,
   GAME_WIDTH,
   INVLUNERABILITY_FRAMES,
   PLAYER_SIZE,
-  SERVER_UPDATE_RATE,
+  SERVER_UPDATE_RATE
 } from "../common/constants";
 import { normalize } from "../common/math";
 import { randomBetweenExclusive } from "../common/random";
@@ -34,7 +35,7 @@ export function updatePlayers(players: Player[], updates: Updates) {
       if (player.x < 0) player.x = 0;
       if (player.y < 0) player.y = 0;
       if (player.x > GAME_WIDTH) player.x = GAME_WIDTH;
-      if (player.y > GAME_WIDTH) player.y = GAME_WIDTH;
+      if (player.y > GAME_HEIGHT) player.y = GAME_HEIGHT;
     }
     player.invulnerabilityFrames -= SERVER_UPDATE_RATE;
   }
