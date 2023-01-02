@@ -99,6 +99,9 @@ export function updateEnemies(enemies: Enemy[], players: Player[]) {
           player.alive = player.hp > 0;
         }
       }
+    } else {
+      enemy.x += Math.cos(enemy.y / 100) * enemy.speed;
+      enemy.y += Math.sin(enemy.x / 100) * enemy.speed;
     }
   }
 
