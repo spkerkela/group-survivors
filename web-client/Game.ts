@@ -22,6 +22,7 @@ const zombieAsset = new URL("assets/zombie.png", import.meta.url);
 const skeletonAsset = new URL("assets/skull.png", import.meta.url);
 const tombstoneAsset = new URL("assets/tombstone.png", import.meta.url);
 const diamondAsset = new URL("assets/diamond.png", import.meta.url);
+const backgroundAsset = new URL("assets/bg.png", import.meta.url);
 const assets = [
   {
     id: "player",
@@ -35,6 +36,7 @@ const assets = [
   { id: "skeleton", url: skeletonAsset.href },
   { id: "tombstone", url: tombstoneAsset.href },
   { id: "diamond", url: diamondAsset.href },
+  { id: "background", url: backgroundAsset.href },
 ];
 
 let pressedKeys = {};
@@ -56,6 +58,18 @@ export default class Game {
 
     const sceneConfig: Phaser.Types.Scenes.CreateSceneFromObjectConfig = {
       preload: function () {
+        assets.forEach(({ id, url }) => {
+          this.load.image(id, url);
+        });
+      },
+      create: function () {
+        this.add.tileSprite(
+          0,
+          0,
+          GAME_WIDTH * 2,
+          GAME_HEIGHT * 2,
+          "background"
+        );
         gameRef.experienceBar = new Bar(this, {
           position: { x: 10, y: 10 },
           width: GAME_WIDTH - 20,
@@ -64,11 +78,7 @@ export default class Game {
           value: 0,
           maxValue: experienceRequiredForLevel(2),
         });
-        assets.forEach(({ id, url }) => {
-          this.load.image(id, url);
-        });
-      },
-      create: function () {
+
         gameState.players.forEach((p) => {
           instantiatePlayer(this, p);
         });
