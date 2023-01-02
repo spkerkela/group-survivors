@@ -1,15 +1,10 @@
-import {
-  GAME_HEIGHT,
-  GAME_WIDTH,
-  INVLUNERABILITY_FRAMES,
-  PLAYER_SIZE,
-  SERVER_UPDATE_RATE
-} from "../common/constants";
+import { GAME_HEIGHT, GAME_WIDTH, INVLUNERABILITY_FRAMES, PLAYER_SIZE, SERVER_UPDATE_RATE } from "../common/constants";
 import { normalize } from "../common/math";
 import { randomBetweenExclusive } from "../common/random";
 import { experienceRequiredForLevel } from "../common/shared";
 import { Enemy, Gem, InputState, Player, Position } from "../common/types";
-import { enemyDB, gemDB, SpellData, spellDB } from "./data";
+import { gemDB, SpellData, spellDB } from "./data";
+
 export interface PlayerUpdate {
   x: number;
   y: number;
@@ -156,14 +151,13 @@ export function castSpell(
   const spellData = spellDB[spell];
   switch (spellData.type) {
     case "aura":
-      const events = tickAura(
+      return tickAura(
         spellData,
         { x: player.x, y: player.y },
         player.id,
         player.level,
         enemies
       );
-      return events;
     default:
       return [];
   }
