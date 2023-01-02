@@ -3,3 +3,4 @@ export const GAME_HEIGHT = 600;
 export const SERVER_UPDATE_RATE = 16;
 export const INVLUNERABILITY_FRAMES = 140;
 export const PLAYER_SIZE = 16;
+export const ENEMY_SIZE = 16;

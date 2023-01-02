@@ -2,6 +2,7 @@ export interface GameState {
   players: Player[];
   enemies: Enemy[];
   gems: Gem[];
+  projectiles: Projectile[];
   id: string;
 }
 
@@ -61,4 +62,16 @@ export interface Enemy extends Position {
   damageMin: number;
   damageMax: number;
   gemType: string;
+}
+
+export interface Projectile extends Position {
+  id: string;
+  speed: number;
+  damage: number;
+  critical: boolean;
+  damageType: string;
+  lifetime: number;
+  fromId: string;
+  direction: Position;
+  hitEnemies: string[];
 }

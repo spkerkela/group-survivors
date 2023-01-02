@@ -6,6 +6,7 @@ export interface EnemyData {
   damageMax: number;
   gemType: string;
 }
+
 export type EnemyDB = { [key: string]: EnemyData };
 export const enemyDB: EnemyDB = {
   zombie: {
@@ -14,7 +15,7 @@ export const enemyDB: EnemyDB = {
     damageType: "cold",
     damageMin: 20,
     damageMax: 40,
-    gemType: "exp",
+    gemType: "exp"
   },
   bat: {
     hp: 20,
@@ -22,7 +23,7 @@ export const enemyDB: EnemyDB = {
     damageType: "poison",
     damageMin: 1,
     damageMax: 5,
-    gemType: "exp",
+    gemType: "exp"
   },
   skeleton: {
     hp: 200,
@@ -30,11 +31,12 @@ export const enemyDB: EnemyDB = {
     damageType: "melee",
     damageMin: 10,
     damageMax: 20,
-    gemType: "exp",
-  },
+    gemType: "exp"
+  }
 };
 
 export interface SpellData {
+  id: string;
   name: string;
   description: string;
   damageType: string;
@@ -46,11 +48,15 @@ export interface SpellData {
   cooldown: number;
   cooldownMultiplier: number;
   type: string;
+  lifetime: number;
+  speed: number;
 }
+
 export type SpellDB = { [key: string]: SpellData };
 
 export const spellDB: SpellDB = {
   damageAura: {
+    id: "damageAura",
     name: "Damage Aura",
     description: "Deals damage to enemies in a radius around you",
     damageType: "fire",
@@ -62,7 +68,25 @@ export const spellDB: SpellDB = {
     cooldown: 500,
     cooldownMultiplier: 1,
     type: "aura",
+    lifetime: 0,
+    speed: 0
   },
+  missile: {
+    id: "missile",
+    name: "Missile",
+    description: "Deals damage to a single target",
+    damageType: "cold",
+    baseDamage: 20,
+    critMultiplier: 2.0,
+    critChance: 0.1,
+    range: 100,
+    rangeMultiplier: 1,
+    cooldown: 1000,
+    cooldownMultiplier: 1,
+    type: "projectile-target",
+    lifetime: 5000,
+    speed: 10
+  }
 };
 
 export interface GemData {
@@ -76,6 +100,6 @@ export const gemDB: GemDB = {
   exp: {
     name: "Experience",
     type: "exp",
-    value: 25,
-  },
+    value: 25
+  }
 };

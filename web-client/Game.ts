@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import {
   GAME_HEIGHT,
   GAME_WIDTH,
-  INVLUNERABILITY_FRAMES,
+  INVLUNERABILITY_FRAMES
 } from "../common/constants";
 import { chooseRandom } from "../common/random";
 import { experienceRequiredForLevel } from "../common/shared";
@@ -14,15 +14,15 @@ import {
   instantiatePlayer,
   updateEnemy,
   updateGem,
-  updatePlayer,
+  updatePlayer
 } from "./middleware";
 import { assets } from "./assets";
 
 let pressedKeys = {};
-window.onkeyup = function (e: { keyCode: string | number }) {
+window.onkeyup = function(e: { keyCode: string | number }) {
   pressedKeys[e.keyCode] = false;
 };
-window.onkeydown = function (e: { keyCode: string | number }) {
+window.onkeydown = function(e: { keyCode: string | number }) {
   pressedKeys[e.keyCode] = true;
 };
 
@@ -36,12 +36,12 @@ export default class Game {
     let gameRef = this;
 
     const sceneConfig: Phaser.Types.Scenes.CreateSceneFromObjectConfig = {
-      preload: function () {
+      preload: function() {
         assets.forEach(({ id, url }) => {
           this.load.image(id, url);
         });
       },
-      create: function () {
+      create: function() {
         this.add.tileSprite(
           0,
           0,
@@ -55,14 +55,14 @@ export default class Game {
           height: 20,
           colorHex: 0x0000ff,
           value: 0,
-          maxValue: experienceRequiredForLevel(2),
+          maxValue: experienceRequiredForLevel(2)
         });
 
         gameState.players.forEach((p) => {
           instantiatePlayer(this, p);
         });
       },
-      update: function () {
+      update: function() {
         gameState.players.forEach((p) => {
           const player = this.children.getByName(p.id);
           if (p.id === gameRef.playerId) {
@@ -115,7 +115,31 @@ export default class Game {
             child.destroy();
           }
         });
-      },
+        gameState.projectiles.forEach((p) => {
+          const projectile = this.children.getByName(p.id);
+          if (projectile instanceof Phaser.GameObjects.Sprite) {
+            projectile.setPosition(p.x, p.y);
+          } else if (projectile == null) {
+            this.add
+              .sprite(p.x, p.y, "projectile")
+              .setName(p.id)
+              .setScale(2)
+              .setDepth(1);
+
+          }
+        });
+        // remove projectiles that are no longer in the game
+        const projectileIds = gameState.projectiles.map((p) => p.id);
+        this.children.each((child) => {
+          if (
+            child instanceof Phaser.GameObjects.Sprite &&
+            child.texture.key === "projectile" &&
+            !projectileIds.includes(child.name)
+          ) {
+            child.destroy();
+          }
+        });
+      }
     };
     this.game = new Phaser.Game({
       canvas: canvas,
@@ -125,12 +149,14 @@ export default class Game {
       roundPixels: false,
       pixelArt: true,
       scene: sceneConfig,
-      backgroundColor: "#170332",
+      backgroundColor: "#170332"
     });
   }
+
   private currentScene() {
     return this.game.scene.scenes[0];
   }
+
   removePlayer(id: string) {
     const player = this.currentScene().children.getByName(id);
     if (player instanceof Phaser.GameObjects.Sprite) {
@@ -156,7 +182,7 @@ export default class Game {
     player.getData("bar").setValue(serverPlayer.hp);
     this.experienceBar.setUpperBound(
       experienceRequiredForLevel(serverPlayer.level + 1) -
-        experienceRequiredForLevel(serverPlayer.level)
+      experienceRequiredForLevel(serverPlayer.level)
     );
   }
 
@@ -170,6 +196,7 @@ export default class Game {
       this.showDamage(amount, target.x, target.y, color);
     }
   }
+
   showDamage(amount: number, x: number, y: number, color: string = "red") {
     const scene = this.currentScene();
     if (scene == null) {
@@ -179,7 +206,7 @@ export default class Game {
       color: color,
       font: "bold 24px Arial",
       stroke: "#000000",
-      strokeThickness: 2,
+      strokeThickness: 2
     });
     text.setOrigin(0.5, 0.5);
     text.setShadow(2, 2, "#333333", 2, true, true);
@@ -192,7 +219,7 @@ export default class Game {
       ease: "Power1",
       onComplete: () => {
         text.destroy();
-      },
+      }
     });
   }
 
@@ -212,7 +239,7 @@ export default class Game {
         onComplete: () => {
           target.clearTint();
           target.setAlpha(1);
-        },
+        }
       });
     }
   }

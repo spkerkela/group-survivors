@@ -1,7 +1,7 @@
 import {
   GAME_HEIGHT,
   GAME_WIDTH,
-  SERVER_UPDATE_RATE,
+  SERVER_UPDATE_RATE
 } from "../common/constants";
 import { GameState, Gem, MoveUpdate, Player } from "../common/types";
 import {
@@ -13,7 +13,7 @@ import {
   removeDeadEnemies,
   updateGems,
   createPlayer,
-  createGem,
+  createGem, SpellProjectileEvent, updateProjectiles
 } from "./game-logic";
 import Spawner from "./Spawner";
 
@@ -35,29 +35,34 @@ export class SocketIOConnector implements Connector {
   events: {
     [key: string]: { name: string; data: any }[];
   };
+
   constructor(io) {
     this.io = io;
     this.gameState = {
       players: [],
       enemies: [],
       gems: [],
-      id: "",
+      projectiles: [],
+      id: ""
     };
     this.updates = { moves: {} };
     this.events = {};
   }
+
   pushEvent(name: string, playerId: string, data: any) {
     this.events[playerId].push({ name, data });
   }
+
   getPlayer(id: string) {
     return this.gameState.players.find((p) => p.id === id);
   }
+
   start(levelData: LevelData) {
     for (let i = 0; i < levelData.bots; i++) {
       this.gameState.players.push(
         createPlayer(`bot-${i}`, {
           x: Math.random() * GAME_WIDTH,
-          y: Math.random() * GAME_HEIGHT,
+          y: Math.random() * GAME_HEIGHT
         })
       );
     }
@@ -67,7 +72,7 @@ export class SocketIOConnector implements Connector {
       this.gameState.players.push(
         createPlayer(id, {
           x: levelData.playerStartPosition.x,
-          y: levelData.playerStartPosition.y,
+          y: levelData.playerStartPosition.y
         })
       );
       const newGameState: GameState = {
@@ -75,6 +80,7 @@ export class SocketIOConnector implements Connector {
         id: id,
         enemies: [],
         gems: [],
+        projectiles: []
       };
       socket.emit("begin", newGameState);
       let interval = setInterval(() => {
@@ -115,11 +121,13 @@ export class GameServer {
   connector: Connector;
   levelData: LevelData;
   spawner: Spawner;
+
   constructor(connector: Connector, levelData: LevelData) {
     this.connector = connector;
     this.levelData = levelData;
     this.spawner = new Spawner(levelData.enemyTable);
   }
+
   start() {
     this.connector.start(this.levelData);
     setInterval(() => {
@@ -129,13 +137,14 @@ export class GameServer {
       this.spawner.spawnEnemy(this.connector.gameState);
     }, 1000);
   }
+
   update() {
     const gemsToSpawn = this.connector.gameState.enemies
       .filter((enemy) => !enemy.alive)
       .map((enemy) =>
         createGem(`gem-${enemy.id}-${Math.random()}`, enemy.gemType, {
           x: enemy.x,
-          y: enemy.y,
+          y: enemy.y
         })
       );
 
@@ -150,13 +159,19 @@ export class GameServer {
       this.connector.gameState.players,
       this.connector.gameState.enemies
     );
+    const projectileEvents = updateProjectiles(
+      this.connector.gameState.projectiles,
+      this.connector.gameState.enemies
+    );
+
+    const spellDamageEvents = spellEvents.damageEvents.concat(projectileEvents);
 
     this.connector.gameState.players.forEach((p) => {
       if (p.id.startsWith("bot-")) {
         return;
       }
     });
-    spellEvents.forEach((spellEvent) => {
+    spellDamageEvents.forEach((spellEvent) => {
       const target = this.connector.gameState.enemies.find(
         (e) => e.id === spellEvent.targetId
       );
@@ -178,11 +193,31 @@ export class GameServer {
         this.connector.pushEvent(e.name, e.data.playerId, e.data);
       });
 
-    spellEvents
+    spellDamageEvents
       .filter((e) => !e.fromId.startsWith("bot-"))
       .forEach((e) => {
         this.connector.pushEvent("spell", e.fromId, e);
       });
+    spellEvents.projectileEvents
+      .filter((e) => !e.fromId.startsWith("bot-"))
+      .forEach((e) => {
+        this.connector.pushEvent("projectile", e.fromId, e);
+      });
+    this.connector.gameState.projectiles = this.connector.gameState.projectiles.concat(spellEvents.projectileEvents.map(
+      (e: SpellProjectileEvent) => ({
+        id: e.spellId,
+        x: e.position.x,
+        y: e.position.y,
+        direction: e.targetDirection,
+        damageType: e.damageType,
+        damage: e.damage,
+        critical: e.critical,
+        lifetime: e.lifetime,
+        fromId: e.fromId,
+        speed: e.speed,
+        hitEnemies: []
+      })
+    )).filter((p) => p.lifetime > 0);
     const { gemEvents, levelEvents } = updateGems(
       this.connector.gameState.gems,
       this.connector.gameState.players

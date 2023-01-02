@@ -3,6 +3,7 @@ import { SERVER_UPDATE_RATE } from "../common/constants";
 import { GameState } from "../common/types";
 import Game from "./Game";
 import { sendMoveMessage } from "./messages";
+
 const canvasElement = document.getElementById("canvas") as HTMLCanvasElement;
 import parser from "socket.io-msgpack-parser";
 
@@ -13,7 +14,8 @@ let gameState: GameState = {
   players: [],
   enemies: [],
   gems: [],
-  id: "",
+  projectiles: [],
+  id: ""
 };
 
 let game: Game | null = null;
@@ -65,6 +67,7 @@ socket.on("update", (newState: GameState) => {
   gameState.players = newState.players;
   gameState.enemies = newState.enemies;
   gameState.gems = newState.gems;
+  gameState.projectiles = newState.projectiles;
 });
 
 socket.on("spell", (data) => {

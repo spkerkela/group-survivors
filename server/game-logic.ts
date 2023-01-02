@@ -1,8 +1,15 @@
-import { GAME_HEIGHT, GAME_WIDTH, INVLUNERABILITY_FRAMES, PLAYER_SIZE, SERVER_UPDATE_RATE } from "../common/constants";
+import {
+  ENEMY_SIZE,
+  GAME_HEIGHT,
+  GAME_WIDTH,
+  INVLUNERABILITY_FRAMES,
+  PLAYER_SIZE,
+  SERVER_UPDATE_RATE
+} from "../common/constants";
 import { normalize } from "../common/math";
 import { randomBetweenExclusive } from "../common/random";
 import { experienceRequiredForLevel } from "../common/shared";
-import { Enemy, Gem, InputState, Player, Position } from "../common/types";
+import { Enemy, Gem, InputState, Player, Position, Projectile } from "../common/types";
 import { gemDB, SpellData, spellDB } from "./data";
 
 export interface PlayerUpdate {
@@ -87,8 +94,8 @@ export function updateEnemies(enemies: Enemy[], players: Player[]) {
             data: {
               playerId: player.id,
               damageType: enemy.damageType,
-              amount: damage,
-            },
+              amount: damage
+            }
           });
           player.invulnerabilityFrames = INVLUNERABILITY_FRAMES;
           player.hp -= damage;
@@ -110,6 +117,18 @@ export interface SpellDamageEvent {
   damage: number;
   damageType: string;
   critical: boolean;
+}
+
+export interface SpellProjectileEvent {
+  fromId: string;
+  position: Position;
+  targetDirection: Position;
+  spellId: string;
+  damage: number;
+  damageType: string;
+  critical: boolean;
+  lifetime: number;
+  speed: number;
 }
 
 function tickAura(
@@ -138,35 +157,94 @@ function tickAura(
       targetId: enemy.id,
       damage: damage * playerLevel,
       damageType: spellData.damageType,
-      critical: critical,
+      critical: critical
     };
   });
+}
+
+function shootAtNearestEnemy(spellData: SpellData, player: Player, enemies: Enemy[]): SpellProjectileEvent | null {
+  const nearestEnemy = enemies.reduce(
+    (nearest, enemy) => {
+      const distance = Math.sqrt(
+        Math.pow(enemy.x - player.x, 2) + Math.pow(enemy.y - player.y, 2)
+      );
+      if (enemy.alive && distance < nearest.distance) {
+        return { distance, enemy };
+      } else {
+        return nearest;
+      }
+    },
+    { distance: Infinity, enemy: null }
+  );
+  const { enemy, distance } = nearestEnemy;
+
+  if (enemy && enemy.alive) {
+    const x = enemy.x - player.x;
+    const y = enemy.y - player.y;
+    const { x: nx, y: ny } = normalize(x, y);
+    const direction = { x: nx, y: ny };
+    const critical = Math.random() < spellData.critChance + 0.01 * player.level;
+    const damage = critical ? spellData.baseDamage * spellData.critMultiplier : spellData.baseDamage;
+    return {
+      fromId: player.id,
+      position: { x: player.x, y: player.y },
+      targetDirection: direction,
+      spellId: spellData.id,
+      damage: damage * player.level,
+      damageType: spellData.damageType,
+      critical: critical,
+      lifetime: spellData.lifetime,
+      speed: spellData.speed
+    };
+  }
+  return null;
+}
+
+interface SpellCastEvent {
+  damageEvents: SpellDamageEvent[];
+  projectileEvents: SpellProjectileEvent[];
 }
 
 export function castSpell(
   spell: string,
   player: Player,
   enemies: Enemy[]
-): SpellDamageEvent[] {
+): SpellCastEvent {
   const spellData = spellDB[spell];
+  let result = {
+    damageEvents: [],
+    projectileEvents: []
+  };
   switch (spellData.type) {
     case "aura":
-      return tickAura(
+      result.damageEvents = tickAura(
         spellData,
         { x: player.x, y: player.y },
         player.id,
         player.level,
         enemies
       );
+      break;
+    case "projectile-target":
+      const projectileEvent = shootAtNearestEnemy(spellData, player, enemies);
+      if (projectileEvent) {
+        result.projectileEvents.push(projectileEvent);
+      }
+      break;
     default:
-      return [];
+      return result;
   }
+  return result;
 }
+
 export function updateSpells(
   players: Player[],
   enemies: Enemy[]
-): SpellDamageEvent[] {
-  let events = [];
+): SpellCastEvent {
+  let events: SpellCastEvent = {
+    damageEvents: [],
+    projectileEvents: []
+  };
   for (let i = 0; i < players.length; i++) {
     const player = players[i];
     if (player.alive) {
@@ -179,10 +257,12 @@ export function updateSpells(
         } else {
           spellData.cooldown = Math.max(
             spellDB[spell].cooldown *
-              (spellDB[spell].cooldownMultiplier - player.level * 0.01),
+            (spellDB[spell].cooldownMultiplier - player.level * 0.01),
             0.01
           );
-          events = events.concat(castSpell(spell, player, enemies));
+          const newEvents = castSpell(spell, player, enemies);
+          events.damageEvents = events.damageEvents.concat(newEvents.damageEvents);
+          events.projectileEvents = events.projectileEvents.concat(newEvents.projectileEvents);
         }
       }
     }
@@ -222,7 +302,7 @@ export function updateGems(
 ): { gemEvents: GemEvent[]; levelEvents: LevelEvent[] } {
   let events: { gemEvents: GemEvent[]; levelEvents: LevelEvent[] } = {
     gemEvents: [],
-    levelEvents: [],
+    levelEvents: []
   };
   for (let i = 0; i < gems.length; i++) {
     const gem = gems[i];
@@ -236,19 +316,52 @@ export function updateGems(
         if (distance < PLAYER_SIZE) {
           events.gemEvents.push({
             playerId: player.id,
-            gemId: gem.id,
+            gemId: gem.id
           });
           player.experience += gemDB[gem.type].value;
           while (checkPlayerExperience(player)) {
             events.levelEvents.push({
               playerId: player.id,
-              player: player,
+              player: player
             });
           }
         }
       }
     }
   }
+  return events;
+}
+
+export function updateProjectiles(projectiles: Projectile[], enemies: Enemy[]): SpellDamageEvent[] {
+  projectiles.forEach((projectile) => {
+    projectile.lifetime -= SERVER_UPDATE_RATE;
+  });
+  const aliveProjectiles = projectiles.filter((projectile) => projectile.lifetime > 0);
+  const events: SpellDamageEvent[] = [];
+  aliveProjectiles.forEach((projectile) => {
+    projectile.x += projectile.direction.x * projectile.speed;
+    projectile.y += projectile.direction.y * projectile.speed;
+    enemies.forEach((enemy) => {
+      if (enemy.alive) {
+        const distance = Math.sqrt(
+          Math.pow(enemy.x - projectile.x, 2) + Math.pow(enemy.y - projectile.y, 2)
+        );
+        if (distance < ENEMY_SIZE) {
+          // an enemy can only be hit once per projectile
+          if (!projectile.hitEnemies.includes(enemy.id)) {
+            projectile.hitEnemies.push(enemy.id);
+            events.push({
+              fromId: projectile.fromId,
+              targetId: enemy.id,
+              damage: projectile.damage,
+              damageType: projectile.damageType,
+              critical: projectile.critical
+            });
+          }
+        }
+      }
+    });
+  });
   return events;
 }
 
@@ -267,9 +380,13 @@ export function createPlayer(id: string, { x, y }: Position): Player {
     spells: {
       damageAura: {
         cooldown: 0,
-        level: 1,
+        level: 1
       },
-    },
+      missile: {
+        cooldown: 0,
+        level: 1
+      }
+    }
   };
 }
 
@@ -282,6 +399,6 @@ export function createGem(
     id: id,
     x: x,
     y: y,
-    type: gemType,
+    type: gemType
   };
 }

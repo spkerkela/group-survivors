@@ -5,6 +5,7 @@ const skeletonAsset = new URL("assets/skull.png", import.meta.url);
 const tombstoneAsset = new URL("assets/tombstone.png", import.meta.url);
 const diamondAsset = new URL("assets/diamond.png", import.meta.url);
 const backgroundAsset = new URL("assets/bg.png", import.meta.url);
+const projectileAsset = new URL("assets/projectile.png", import.meta.url);
 
 export const assets = [
   {
@@ -19,5 +20,6 @@ export const assets = [
   { id: "skeleton", url: skeletonAsset.href },
   { id: "tombstone", url: tombstoneAsset.href },
   { id: "diamond", url: diamondAsset.href },
-  { id: "background", url: backgroundAsset.href }
+  { id: "background", url: backgroundAsset.href },
+  { id: "projectile", url: projectileAsset.href }
 ];
