@@ -187,11 +187,6 @@ export class GameServer {
 
     const spellDamageEvents = spellEvents.damageEvents.concat(projectileEvents);
 
-    this.connector.gameState.players.forEach((p) => {
-      if (p.id.startsWith("bot-")) {
-        return;
-      }
-    });
     spellDamageEvents.forEach((spellEvent) => {
       const target = this.connector.gameState.enemies.find(
         (e) => e.id === spellEvent.targetId
@@ -207,7 +202,15 @@ export class GameServer {
       this.connector.gameState.enemies,
       this.connector.gameState.players
     );
-
+    this.connector.gameState.players.forEach((p) => {
+      if (p.id.startsWith("bot-")) {
+        return;
+      }
+      if (!p.alive) {
+        this.connector.lobby.push(p.id);
+        return;
+      }
+    });
     enemyEvents
       .filter((e) => !e.data.playerId.startsWith("bot-"))
       .forEach((e) => {
