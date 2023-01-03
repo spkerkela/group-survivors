@@ -47,12 +47,14 @@ export function updatePlayer(
       .getData("bar")
       .setPosition({ x: serverPlayer.x, y: serverPlayer.y + 26 });
   } else {
-    if (player.texture.key !== "tombstone") {
-      player.setTexture("tombstone");
-      player.removeAllListeners();
-      player.getData("bar").destroy();
-      player.getData("text").destroy();
-    }
+    const scene = player.scene;
+    scene.add
+      .sprite(serverPlayer.x, serverPlayer.y, "tombstone")
+      .setOrigin(0.5, 0.5)
+      .setName(`grave-${serverPlayer.screenName}`);
+    player.getData("bar").destroy();
+    player.getData("text").destroy();
+    player.destroy();
   }
 }
 

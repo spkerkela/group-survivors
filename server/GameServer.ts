@@ -79,6 +79,9 @@ export class SocketIOConnector implements Connector {
       socket.on("join", (screenName: string) => {
         if (this.lobby.includes(id)) {
           this.lobby = this.lobby.filter((p) => p !== id);
+          this.gameState.players = this.gameState.players.filter(
+            (p) => p.id !== id
+          );
           this.gameState.players.push(
             createPlayer(id, sanitizeName(screenName), {
               x: levelData.playerStartPosition.x,
