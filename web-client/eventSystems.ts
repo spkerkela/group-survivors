@@ -1,14 +1,18 @@
 import { Socket } from "socket.io-client";
-import { DefaultEventsMap } from "socket.io/dist/typed-events";
 import EventSystem from "../common/EventSystem";
-import { GameState, MoveUpdate } from "../common/types";
+import {
+  GameState,
+  FromServerEventMap,
+  MoveUpdate,
+  ToServerEventMap,
+} from "../common/types";
 import { sendJoinMessage, sendMoveMessage } from "./messages";
 
 export const globalEventSystem = new EventSystem();
 
 export function initServerEventSystem(
   serverEventSystem: EventSystem,
-  io: Socket<DefaultEventsMap, DefaultEventsMap>
+  io: Socket<FromServerEventMap, ToServerEventMap>
 ) {
   io.on("begin", (gameState: GameState) => {
     serverEventSystem.dispatchEvent("begin", gameState);

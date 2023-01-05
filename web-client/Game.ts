@@ -222,13 +222,6 @@ export default class Game {
     return this.phaserInstance.scene.scenes[0];
   }
 
-  removePlayer(id: string) {
-    const player = this.currentScene().children.getByName(id);
-    if (player instanceof Phaser.GameObjects.Sprite) {
-      player.destroy();
-    }
-  }
-
   getInputState() {
     const up = pressedKeys[38] || pressedKeys[87];
     const down = pressedKeys[40] || pressedKeys[83];

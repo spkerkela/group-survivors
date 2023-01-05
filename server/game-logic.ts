@@ -63,8 +63,11 @@ function updateBots(players: Player[]) {
   }
 }
 
-export function updateEnemies(enemies: Enemy[], players: Player[]) {
-  let events = [];
+export function updateEnemies(
+  enemies: Enemy[],
+  players: Player[]
+): DamageEvent[] {
+  let events: DamageEvent[] = [];
   for (let i = 0; i < enemies.length; i++) {
     const enemy = enemies[i];
     if (!enemy.alive) continue;
@@ -97,12 +100,9 @@ export function updateEnemies(enemies: Enemy[], players: Player[]) {
             enemy.damageMax
           );
           events.push({
-            name: "damage",
-            data: {
-              playerId: player.id,
-              damageType: enemy.damageType,
-              amount: damage,
-            },
+            playerId: player.id,
+            damageType: enemy.damageType,
+            amount: damage,
           });
           player.invulnerabilityFrames = INVLUNERABILITY_FRAMES;
           player.hp -= damage;
@@ -303,6 +303,12 @@ function checkPlayerExperience(player: Player): boolean {
     return true;
   }
   return false;
+}
+
+interface DamageEvent {
+  playerId: string;
+  damageType: string;
+  amount: number;
 }
 
 export interface GemEvent {

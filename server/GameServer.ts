@@ -216,7 +216,7 @@ export class GameServer {
       }
     });
     enemyEvents.forEach((e) => {
-      this.connector.pushEvent(e.name, e.data.playerId, e.data);
+      this.connector.pushEvent("damage", e.playerId, e);
     });
 
     spellDamageEvents.forEach((e) => {

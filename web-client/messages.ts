@@ -1,4 +1,9 @@
-import { MoveUpdate } from "../common/types";
+import { Socket } from "socket.io-client";
+import {
+  FromServerEventMap,
+  MoveUpdate,
+  ToServerEventMap,
+} from "../common/types";
 
 export function sendMoveMessage(
   socket: { emit: (name: string, update: MoveUpdate) => void },
@@ -8,7 +13,7 @@ export function sendMoveMessage(
 }
 
 export function sendJoinMessage(
-  socket: { emit: (name: string, joinName: string) => void },
+  socket: Socket<FromServerEventMap, ToServerEventMap>,
   name: string
 ) {
   socket.emit("join", name);

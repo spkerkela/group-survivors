@@ -1,3 +1,5 @@
+import { LevelEvent, SpellDamageEvent } from "../server/game-logic";
+
 export interface GameState {
   players: Player[];
   enemies: Enemy[];
@@ -77,3 +79,18 @@ export interface Projectile extends Position {
   maxPierceCount: number;
   hitEnemies: string[];
 }
+
+export type FromServerEventMap = {
+  begin: (gameState: GameState) => void;
+  disconnect: () => void;
+  spell: (data: SpellDamageEvent) => void;
+  update: (gameState: GameState) => void;
+  damage: (data: SpellDamageEvent) => void;
+  level: (data: LevelEvent) => void;
+  move: (moveMessage: MoveUpdate) => void;
+};
+
+export type ToServerEventMap = {
+  join: (name: string) => void;
+  move: (moveUpdate: MoveUpdate) => void;
+};
