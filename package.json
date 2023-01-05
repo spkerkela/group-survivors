@@ -20,7 +20,7 @@
   "homepage": "https://github.com/spkerkela/group-survivors#readme",
   "devDependencies": {
     "@playwright/test": "^1.29.1",
-    "buffer": "^6.0.0",
+    "buffer": "^5.5.0",
     "parcel": "^2.8.2",
     "playwright": "^1.29.1",
     "prettier": "^2.8.1",
