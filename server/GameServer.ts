@@ -69,6 +69,7 @@ export class Connector {
     this.eventSystems.gameEventSystem.addEventListener(
       "connection",
       (id: string, connection: EventSystem) => {
+        this.eventSystems.connectionSystems[id] = connection;
         this.lobby.push(id);
         this.events[id] = [];
         connection.addEventListener("join", (screenName: string) => {
@@ -93,21 +94,13 @@ export class Connector {
           projectiles: [],
         };
         connection.dispatchEvent("begin", newGameState);
-        let interval = setInterval(() => {
-          connection.dispatchEvent("update", { ...this.gameState, id: id });
-          if (this.events[id] != null) {
-            this.events[id].forEach((e) => {
-              connection.dispatchEvent(e.name, e.data);
-            });
-          }
-          this.events[id] = [];
-        }, SERVER_UPDATE_RATE);
         connection.addEventListener("disconnect", () => {
           this.gameState.players = this.gameState.players.filter(
             (p) => p.id !== id
           );
+          this.lobby = this.lobby.filter((p) => p !== id);
           delete this.events[id];
-          clearInterval(interval);
+          delete this.eventSystems.connectionSystems[id];
         });
         connection.addEventListener("move", (data: MoveUpdate) => {
           if (data.id !== id) return;
@@ -124,9 +117,22 @@ export class Connector {
       }
     );
   }
+  update() {
+    Object.entries(this.eventSystems.connectionSystems).forEach(
+      ([id, connection]) => {
+        connection.dispatchEvent("update", { ...this.gameState, id: id });
+        if (this.events[id] != null) {
+          this.events[id].forEach((e) => {
+            connection.dispatchEvent(e.name, e.data);
+          });
+        }
+        this.events[id] = [];
+      }
+    );
+  }
 }
 
-interface LevelData {
+export interface LevelData {
   name: string;
   bots: number;
   playerStartPosition: { x: number; y: number };
@@ -142,6 +148,7 @@ export class GameServer {
     this.connector = connector;
     this.levelData = levelData;
     this.spawner = new Spawner(levelData.enemyTable);
+    this.connector.start(this.levelData);
   }
 
   private playersAlive() {
@@ -149,8 +156,8 @@ export class GameServer {
   }
 
   start() {
-    this.connector.start(this.levelData);
     setInterval(() => {
+      this.connector.update();
       if (this.playersAlive() || this.connector.lobby.length > 0) {
         this.update();
       }
