@@ -23,10 +23,21 @@ startButton.onclick = () => {
   }
   errorDiv.innerText = "";
   serverEventSystem.dispatchEvent("join", sanitizeName(nameInput.value));
+  globalEventSystem.dispatchEvent("disableJoinUI");
 };
 
 globalEventSystem.addEventListener("level", (level: number) => {
   levelIndicatorDiv.innerText = `Level: ${level}`;
+});
+
+globalEventSystem.addEventListener("disableJoinUI", () => {
+  startButton.disabled = true;
+  nameInput.disabled = true;
+});
+
+globalEventSystem.addEventListener("enableJoinUI", () => {
+  startButton.disabled = false;
+  nameInput.disabled = false;
 });
 
 const game = new Game(canvasElement, serverEventSystem);

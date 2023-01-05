@@ -5,7 +5,13 @@ import {
 } from "../common/constants";
 import EventSystem from "../common/EventSystem";
 import { sanitizeName } from "../common/shared";
-import { GameState, Gem, MoveUpdate, Player } from "../common/types";
+import {
+  GameState,
+  Gem,
+  MoveUpdate,
+  Player,
+  StaticObject,
+} from "../common/types";
 import { ServerEventSystems } from "./eventSystems";
 
 import {
@@ -41,6 +47,7 @@ export class Connector {
       gems: [],
       projectiles: [],
       id: "",
+      staticObjects: [],
     };
     this.updates = { moves: {} };
     this.events = {};
@@ -92,6 +99,7 @@ export class Connector {
           enemies: [],
           gems: [],
           projectiles: [],
+          staticObjects: levelData.staticObjects,
         };
         connection.dispatchEvent("begin", newGameState);
         connection.addEventListener("disconnect", () => {
@@ -137,6 +145,7 @@ export interface LevelData {
   bots: number;
   playerStartPosition: { x: number; y: number };
   enemyTable: { [key: string]: number };
+  staticObjects: StaticObject[];
 }
 
 export class GameServer {
@@ -274,6 +283,16 @@ export class GameServer {
     );
     levelEvents.forEach((e) => {
       this.connector.pushEvent("level", e.playerId, e);
+    });
+    this.connector.gameState.players.forEach((p) => {
+      if (!p.alive) {
+        this.connector.gameState.staticObjects.push({
+          id: `grave-${p.id}`,
+          type: "grave",
+          x: p.x,
+          y: p.y,
+        });
+      }
     });
     this.connector.gameState.players = this.connector.gameState.players.filter(
       (p) => p.alive

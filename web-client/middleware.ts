@@ -1,4 +1,11 @@
-import { Enemy, Gem, Player } from "../common/types";
+import {
+  Enemy,
+  Gem,
+  Player,
+  Position,
+  Projectile,
+  StaticObject,
+} from "../common/types";
 import Bar from "./Bar";
 
 export function instantiatePlayer(scene: Phaser.Scene, player: Player) {
@@ -12,6 +19,7 @@ export function instantiatePlayer(scene: Phaser.Scene, player: Player) {
     .setOrigin(0.5, 0.5)
     .setShadow(2, 2, "#333333", 2, true, true);
   newPlayer.setData("text", playerText);
+  newPlayer.setData("type", "player");
   newPlayer.setData(
     "bar",
     new Bar(scene, {
@@ -39,23 +47,18 @@ export function updatePlayer(
   player: Phaser.GameObjects.Sprite,
   serverPlayer: Player
 ) {
-  if (serverPlayer.alive) {
-    player.setPosition(serverPlayer.x, serverPlayer.y);
-    player.getData("text").setPosition(serverPlayer.x, serverPlayer.y - 32);
-    player.setData("health", serverPlayer.hp);
-    player
-      .getData("bar")
-      .setPosition({ x: serverPlayer.x, y: serverPlayer.y + 26 });
-  } else {
-    const scene = player.scene;
-    scene.add
-      .sprite(serverPlayer.x, serverPlayer.y, "tombstone")
-      .setOrigin(0.5, 0.5)
-      .setName(`grave-${serverPlayer.screenName}`);
-    player.getData("bar").destroy();
-    player.getData("text").destroy();
-    player.destroy();
-  }
+  player.setPosition(serverPlayer.x, serverPlayer.y);
+  player.getData("text").setPosition(serverPlayer.x, serverPlayer.y - 32);
+  player.setData("health", serverPlayer.hp);
+  player
+    .getData("bar")
+    .setPosition({ x: serverPlayer.x, y: serverPlayer.y + 26 });
+}
+
+export function destroyPlayer(player: Phaser.GameObjects.Sprite) {
+  player.getData("bar")?.destroy();
+  player.getData("text")?.destroy();
+  player.destroy();
 }
 
 export function updateEnemy(
@@ -67,6 +70,7 @@ export function updateEnemy(
 
 export function instantiateEnemy(scene: Phaser.Scene, enemy: Enemy) {
   const newEnemy = scene.add.sprite(enemy.x, enemy.y, enemy.type);
+  newEnemy.setData("type", "enemy");
   newEnemy.setName(enemy.id);
   newEnemy.setOrigin(0.5, 0.5);
   return newEnemy;
@@ -74,12 +78,92 @@ export function instantiateEnemy(scene: Phaser.Scene, enemy: Enemy) {
 
 export function instantiateGem(scene: Phaser.Scene, gem: Gem) {
   const newGem = scene.add.sprite(gem.x, gem.y, "diamond");
+  newGem.setData("type", "gem");
   newGem.setName(gem.id);
   newGem.setScale(0.5);
   newGem.setOrigin(0.5, 0.5);
   return newGem;
 }
 
-export function updateGem(gem: Phaser.GameObjects.Sprite, serverGem: Gem) {
-  gem.setPosition(serverGem.x, serverGem.y);
+export function updateProjectile(
+  projectile: Phaser.GameObjects.Sprite,
+  serverProjectile: Projectile
+) {
+  projectile.setPosition(serverProjectile.x, serverProjectile.y);
+}
+
+export function instantiateProjectile(
+  scene: Phaser.Scene,
+  projectile: Projectile
+) {
+  const newProjectile = scene.add.sprite(
+    projectile.x,
+    projectile.y,
+    "projectile"
+  );
+  newProjectile.setData("type", "projectile");
+  newProjectile.setName(projectile.id);
+  newProjectile.setOrigin(0.5, 0.5);
+  return newProjectile;
+}
+
+export function simpleDestroy(gameObject: Phaser.GameObjects.Sprite) {
+  gameObject.destroy();
+}
+
+export function instantiateStaticObject(
+  scene: Phaser.Scene,
+  staticObject: StaticObject
+) {
+  const newStaticObject = scene.add.sprite(
+    staticObject.x,
+    staticObject.y,
+    staticObject.type
+  );
+  newStaticObject.setName(staticObject.id);
+  newStaticObject.setOrigin(0.5, 0.5);
+  newStaticObject.setData("type", "staticObject");
+  return newStaticObject;
+}
+
+export function simpleUpdate(
+  gameObject: Phaser.GameObjects.Sprite,
+  obj: Position
+) {
+  gameObject.setPosition(obj.x, obj.y);
+}
+
+export function updateGameObject<T extends Position>(
+  scene: Phaser.Scene,
+  id: string,
+  obj: T,
+  instantiateFn: (scene: Phaser.Scene, obj: T) => Phaser.GameObjects.Sprite,
+  updateFn: (
+    gameObject: Phaser.GameObjects.Sprite,
+    obj: T
+  ) => void = simpleUpdate
+) {
+  const gameObject = scene.children.getByName(id);
+  if (gameObject instanceof Phaser.GameObjects.Sprite) {
+    updateFn(gameObject, obj);
+  } else if (gameObject == null) {
+    instantiateFn(scene, obj);
+  }
+}
+
+export function removeInvalidGameObjects(
+  scene: Phaser.Scene,
+  type: string,
+  validIds: string[],
+  destroyFn: (gameObject: Phaser.GameObjects.Sprite) => void = simpleDestroy
+) {
+  scene.children.each((child) => {
+    if (
+      child instanceof Phaser.GameObjects.Sprite &&
+      child.getData("type") === type &&
+      !validIds.includes(child.name)
+    ) {
+      destroyFn(child);
+    }
+  });
 }

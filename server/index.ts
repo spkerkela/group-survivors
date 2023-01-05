@@ -45,6 +45,7 @@ const gameServer = new GameServer(new Connector(events), {
     skeleton: 5,
     bat: 200,
   },
+  staticObjects: [],
 });
 
 gameServer.start();

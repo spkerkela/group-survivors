@@ -10,11 +10,15 @@ import { experienceRequiredForLevel } from "../common/shared";
 import { GameState, Player, Position } from "../common/types";
 import Bar from "./Bar";
 import {
+  destroyPlayer,
   instantiateEnemy,
   instantiateGem,
   instantiatePlayer,
+  instantiateProjectile,
+  instantiateStaticObject,
+  removeInvalidGameObjects,
   updateEnemy,
-  updateGem,
+  updateGameObject,
   updatePlayer,
 } from "./middleware";
 import { assets } from "./assets";
@@ -56,6 +60,7 @@ export default class Game {
       gems: [],
       projectiles: [],
       id: "",
+      staticObjects: [],
     };
     const sceneConfig: Phaser.Types.Scenes.CreateSceneFromObjectConfig = {
       preload: function () {
@@ -86,80 +91,43 @@ export default class Game {
       },
       update: function () {
         gameRef.gameState.players.forEach((p) => {
-          const player = this.children.getByName(p.id);
           if (p.id === gameRef.gameState.id) {
             gameRef.experienceBar.setValue(
               p.experience - experienceRequiredForLevel(p.level)
             );
           }
-          if (player instanceof Phaser.GameObjects.Sprite) {
-            updatePlayer(player, p);
-          } else if (player == null && p.alive) {
-            instantiatePlayer(this, p);
-          }
+          updateGameObject(this, p.id, p, instantiatePlayer, updatePlayer);
         });
         const playerIds = gameRef.gameState.players.map((p) => p.id);
         // remove players that are no longer in the game
-        this.children.each((child) => {
-          if (
-            child instanceof Phaser.GameObjects.Sprite &&
-            !playerIds.includes(child.name)
-          ) {
-            child.getData("bar")?.destroy();
-            child.destroy();
-          }
-        });
-        gameRef.gameState.enemies.forEach((e) => {
-          const enemy = this.children.getByName(e.id);
-          if (enemy instanceof Phaser.GameObjects.Sprite) {
-            updateEnemy(enemy, e);
-            enemy.setPosition(e.x, e.y);
-          } else if (enemy == null) {
-            instantiateEnemy(this, e);
-          }
-        });
-        gameRef.gameState.gems.forEach((g) => {
-          const gem = this.children.getByName(g.id);
-          if (gem instanceof Phaser.GameObjects.Sprite) {
-            updateGem(gem, g);
-          } else if (gem == null) {
-            instantiateGem(this, g);
-          }
-        });
-        // remove gems that are no longer in the game
+        removeInvalidGameObjects(this, "player", playerIds, destroyPlayer);
+
+        gameRef.gameState.enemies.forEach((e) =>
+          updateGameObject(this, e.id, e, instantiateEnemy)
+        );
+        const enemyIds = gameRef.gameState.enemies.map((e) => e.id);
+        removeInvalidGameObjects(this, "enemy", enemyIds);
+
+        gameRef.gameState.gems.forEach((g) =>
+          updateGameObject(this, g.id, g, instantiateGem)
+        );
         const gemIds = gameRef.gameState.gems.map((g) => g.id);
-        this.children.each((child) => {
-          if (
-            child instanceof Phaser.GameObjects.Sprite &&
-            child.texture.key === "diamond" &&
-            !gemIds.includes(child.name)
-          ) {
-            child.destroy();
-          }
-        });
+        removeInvalidGameObjects(this, "gem", gemIds);
         gameRef.gameState.projectiles.forEach((p) => {
-          const projectile = this.children.getByName(p.id);
-          if (projectile instanceof Phaser.GameObjects.Sprite) {
-            projectile.setPosition(p.x, p.y);
-          } else if (projectile == null) {
-            this.add
-              .sprite(p.x, p.y, "projectile")
-              .setName(p.id)
-              .setScale(2)
-              .setDepth(1);
-          }
+          updateGameObject(this, p.id, p, instantiateProjectile);
         });
-        // remove projectiles that are no longer in the game
+
         const projectileIds = gameRef.gameState.projectiles.map((p) => p.id);
-        this.children.each((child) => {
-          if (
-            child instanceof Phaser.GameObjects.Sprite &&
-            child.texture.key === "projectile" &&
-            !projectileIds.includes(child.name)
-          ) {
-            child.destroy();
-          }
+        removeInvalidGameObjects(this, "projectile", projectileIds);
+
+        gameRef.gameState.staticObjects.forEach((s) => {
+          updateGameObject(this, s.id, s, instantiateStaticObject);
         });
+
+        const staticObjectIds = gameRef.gameState.staticObjects.map(
+          (s) => s.id
+        );
+        removeInvalidGameObjects(this, "staticObject", staticObjectIds);
       },
     };
     this.phaserInstance = new Phaser.Game({
@@ -188,6 +156,7 @@ export default class Game {
       const player = this.gameState.players.find(
         (p) => p.id === this.gameState.id
       );
+      if (!player) return;
       const color = colorFromDamageType(damageType);
       this.showDamage(amount, player, color);
       this.flashWhite(player.id);
@@ -210,6 +179,11 @@ export default class Game {
       this.gameState.enemies = newState.enemies;
       this.gameState.gems = newState.gems;
       this.gameState.projectiles = newState.projectiles;
+      this.gameState.staticObjects = newState.staticObjects;
+      const player = newState.players.find((p) => p.id === this.gameState.id);
+      if (player == null || !player.alive) {
+        globalEventSystem.dispatchEvent("enableJoinUI");
+      }
     });
     serverEventSystem.addEventListener("disconnect", () => {
       if (inputInterval) {

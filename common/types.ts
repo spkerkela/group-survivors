@@ -10,6 +10,7 @@ export interface GameState {
   enemies: Enemy[];
   gems: Gem[];
   projectiles: Projectile[];
+  staticObjects: StaticObject[];
   id: string;
 }
 
@@ -25,6 +26,11 @@ export interface Circle extends Position {
 export interface Rectangle extends Position {
   width: number;
   height: number;
+}
+
+export interface StaticObject extends Position {
+  id: string;
+  type: string;
 }
 
 export interface InputState {

@@ -10,16 +10,16 @@ const projectileAsset = new URL("assets/projectile.png", import.meta.url);
 export const assets = [
   {
     id: "player",
-    url: playerAsset.href
+    url: playerAsset.href,
   },
   {
     id: "bat",
-    url: batAsset.href
+    url: batAsset.href,
   },
   { id: "zombie", url: zombieAsset.href },
   { id: "skeleton", url: skeletonAsset.href },
-  { id: "tombstone", url: tombstoneAsset.href },
+  { id: "grave", url: tombstoneAsset.href },
   { id: "diamond", url: diamondAsset.href },
   { id: "background", url: backgroundAsset.href },
-  { id: "projectile", url: projectileAsset.href }
+  { id: "projectile", url: projectileAsset.href },
 ];

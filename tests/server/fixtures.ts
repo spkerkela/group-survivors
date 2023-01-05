@@ -9,4 +9,5 @@ export const levelData: LevelData = {
     skeleton: 5,
     bat: 200,
   },
+  staticObjects: [],
 };
