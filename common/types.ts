@@ -1,4 +1,9 @@
-import { LevelEvent, SpellDamageEvent } from "../server/game-logic";
+import {
+  DamageEvent,
+  LevelEvent,
+  SpellDamageEvent,
+  SpellProjectileEvent,
+} from "../server/game-logic";
 
 export interface GameState {
   players: Player[];
@@ -85,12 +90,14 @@ export type FromServerEventMap = {
   disconnect: () => void;
   spell: (data: SpellDamageEvent) => void;
   update: (gameState: GameState) => void;
-  damage: (data: SpellDamageEvent) => void;
+  damage: (data: DamageEvent) => void;
   level: (data: LevelEvent) => void;
   move: (moveMessage: MoveUpdate) => void;
+  projectile: (projectile: SpellProjectileEvent) => void;
 };
 
 export type ToServerEventMap = {
+  connection: (any) => void;
   join: (name: string) => void;
   move: (moveUpdate: MoveUpdate) => void;
 };

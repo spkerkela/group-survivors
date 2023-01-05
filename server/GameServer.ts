@@ -3,8 +3,11 @@ import {
   GAME_WIDTH,
   SERVER_UPDATE_RATE,
 } from "../common/constants";
+import EventSystem from "../common/EventSystem";
 import { sanitizeName } from "../common/shared";
 import { GameState, Gem, MoveUpdate, Player } from "../common/types";
+import { ServerEventSystems } from "./eventSystems";
+
 import {
   createMoveUpdate,
   PlayerUpdate,
@@ -20,18 +23,7 @@ import {
 } from "./game-logic";
 import Spawner from "./Spawner";
 
-export interface Connector {
-  start: (levelData: LevelData) => void;
-  gameState: GameState;
-  updates: {
-    moves: { [key: string]: PlayerUpdate };
-  };
-  lobby: string[];
-  pushEvent: (name: string, playerId: string, data: any) => void;
-}
-
-export class SocketIOConnector implements Connector {
-  io: any;
+export class Connector {
   gameState: GameState;
   updates: {
     moves: { [key: string]: PlayerUpdate };
@@ -39,10 +31,10 @@ export class SocketIOConnector implements Connector {
   events: {
     [key: string]: { name: string; data: any }[];
   };
+  eventSystems: ServerEventSystems;
   lobby: string[];
 
-  constructor(io) {
-    this.io = io;
+  constructor(eventSystems: ServerEventSystems) {
     this.gameState = {
       players: [],
       enemies: [],
@@ -53,6 +45,7 @@ export class SocketIOConnector implements Connector {
     this.updates = { moves: {} };
     this.events = {};
     this.lobby = [];
+    this.eventSystems = eventSystems;
   }
 
   pushEvent(name: string, playerId: string, data: any) {
@@ -73,57 +66,63 @@ export class SocketIOConnector implements Connector {
         })
       );
     }
-    this.io.on("connection", (socket) => {
-      const id = socket.id;
-      this.lobby.push(id);
-      this.events[id] = [];
-      socket.on("join", (screenName: string) => {
-        if (this.lobby.includes(id)) {
-          this.lobby = this.lobby.filter((p) => p !== id);
+    this.eventSystems.gameEventSystem.addEventListener(
+      "connection",
+      (id: string, connection: EventSystem) => {
+        this.lobby.push(id);
+        this.events[id] = [];
+        connection.addEventListener("join", (screenName: string) => {
+          if (this.lobby.includes(id)) {
+            this.lobby = this.lobby.filter((p) => p !== id);
+            this.gameState.players = this.gameState.players.filter(
+              (p) => p.id !== id
+            );
+            this.gameState.players.push(
+              createPlayer(id, sanitizeName(screenName), {
+                x: levelData.playerStartPosition.x,
+                y: levelData.playerStartPosition.y,
+              })
+            );
+          }
+        });
+        const newGameState: GameState = {
+          players: this.gameState.players,
+          id: id,
+          enemies: [],
+          gems: [],
+          projectiles: [],
+        };
+        connection.dispatchEvent("begin", newGameState);
+        let interval = setInterval(() => {
+          connection.dispatchEvent("update", { ...this.gameState, id: id });
+          if (this.events[id] != null) {
+            this.events[id].forEach((e) => {
+              connection.dispatchEvent(e.name, e.data);
+            });
+          }
+          this.events[id] = [];
+        }, SERVER_UPDATE_RATE);
+        connection.addEventListener("disconnect", () => {
           this.gameState.players = this.gameState.players.filter(
             (p) => p.id !== id
           );
-          this.gameState.players.push(
-            createPlayer(id, sanitizeName(screenName), {
-              x: levelData.playerStartPosition.x,
-              y: levelData.playerStartPosition.y,
-            })
-          );
-        }
-      });
-
-      const newGameState: GameState = {
-        players: this.gameState.players,
-        id: id,
-        enemies: [],
-        gems: [],
-        projectiles: [],
-      };
-      socket.emit("begin", newGameState);
-      let interval = setInterval(() => {
-        socket.emit("update", { ...this.gameState, id: id });
-        if (this.events[id] != null) {
-          this.events[id].forEach((e) => {
-            socket.emit(e.name, e.data);
-          });
-        }
-        this.events[id] = [];
-      }, SERVER_UPDATE_RATE);
-      socket.on("disconnect", () => {
-        this.gameState.players = this.gameState.players.filter(
-          (p) => p.id !== id
-        );
-        delete this.events[id];
-        clearInterval(interval);
-      });
-      socket.on("move", (data: MoveUpdate) => {
-        if (data.id !== id) return;
-        if (this.getPlayer(id)) {
-          const { up, down, left, right } = data;
-          this.updates.moves[id] = createMoveUpdate({ up, down, left, right });
-        }
-      });
-    });
+          delete this.events[id];
+          clearInterval(interval);
+        });
+        connection.addEventListener("move", (data: MoveUpdate) => {
+          if (data.id !== id) return;
+          if (this.getPlayer(id)) {
+            const { up, down, left, right } = data;
+            this.updates.moves[id] = createMoveUpdate({
+              up,
+              down,
+              left,
+              right,
+            });
+          }
+        });
+      }
+    );
   }
 }
 

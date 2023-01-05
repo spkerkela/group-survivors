@@ -305,7 +305,7 @@ function checkPlayerExperience(player: Player): boolean {
   return false;
 }
 
-interface DamageEvent {
+export interface DamageEvent {
   playerId: string;
   damageType: string;
   amount: number;
