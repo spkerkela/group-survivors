@@ -3,10 +3,11 @@ import {
   GAME_HEIGHT,
   GAME_WIDTH,
   INVLUNERABILITY_FRAMES,
+  SERVER_UPDATE_RATE,
 } from "../common/constants";
 import { chooseRandom } from "../common/random";
 import { experienceRequiredForLevel } from "../common/shared";
-import { GameState, Player } from "../common/types";
+import { GameState, Player, Position } from "../common/types";
 import Bar from "./Bar";
 import {
   instantiateEnemy,
@@ -17,6 +18,22 @@ import {
   updatePlayer,
 } from "./middleware";
 import { assets } from "./assets";
+import EventSystem from "../common/EventSystem";
+import { globalEventSystem } from "./eventSystems";
+const colorFromDamageType = (damageType: string) => {
+  switch (damageType) {
+    case "fire":
+      return "red";
+    case "cold":
+      return "blue";
+    case "poison":
+      return "green";
+    case "physical":
+      return "white";
+    default:
+      return "white";
+  }
+};
 
 let pressedKeys = {};
 window.onkeyup = function (e: { keyCode: string | number }) {
@@ -27,14 +44,19 @@ window.onkeydown = function (e: { keyCode: string | number }) {
 };
 
 export default class Game {
-  game: Phaser.Game;
-  playerId: string;
+  phaserInstance: Phaser.Game;
   experienceBar: Bar;
+  gameState: GameState;
 
-  constructor(canvas: HTMLCanvasElement, gameState: GameState) {
-    this.playerId = gameState.id;
+  constructor(canvas: HTMLCanvasElement, serverEventSystem: EventSystem) {
     let gameRef = this;
-
+    this.gameState = {
+      players: [],
+      enemies: [],
+      gems: [],
+      projectiles: [],
+      id: "",
+    };
     const sceneConfig: Phaser.Types.Scenes.CreateSceneFromObjectConfig = {
       preload: function () {
         assets.forEach(({ id, url }) => {
@@ -58,14 +80,14 @@ export default class Game {
           maxValue: experienceRequiredForLevel(2),
         });
 
-        gameState.players.forEach((p) => {
+        gameRef.gameState.players.forEach((p) => {
           instantiatePlayer(this, p);
         });
       },
       update: function () {
-        gameState.players.forEach((p) => {
+        gameRef.gameState.players.forEach((p) => {
           const player = this.children.getByName(p.id);
-          if (p.id === gameRef.playerId) {
+          if (p.id === gameRef.gameState.id) {
             gameRef.experienceBar.setValue(
               p.experience - experienceRequiredForLevel(p.level)
             );
@@ -76,7 +98,7 @@ export default class Game {
             instantiatePlayer(this, p);
           }
         });
-        const playerIds = gameState.players.map((p) => p.id);
+        const playerIds = gameRef.gameState.players.map((p) => p.id);
         // remove players that are no longer in the game
         this.children.each((child) => {
           if (
@@ -87,7 +109,7 @@ export default class Game {
             child.destroy();
           }
         });
-        gameState.enemies.forEach((e) => {
+        gameRef.gameState.enemies.forEach((e) => {
           const enemy = this.children.getByName(e.id);
           if (enemy instanceof Phaser.GameObjects.Sprite) {
             updateEnemy(enemy, e);
@@ -96,7 +118,7 @@ export default class Game {
             instantiateEnemy(this, e);
           }
         });
-        gameState.gems.forEach((g) => {
+        gameRef.gameState.gems.forEach((g) => {
           const gem = this.children.getByName(g.id);
           if (gem instanceof Phaser.GameObjects.Sprite) {
             updateGem(gem, g);
@@ -105,7 +127,7 @@ export default class Game {
           }
         });
         // remove gems that are no longer in the game
-        const gemIds = gameState.gems.map((g) => g.id);
+        const gemIds = gameRef.gameState.gems.map((g) => g.id);
         this.children.each((child) => {
           if (
             child instanceof Phaser.GameObjects.Sprite &&
@@ -115,7 +137,7 @@ export default class Game {
             child.destroy();
           }
         });
-        gameState.projectiles.forEach((p) => {
+        gameRef.gameState.projectiles.forEach((p) => {
           const projectile = this.children.getByName(p.id);
           if (projectile instanceof Phaser.GameObjects.Sprite) {
             projectile.setPosition(p.x, p.y);
@@ -128,7 +150,7 @@ export default class Game {
           }
         });
         // remove projectiles that are no longer in the game
-        const projectileIds = gameState.projectiles.map((p) => p.id);
+        const projectileIds = gameRef.gameState.projectiles.map((p) => p.id);
         this.children.each((child) => {
           if (
             child instanceof Phaser.GameObjects.Sprite &&
@@ -140,7 +162,7 @@ export default class Game {
         });
       },
     };
-    this.game = new Phaser.Game({
+    this.phaserInstance = new Phaser.Game({
       canvas: canvas,
       width: GAME_WIDTH,
       height: GAME_HEIGHT,
@@ -150,10 +172,54 @@ export default class Game {
       scene: sceneConfig,
       backgroundColor: "#170332",
     });
+
+    let inputInterval: NodeJS.Timeout | null = null;
+    serverEventSystem.addEventListener("begin", (newGameState: GameState) => {
+      this.gameState = newGameState;
+      inputInterval = setInterval(() => {
+        const inputState = this.getInputState();
+        serverEventSystem.dispatchEvent("move", {
+          ...inputState,
+          id: this.gameState.id,
+        });
+      }, SERVER_UPDATE_RATE);
+    });
+    serverEventSystem.addEventListener("damage", ({ amount, damageType }) => {
+      const player = this.gameState.players.find(
+        (p) => p.id === this.gameState.id
+      );
+      const color = colorFromDamageType(damageType);
+      this.showDamage(amount, player, color);
+      this.flashWhite(player.id);
+    });
+    serverEventSystem.addEventListener("spell", (data) => {
+      const color = colorFromDamageType(data.damageType);
+      this.showDamageToTarget(data.targetId, data.damage, color);
+      this.flashWhite(data.targetId);
+    });
+
+    serverEventSystem.addEventListener("level", (data) => {
+      if (data.playerId !== this.gameState.id) return;
+      globalEventSystem.dispatchEvent("level", data.player.level);
+      this.updateLevel(data.player);
+    });
+
+    serverEventSystem.addEventListener("update", (newState: GameState) => {
+      if (newState.id !== this.gameState.id) return;
+      this.gameState.players = newState.players;
+      this.gameState.enemies = newState.enemies;
+      this.gameState.gems = newState.gems;
+      this.gameState.projectiles = newState.projectiles;
+    });
+    serverEventSystem.addEventListener("disconnect", () => {
+      if (inputInterval) {
+        clearInterval(inputInterval);
+      }
+    });
   }
 
   private currentScene() {
-    return this.game.scene.scenes[0];
+    return this.phaserInstance.scene.scenes[0];
   }
 
   removePlayer(id: string) {
@@ -172,7 +238,7 @@ export default class Game {
   }
 
   getActivePlayer() {
-    return this.currentScene().children.getByName(this.playerId);
+    return this.currentScene().children.getByName(this.gameState.id);
   }
 
   updateLevel(serverPlayer: Player) {
@@ -192,16 +258,16 @@ export default class Game {
     }
     const target = this.currentScene().children.getByName(targetId);
     if (target instanceof Phaser.GameObjects.Sprite) {
-      this.showDamage(amount, target.x, target.y, color);
+      this.showDamage(amount, target, color);
     }
   }
 
-  showDamage(amount: number, x: number, y: number, color: string = "red") {
+  showDamage(amount: number, position: Position, color: string = "red") {
     const scene = this.currentScene();
     if (scene == null) {
       return;
     }
-    const text = scene.add.text(x, y, `${amount}`, {
+    const text = scene.add.text(position.x, position.y, `${amount}`, {
       color: color,
       font: "bold 24px Arial",
       stroke: "#000000",
@@ -211,8 +277,8 @@ export default class Game {
     text.setShadow(2, 2, "#333333", 2, true, true);
     scene.tweens.add({
       targets: text,
-      y: y - chooseRandom([20, 50, 75]),
-      x: x + chooseRandom([-10, 0, 10]),
+      y: position.y - chooseRandom([20, 50, 75]),
+      x: position.x + chooseRandom([-10, 0, 10]),
       alpha: 0,
       duration: 1000,
       ease: "Power1",

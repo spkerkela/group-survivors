@@ -6,3 +6,10 @@ export function sendMoveMessage(
 ) {
   socket.emit("move", moveMessage);
 }
+
+export function sendJoinMessage(
+  socket: { emit: (name: string, joinName: string) => void },
+  name: string
+) {
+  socket.emit("join", name);
+}
