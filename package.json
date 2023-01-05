@@ -2,9 +2,9 @@
   "name": "group-survivors",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
     "server": "tsx watch server/index.ts",
+    "build-client": "parcel build web-client/index.html --dist-dir server/dist",
     "web-client": "parcel web-client/index.html --dist-dir server/dist",
     "test": "playwright test"
   },
