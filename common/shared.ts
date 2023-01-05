@@ -4,6 +4,10 @@ export function experienceRequiredForLevel(level: number) {
 }
 
 export function sanitizeName(name: string): string {
+  // if name is only numbers, return empty string
+  if (/^\d+$/.test(name)) {
+    return "";
+  }
   return name
     .replace(/[^a-zA-Z0-9åäöÅÄÖ ]/g, "")
     .trim()

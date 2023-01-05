@@ -56,6 +56,7 @@ export class SocketIOConnector implements Connector {
   }
 
   pushEvent(name: string, playerId: string, data: any) {
+    if (!this.events[playerId]) return;
     this.events[playerId].push({ name, data });
   }
 
@@ -214,22 +215,16 @@ export class GameServer {
         return;
       }
     });
-    enemyEvents
-      .filter((e) => !e.data.playerId.startsWith("bot-"))
-      .forEach((e) => {
-        this.connector.pushEvent(e.name, e.data.playerId, e.data);
-      });
+    enemyEvents.forEach((e) => {
+      this.connector.pushEvent(e.name, e.data.playerId, e.data);
+    });
 
-    spellDamageEvents
-      .filter((e) => !e.fromId.startsWith("bot-"))
-      .forEach((e) => {
-        this.connector.pushEvent("spell", e.fromId, e);
-      });
-    spellEvents.projectileEvents
-      .filter((e) => !e.fromId.startsWith("bot-"))
-      .forEach((e) => {
-        this.connector.pushEvent("projectile", e.fromId, e);
-      });
+    spellDamageEvents.forEach((e) => {
+      this.connector.pushEvent("spell", e.fromId, e);
+    });
+    spellEvents.projectileEvents.forEach((e) => {
+      this.connector.pushEvent("projectile", e.fromId, e);
+    });
     this.connector.gameState.projectiles = this.connector.gameState.projectiles
       .concat(
         spellEvents.projectileEvents.map((e: SpellProjectileEvent) => ({
@@ -256,10 +251,8 @@ export class GameServer {
     this.connector.gameState.gems = this.connector.gameState.gems.filter(
       (g) => !gemEvents.map((e) => e.gemId).includes(g.id) // remove gems that have been picked up
     );
-    levelEvents
-      .filter((e) => !e.playerId.startsWith("bot-"))
-      .forEach((e) => {
-        this.connector.pushEvent("level", e.playerId, e);
-      });
+    levelEvents.forEach((e) => {
+      this.connector.pushEvent("level", e.playerId, e);
+    });
   }
 }
