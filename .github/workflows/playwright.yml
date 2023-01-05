@@ -17,6 +17,8 @@ jobs:
         run: npm ci
       - name: Build frontend
         run: npm run build-client
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
       - name: Run tests
         run: npm run test
       - uses: actions/upload-artifact@v3
