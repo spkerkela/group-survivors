@@ -1,14 +1,10 @@
 import { io, Socket } from "socket.io-client";
-import { SERVER_UPDATE_RATE } from "../common/constants";
-import { GameState } from "../common/types";
 import Game from "./Game";
-import { sendJoinMessage, sendMoveMessage } from "./messages";
 
 const canvasElement = document.getElementById("canvas") as HTMLCanvasElement;
 import parser from "socket.io-msgpack-parser";
 import { sanitizeName } from "../common/shared";
 import { globalEventSystem, initServerEventSystem } from "./eventSystems";
-import { DefaultEventsMap } from "socket.io/dist/typed-events";
 import EventSystem from "../common/EventSystem";
 
 const levelIndicatorDiv = document.getElementById("level");
