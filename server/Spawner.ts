@@ -30,6 +30,11 @@ export default class Spawner {
     };
   }
 
+  spawnEnemyOfType(gameState: GameState, enemyType: string) {
+    const enemy = this.createEnemy(enemyType);
+    gameState.enemies.push(enemy);
+    return enemy;
+  }
   spawnEnemy(gameState: GameState) {
     const enemyTypesThatCanSpawn = Object.keys(this.spawnTable).filter(
       (enemyType) => {

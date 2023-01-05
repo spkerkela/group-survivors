@@ -143,24 +143,39 @@ export class GameServer {
   connector: Connector;
   levelData: LevelData;
   spawner: Spawner;
+  adminEvents: EventSystem;
 
   constructor(connector: Connector, levelData: LevelData) {
     this.connector = connector;
     this.levelData = levelData;
     this.spawner = new Spawner(levelData.enemyTable);
     this.connector.start(this.levelData);
+    this.adminEvents = new EventSystem();
+    this.adminEvents.addEventListener("spawn", (enemyType: string) => {
+      this.spawner.spawnEnemyOfType(this.connector.gameState, enemyType);
+    });
+    this.adminEvents.addEventListener("killPlayer", (id: string) => {
+      const player = this.connector.gameState.players.find((p) => p.id === id);
+      if (player) {
+        player.hp = 0;
+        player.alive = false;
+      }
+    });
   }
 
   private playersAlive() {
     return this.connector.gameState.players.filter((p) => p.alive).length > 0;
   }
 
+  update() {
+    this.connector.update();
+    if (this.playersAlive() || this.connector.lobby.length > 0) {
+      this.gameLoop();
+    }
+  }
   start() {
     setInterval(() => {
-      this.connector.update();
-      if (this.playersAlive() || this.connector.lobby.length > 0) {
-        this.update();
-      }
+      this.update();
     }, SERVER_UPDATE_RATE);
     setInterval(() => {
       if (this.playersAlive()) {
@@ -169,7 +184,7 @@ export class GameServer {
     }, 1000);
   }
 
-  update() {
+  private gameLoop() {
     const gemsToSpawn = this.connector.gameState.enemies
       .filter((enemy) => !enemy.alive)
       .map((enemy) =>
@@ -260,5 +275,8 @@ export class GameServer {
     levelEvents.forEach((e) => {
       this.connector.pushEvent("level", e.playerId, e);
     });
+    this.connector.gameState.players = this.connector.gameState.players.filter(
+      (p) => p.alive
+    );
   }
 }
