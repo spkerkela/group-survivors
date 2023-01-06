@@ -47,13 +47,128 @@ window.onkeydown = function (e: { keyCode: string | number }) {
   pressedKeys[e.keyCode] = true;
 };
 
+class UiScene extends Phaser.Scene {
+  gameRef: Game;
+  experienceBar: Bar;
+  eventSystem: EventSystem;
+  constructor(gameRef: Game, eventSystem: EventSystem) {
+    super({ key: "UI", active: false });
+    this.gameRef = gameRef;
+    this.eventSystem = eventSystem;
+  }
+  create() {
+    this.experienceBar = new Bar(this, {
+      position: { x: 10, y: 10 },
+      width: GAME_WIDTH - 20,
+      height: 20,
+      colorHex: 0x0000ff,
+      value: 0,
+      maxValue: experienceRequiredForLevel(2),
+    });
+    this.eventSystem.addEventListener("level", ({ playerId, player }) => {
+      if (playerId !== this.gameRef.gameState.id) {
+        return;
+      }
+      this.experienceBar.setUpperBound(
+        experienceRequiredForLevel(player.level + 1) -
+          experienceRequiredForLevel(player.level)
+      );
+    });
+  }
+
+  update() {
+    const gameRef = this.gameRef;
+    gameRef.gameState.players.forEach((p) => {
+      if (p.id === gameRef.gameState.id) {
+        this.experienceBar.setValue(
+          p.experience - experienceRequiredForLevel(p.level)
+        );
+      }
+    });
+  }
+}
+
+class GameScene extends Phaser.Scene {
+  gameRef: Game;
+  constructor(gameRef: Game) {
+    super({ key: "Game", active: true });
+    this.gameRef = gameRef;
+  }
+  preload() {
+    assets.forEach(({ id, url }) => {
+      this.load.image(id, url);
+    });
+  }
+  launchUi() {
+    if (!this.scene.isActive("UI")) {
+      this.scene.launch("UI");
+    }
+  }
+
+  create() {
+    this.cameras.main.setBounds(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    this.cameras.main.setZoom(2);
+    this.add.tileSprite(0, 0, GAME_WIDTH * 2, GAME_HEIGHT * 2, "background");
+
+    this.gameRef.gameState.players.forEach((p) => {
+      const instantiated = instantiatePlayer(this, p);
+      if (p.id === this.gameRef.gameState.id) {
+        this.cameras.main.startFollow(instantiated);
+        this.launchUi();
+      }
+    });
+  }
+  update() {
+    const gameRef = this.gameRef;
+    gameRef.gameState.players.forEach((p) => {
+      const playerSprite = updateGameObject(
+        this,
+        p.id,
+        p,
+        instantiatePlayer,
+        updatePlayer
+      );
+      if (p.id == gameRef.gameState.id) {
+        this.cameras.main.startFollow(playerSprite);
+        this.launchUi();
+      }
+    });
+    const playerIds = gameRef.gameState.players.map((p) => p.id);
+    // remove players that are no longer in the game
+    removeInvalidGameObjects(this, "player", playerIds, destroyPlayer);
+
+    gameRef.gameState.enemies.forEach((e) =>
+      updateGameObject(this, e.id, e, instantiateEnemy)
+    );
+    const enemyIds = gameRef.gameState.enemies.map((e) => e.id);
+    removeInvalidGameObjects(this, "enemy", enemyIds);
+
+    gameRef.gameState.gems.forEach((g) =>
+      updateGameObject(this, g.id, g, instantiateGem)
+    );
+    const gemIds = gameRef.gameState.gems.map((g) => g.id);
+    removeInvalidGameObjects(this, "gem", gemIds);
+    gameRef.gameState.projectiles.forEach((p) => {
+      updateGameObject(this, p.id, p, instantiateProjectile);
+    });
+
+    const projectileIds = gameRef.gameState.projectiles.map((p) => p.id);
+    removeInvalidGameObjects(this, "projectile", projectileIds);
+
+    gameRef.gameState.staticObjects.forEach((s) => {
+      updateGameObject(this, s.id, s, instantiateStaticObject);
+    });
+
+    const staticObjectIds = gameRef.gameState.staticObjects.map((s) => s.id);
+    removeInvalidGameObjects(this, "staticObject", staticObjectIds);
+  }
+}
+
 export default class Game {
   phaserInstance: Phaser.Game;
-  experienceBar: Bar;
   gameState: GameState;
 
   constructor(canvas: HTMLCanvasElement, serverEventSystem: EventSystem) {
-    let gameRef = this;
     this.gameState = {
       players: [],
       enemies: [],
@@ -62,74 +177,7 @@ export default class Game {
       id: "",
       staticObjects: [],
     };
-    const sceneConfig: Phaser.Types.Scenes.CreateSceneFromObjectConfig = {
-      preload: function () {
-        assets.forEach(({ id, url }) => {
-          this.load.image(id, url);
-        });
-      },
-      create: function () {
-        this.add.tileSprite(
-          0,
-          0,
-          GAME_WIDTH * 2,
-          GAME_HEIGHT * 2,
-          "background"
-        );
-        gameRef.experienceBar = new Bar(this, {
-          position: { x: 10, y: 10 },
-          width: GAME_WIDTH - 20,
-          height: 20,
-          colorHex: 0x0000ff,
-          value: 0,
-          maxValue: experienceRequiredForLevel(2),
-        });
 
-        gameRef.gameState.players.forEach((p) => {
-          instantiatePlayer(this, p);
-        });
-      },
-      update: function () {
-        gameRef.gameState.players.forEach((p) => {
-          if (p.id === gameRef.gameState.id) {
-            gameRef.experienceBar.setValue(
-              p.experience - experienceRequiredForLevel(p.level)
-            );
-          }
-          updateGameObject(this, p.id, p, instantiatePlayer, updatePlayer);
-        });
-        const playerIds = gameRef.gameState.players.map((p) => p.id);
-        // remove players that are no longer in the game
-        removeInvalidGameObjects(this, "player", playerIds, destroyPlayer);
-
-        gameRef.gameState.enemies.forEach((e) =>
-          updateGameObject(this, e.id, e, instantiateEnemy)
-        );
-        const enemyIds = gameRef.gameState.enemies.map((e) => e.id);
-        removeInvalidGameObjects(this, "enemy", enemyIds);
-
-        gameRef.gameState.gems.forEach((g) =>
-          updateGameObject(this, g.id, g, instantiateGem)
-        );
-        const gemIds = gameRef.gameState.gems.map((g) => g.id);
-        removeInvalidGameObjects(this, "gem", gemIds);
-        gameRef.gameState.projectiles.forEach((p) => {
-          updateGameObject(this, p.id, p, instantiateProjectile);
-        });
-
-        const projectileIds = gameRef.gameState.projectiles.map((p) => p.id);
-        removeInvalidGameObjects(this, "projectile", projectileIds);
-
-        gameRef.gameState.staticObjects.forEach((s) => {
-          updateGameObject(this, s.id, s, instantiateStaticObject);
-        });
-
-        const staticObjectIds = gameRef.gameState.staticObjects.map(
-          (s) => s.id
-        );
-        removeInvalidGameObjects(this, "staticObject", staticObjectIds);
-      },
-    };
     this.phaserInstance = new Phaser.Game({
       canvas: canvas,
       width: GAME_WIDTH,
@@ -137,7 +185,7 @@ export default class Game {
       type: Phaser.WEBGL,
       roundPixels: false,
       pixelArt: true,
-      scene: sceneConfig,
+      scene: [new GameScene(this), new UiScene(this, serverEventSystem)],
       backgroundColor: "#170332",
     });
 
@@ -212,10 +260,6 @@ export default class Game {
     const player = this.getActivePlayer();
     player.getData("bar").setUpperBound(serverPlayer.maxHp);
     player.getData("bar").setValue(serverPlayer.hp);
-    this.experienceBar.setUpperBound(
-      experienceRequiredForLevel(serverPlayer.level + 1) -
-        experienceRequiredForLevel(serverPlayer.level)
-    );
   }
 
   showDamageToTarget(targetId: string, amount: number, color: string = "red") {

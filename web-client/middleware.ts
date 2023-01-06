@@ -8,11 +8,14 @@ import {
 } from "../common/types";
 import Bar from "./Bar";
 
-export function instantiatePlayer(scene: Phaser.Scene, player: Player) {
+export function instantiatePlayer(
+  scene: Phaser.Scene,
+  player: Player
+): Phaser.GameObjects.Sprite {
   const newPlayer = scene.add.sprite(player.x, player.y, "player");
   const playerText = scene.add
     .text(player.x, player.y - 32, player.screenName, {
-      font: "20px Arial",
+      font: "12x Arial",
       stroke: "#000000",
       strokeThickness: 1,
     })
@@ -142,12 +145,13 @@ export function updateGameObject<T extends Position>(
     gameObject: Phaser.GameObjects.Sprite,
     obj: T
   ) => void = simpleUpdate
-) {
+): Phaser.GameObjects.Sprite {
   const gameObject = scene.children.getByName(id);
   if (gameObject instanceof Phaser.GameObjects.Sprite) {
     updateFn(gameObject, obj);
+    return gameObject;
   } else if (gameObject == null) {
-    instantiateFn(scene, obj);
+    return instantiateFn(scene, obj);
   }
 }
 

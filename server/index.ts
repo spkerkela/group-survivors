@@ -6,11 +6,7 @@ import { GAME_HEIGHT, GAME_WIDTH } from "../common/constants";
 import { GameServer, Connector } from "./GameServer";
 import parser from "socket.io-msgpack-parser";
 import EventSystem from "../common/EventSystem";
-import {
-  initGameEventSystem,
-  initConnectedClientEventSystem,
-  ServerEventSystems,
-} from "./eventSystems";
+import { initGameEventSystem, ServerEventSystems } from "./eventSystems";
 
 const app = express();
 
