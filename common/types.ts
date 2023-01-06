@@ -80,6 +80,7 @@ export interface Enemy extends Position {
 
 export interface Projectile extends Position {
   id: string;
+  type: string;
   speed: number;
   damage: number;
   critical: boolean;

@@ -1,3 +1,4 @@
+import { randomBetweenExclusive } from "../common/random";
 import {
   Enemy,
   Gem,
@@ -43,6 +44,15 @@ export function instantiatePlayer(
       p.getData("bar").setValue(newHp);
     }
   );
+  // make player wobble
+  scene.tweens.add({
+    targets: newPlayer,
+    angle: 5,
+    duration: randomBetweenExclusive(250, 350),
+    ease: "Power1",
+    yoyo: true,
+    repeat: -1,
+  });
   return newPlayer;
 }
 
@@ -76,6 +86,15 @@ export function instantiateEnemy(scene: Phaser.Scene, enemy: Enemy) {
   newEnemy.setData("type", "enemy");
   newEnemy.setName(enemy.id);
   newEnemy.setOrigin(0.5, 0.5);
+
+  scene.tweens.add({
+    targets: newEnemy,
+    angle: 10,
+    duration: randomBetweenExclusive(250, 350),
+    ease: "Sine.easeInOut",
+    yoyo: true,
+    repeat: -1,
+  });
   return newEnemy;
 }
 

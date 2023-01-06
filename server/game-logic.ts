@@ -329,6 +329,7 @@ export function updateGems(
     gemEvents: [],
     levelEvents: [],
   };
+
   for (let i = 0; i < gems.length; i++) {
     const gem = gems[i];
     for (let j = 0; j < players.length; j++) {

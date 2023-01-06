@@ -2,6 +2,7 @@ import { GAME_HEIGHT, GAME_WIDTH } from "../common/constants";
 import { chooseRandom, randomBetweenExclusive } from "../common/random";
 import { Enemy, GameState } from "../common/types";
 import { enemyDB } from "./data";
+import { generateId } from "./id-generator";
 
 interface SpawnTable {
   [key: string]: number;
@@ -16,7 +17,7 @@ export default class Spawner {
   private createEnemy(enemyType: string): Enemy {
     const enemyInfo = enemyDB[enemyType];
     return {
-      id: `${enemyType}-${Math.random()}`,
+      id: generateId(enemyType),
       x: randomBetweenExclusive(10, GAME_WIDTH - 10),
       y: randomBetweenExclusive(10, GAME_HEIGHT - 10),
       hp: enemyInfo.hp,

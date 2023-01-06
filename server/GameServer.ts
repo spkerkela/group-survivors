@@ -27,6 +27,7 @@ import {
   SpellProjectileEvent,
   updateProjectiles,
 } from "./game-logic";
+import { generateId } from "./id-generator";
 import Spawner from "./Spawner";
 
 export class Connector {
@@ -67,7 +68,7 @@ export class Connector {
   start(levelData: LevelData) {
     for (let i = 0; i < levelData.bots; i++) {
       this.gameState.players.push(
-        createPlayer(`bot-${i}`, `Mr Bot ${i + 1}`, {
+        createPlayer(generateId("bot"), `Mr Bot ${i + 1}`, {
           x: Math.random() * GAME_WIDTH,
           y: Math.random() * GAME_HEIGHT,
         })
@@ -190,14 +191,14 @@ export class GameServer {
       if (this.playersAlive()) {
         this.spawner.spawnEnemy(this.connector.gameState);
       }
-    }, 1000);
+    }, 100);
   }
 
   private gameLoop() {
     const gemsToSpawn = this.connector.gameState.enemies
       .filter((enemy) => !enemy.alive)
       .map((enemy) =>
-        createGem(`gem-${enemy.id}-${Math.random()}`, enemy.gemType, {
+        createGem(generateId(`gem-${enemy.id}`), enemy.gemType, {
           x: enemy.x,
           y: enemy.y,
         })
@@ -258,7 +259,8 @@ export class GameServer {
     this.connector.gameState.projectiles = this.connector.gameState.projectiles
       .concat(
         spellEvents.projectileEvents.map((e: SpellProjectileEvent) => ({
-          id: e.spellId,
+          id: generateId(e.spellId),
+          type: e.spellId,
           x: e.position.x,
           y: e.position.y,
           direction: e.targetDirection,
@@ -287,7 +289,7 @@ export class GameServer {
     this.connector.gameState.players.forEach((p) => {
       if (!p.alive) {
         this.connector.gameState.staticObjects.push({
-          id: `grave-${p.id}`,
+          id: generateId("grave"),
           type: "grave",
           x: p.x,
           y: p.y,

@@ -3,6 +3,8 @@ import {
   GAME_HEIGHT,
   GAME_WIDTH,
   INVLUNERABILITY_FRAMES,
+  SCREEN_HEIGHT,
+  SCREEN_WIDTH,
   SERVER_UPDATE_RATE,
 } from "../common/constants";
 import { chooseRandom } from "../common/random";
@@ -59,7 +61,7 @@ class UiScene extends Phaser.Scene {
   create() {
     this.experienceBar = new Bar(this, {
       position: { x: 10, y: 10 },
-      width: GAME_WIDTH - 20,
+      width: SCREEN_WIDTH - 20,
       height: 20,
       colorHex: 0x0000ff,
       value: 0,
@@ -180,8 +182,8 @@ export default class Game {
 
     this.phaserInstance = new Phaser.Game({
       canvas: canvas,
-      width: GAME_WIDTH,
-      height: GAME_HEIGHT,
+      width: SCREEN_WIDTH,
+      height: SCREEN_HEIGHT,
       type: Phaser.WEBGL,
       roundPixels: false,
       pixelArt: true,

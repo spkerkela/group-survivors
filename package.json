@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "server": "tsx watch server/index.ts",
+    "server": "tsx --inspect --watch server/index",
     "build-client": "parcel build web-client/index.html --dist-dir server/dist",
     "web-client": "parcel web-client/index.html --dist-dir server/dist",
     "test": "playwright test",
