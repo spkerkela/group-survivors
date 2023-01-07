@@ -1,6 +1,7 @@
 import {
   GAME_HEIGHT,
   GAME_WIDTH,
+  SERVER_FRAME_RATE,
   SERVER_UPDATE_RATE,
 } from "../common/constants";
 import EventSystem from "../common/EventSystem";
@@ -154,6 +155,7 @@ export class GameServer {
   levelData: LevelData;
   spawner: Spawner;
   adminEvents: EventSystem;
+  deltaTime: number;
 
   constructor(connector: Connector, levelData: LevelData) {
     this.connector = connector;
@@ -171,6 +173,7 @@ export class GameServer {
         player.alive = false;
       }
     });
+    this.deltaTime = 0;
   }
 
   private playersAlive() {
@@ -183,8 +186,14 @@ export class GameServer {
       this.gameLoop();
     }
   }
+
   start() {
+    let previousTime = Date.now();
     setInterval(() => {
+      const currentTime = Date.now();
+      const elapsedTime = currentTime - previousTime;
+      previousTime = currentTime;
+      this.deltaTime = elapsedTime / (1000 / SERVER_FRAME_RATE);
       this.update();
     }, SERVER_UPDATE_RATE);
     setInterval(() => {
@@ -195,6 +204,7 @@ export class GameServer {
   }
 
   private gameLoop() {
+    const deltaTime = this.deltaTime;
     const gemsToSpawn = this.connector.gameState.enemies
       .filter((enemy) => !enemy.alive)
       .map((enemy) =>
@@ -210,14 +220,20 @@ export class GameServer {
     this.connector.gameState.enemies = removeDeadEnemies(
       this.connector.gameState.enemies
     );
-    updatePlayers(this.connector.gameState.players, this.connector.updates);
+    updatePlayers(
+      this.connector.gameState.players,
+      this.connector.updates,
+      deltaTime
+    );
     const spellEvents = updateSpells(
       this.connector.gameState.players,
-      this.connector.gameState.enemies
+      this.connector.gameState.enemies,
+      deltaTime
     );
     const projectileEvents = updateProjectiles(
       this.connector.gameState.projectiles,
-      this.connector.gameState.enemies
+      this.connector.gameState.enemies,
+      deltaTime
     );
 
     const spellDamageEvents = spellEvents.damageEvents.concat(projectileEvents);
@@ -235,7 +251,8 @@ export class GameServer {
     });
     const enemyEvents = updateEnemies(
       this.connector.gameState.enemies,
-      this.connector.gameState.players
+      this.connector.gameState.players,
+      deltaTime
     );
     this.connector.gameState.players.forEach((p) => {
       if (p.id.startsWith("bot-")) {
@@ -275,9 +292,10 @@ export class GameServer {
         }))
       )
       .filter((p) => p.lifetime > 0);
-    const { gemEvents, levelEvents } = updateGems(
+    const { gemEvents, levelEvents, expiredGems } = updateGems(
       this.connector.gameState.gems,
-      this.connector.gameState.players
+      this.connector.gameState.players,
+      deltaTime
     );
 
     this.connector.gameState.gems = this.connector.gameState.gems.filter(
@@ -298,6 +316,9 @@ export class GameServer {
     });
     this.connector.gameState.players = this.connector.gameState.players.filter(
       (p) => p.alive
+    );
+    this.connector.gameState.gems = this.connector.gameState.gems.filter(
+      (g) => !expiredGems.includes(g.id)
     );
   }
 }

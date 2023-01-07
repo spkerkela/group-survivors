@@ -4,7 +4,6 @@ import {
   GAME_WIDTH,
   INVLUNERABILITY_FRAMES,
   PLAYER_SIZE,
-  SERVER_UPDATE_RATE,
 } from "../common/constants";
 import { normalize } from "../common/math";
 import { randomBetweenExclusive } from "../common/random";
@@ -33,30 +32,36 @@ export function createMoveUpdate(inputState: InputState) {
   return normalize(x, y);
 }
 
-export function updatePlayers(players: Player[], updates: Updates) {
+export function updatePlayers(
+  players: Player[],
+  updates: Updates,
+  deltaTime: number
+) {
   for (let i = 0; i < players.length; i++) {
     const player = players[i];
     const update = updates.moves[player.id];
     if (player.alive && update) {
-      player.x += update.x * player.speed;
-      player.y += update.y * player.speed;
+      player.x += update.x * (player.speed * deltaTime);
+      player.y += update.y * (player.speed * deltaTime);
       delete updates.moves[player.id];
       if (player.x < 0) player.x = 0;
       if (player.y < 0) player.y = 0;
       if (player.x > GAME_WIDTH) player.x = GAME_WIDTH;
       if (player.y > GAME_HEIGHT) player.y = GAME_HEIGHT;
     }
-    player.invulnerabilityFrames -= SERVER_UPDATE_RATE;
+    player.invulnerabilityFrames -= deltaTime;
   }
-  updateBots(players);
+  updateBots(players, deltaTime);
 }
 
-function updateBots(players: Player[]) {
+function updateBots(players: Player[], deltaTime: number) {
   for (let i = 0; i < players.length; i++) {
     const player = players[i];
     if (player.alive && player.id.startsWith("bot")) {
-      const x = player.x + Math.cos(player.y / 100) * player.speed;
-      const y = player.y + Math.sin(player.x / 100) * player.speed;
+      const x =
+        player.x + Math.cos(player.y / 100) * (player.speed * deltaTime);
+      const y =
+        player.y + Math.sin(player.x / 100) * (player.speed * deltaTime);
       player.x = x;
       player.y = y;
     }
@@ -65,7 +70,8 @@ function updateBots(players: Player[]) {
 
 export function updateEnemies(
   enemies: Enemy[],
-  players: Player[]
+  players: Player[],
+  deltaTime: number
 ): DamageEvent[] {
   let events: DamageEvent[] = [];
   for (let i = 0; i < enemies.length; i++) {
@@ -91,8 +97,8 @@ export function updateEnemies(
         const x = player.x - enemy.x;
         const y = player.y - enemy.y;
         const { x: nx, y: ny } = normalize(x, y);
-        enemy.x += nx * enemy.speed;
-        enemy.y += ny * enemy.speed;
+        enemy.x += nx * (enemy.speed * deltaTime);
+        enemy.y += ny * (enemy.speed * deltaTime);
       } else {
         if (player.invulnerabilityFrames <= 0) {
           const damage = randomBetweenExclusive(
@@ -110,8 +116,8 @@ export function updateEnemies(
         }
       }
     } else {
-      enemy.x += Math.cos(enemy.y / 100) * enemy.speed;
-      enemy.y += Math.sin(enemy.x / 100) * enemy.speed;
+      enemy.x += Math.cos(enemy.y / 100) * (enemy.speed * deltaTime);
+      enemy.y += Math.sin(enemy.x / 100) * (enemy.speed * deltaTime);
     }
   }
 
@@ -254,7 +260,8 @@ export function castSpell(
 
 export function updateSpells(
   players: Player[],
-  enemies: Enemy[]
+  enemies: Enemy[],
+  deltaTime: number
 ): SpellCastEvent {
   let events: SpellCastEvent = {
     damageEvents: [],
@@ -268,7 +275,7 @@ export function updateSpells(
         const spell = spells[j];
         const spellData = player.spells[spell];
         if (spellData.cooldown > 0) {
-          spellData.cooldown -= SERVER_UPDATE_RATE;
+          spellData.cooldown -= deltaTime;
         } else {
           spellData.cooldown = Math.max(
             spellDB[spell].cooldown *
@@ -323,15 +330,26 @@ export interface LevelEvent {
 
 export function updateGems(
   gems: Gem[],
-  players: Player[]
-): { gemEvents: GemEvent[]; levelEvents: LevelEvent[] } {
-  let events: { gemEvents: GemEvent[]; levelEvents: LevelEvent[] } = {
+  players: Player[],
+  deltaTime: number
+): { expiredGems: string[]; gemEvents: GemEvent[]; levelEvents: LevelEvent[] } {
+  let events: {
+    expiredGems: string[];
+    gemEvents: GemEvent[];
+    levelEvents: LevelEvent[];
+  } = {
     gemEvents: [],
     levelEvents: [],
+    expiredGems: [],
   };
 
   for (let i = 0; i < gems.length; i++) {
     const gem = gems[i];
+    gem.lifetime -= deltaTime;
+    if (gem.lifetime <= 0) {
+      events.expiredGems.push(gem.id);
+      continue;
+    }
     for (let j = 0; j < players.length; j++) {
       const player = players[j];
       if (player.alive) {
@@ -360,18 +378,19 @@ export function updateGems(
 
 export function updateProjectiles(
   projectiles: Projectile[],
-  enemies: Enemy[]
+  enemies: Enemy[],
+  deltaTime: number
 ): SpellDamageEvent[] {
   projectiles.forEach((projectile) => {
-    projectile.lifetime -= SERVER_UPDATE_RATE;
+    projectile.lifetime -= deltaTime;
   });
   const aliveProjectiles = projectiles.filter(
     (projectile) => projectile.lifetime > 0
   );
   const events: SpellDamageEvent[] = [];
   aliveProjectiles.forEach((projectile) => {
-    projectile.x += projectile.direction.x * projectile.speed;
-    projectile.y += projectile.direction.y * projectile.speed;
+    projectile.x += projectile.direction.x * (projectile.speed * deltaTime);
+    projectile.y += projectile.direction.y * (projectile.speed * deltaTime);
     enemies.forEach((enemy) => {
       if (enemy.alive) {
         const distance = Math.sqrt(
@@ -413,7 +432,7 @@ export function createPlayer(
     hp: 200,
     maxHp: 200,
     alive: true,
-    speed: 3,
+    speed: 6,
     level: 1,
     experience: 0,
     invulnerabilityFrames: 0,
@@ -440,5 +459,6 @@ export function createGem(
     x: x,
     y: y,
     type: gemType,
+    lifetime: 1000 * 15,
   };
 }

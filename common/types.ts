@@ -43,6 +43,7 @@ export interface InputState {
 export interface Gem extends Position {
   id: string;
   type: string;
+  lifetime: number;
 }
 
 export interface Player extends Position {

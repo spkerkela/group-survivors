@@ -19,7 +19,6 @@ import {
   instantiateProjectile,
   instantiateStaticObject,
   removeInvalidGameObjects,
-  updateEnemy,
   updateGameObject,
   updatePlayer,
 } from "./middleware";

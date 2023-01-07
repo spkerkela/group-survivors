@@ -1,3 +1,4 @@
+import { SERVER_UPDATE_RATE } from "../common/constants";
 import { randomBetweenExclusive } from "../common/random";
 import {
   Enemy,
@@ -60,25 +61,36 @@ export function updatePlayer(
   player: Phaser.GameObjects.Sprite,
   serverPlayer: Player
 ) {
-  player.setPosition(serverPlayer.x, serverPlayer.y);
-  player.getData("text").setPosition(serverPlayer.x, serverPlayer.y - 32);
+  const scene = player.scene;
+  scene.add.tween({
+    targets: player,
+    x: serverPlayer.x,
+    y: serverPlayer.y,
+    duration: SERVER_UPDATE_RATE,
+    ease: "Power1",
+  });
+  scene.add.tween({
+    targets: player.getData("text"),
+    x: serverPlayer.x,
+    y: serverPlayer.y - 32,
+    duration: SERVER_UPDATE_RATE,
+    ease: "Power1",
+  });
   player.setData("health", serverPlayer.hp);
-  player
-    .getData("bar")
-    .setPosition({ x: serverPlayer.x, y: serverPlayer.y + 26 });
+  const barContainer = player.getData("bar");
+  scene.add.tween({
+    targets: barContainer.bar,
+    x: serverPlayer.x,
+    y: serverPlayer.y + 16,
+    duration: SERVER_UPDATE_RATE,
+    ease: "Power1",
+  });
 }
 
 export function destroyPlayer(player: Phaser.GameObjects.Sprite) {
   player.getData("bar")?.destroy();
   player.getData("text")?.destroy();
   player.destroy();
-}
-
-export function updateEnemy(
-  enemy: Phaser.GameObjects.Sprite,
-  serverEnemy: Enemy
-) {
-  enemy.setPosition(serverEnemy.x, serverEnemy.y);
 }
 
 export function instantiateEnemy(scene: Phaser.Scene, enemy: Enemy) {
@@ -152,7 +164,14 @@ export function simpleUpdate(
   gameObject: Phaser.GameObjects.Sprite,
   obj: Position
 ) {
-  gameObject.setPosition(obj.x, obj.y);
+  const scene = gameObject.scene;
+  scene.add.tween({
+    targets: gameObject,
+    x: obj.x,
+    y: obj.y,
+    duration: SERVER_UPDATE_RATE,
+    ease: "Power1",
+  });
 }
 
 export function updateGameObject<T extends Position>(
