@@ -11,7 +11,7 @@ export type EnemyDB = { [key: string]: EnemyData };
 export const enemyDB: EnemyDB = {
   zombie: {
     hp: 200,
-    speed: 0.5,
+    speed: 40,
     damageType: "cold",
     damageMin: 20,
     damageMax: 40,
@@ -19,7 +19,7 @@ export const enemyDB: EnemyDB = {
   },
   bat: {
     hp: 20,
-    speed: 2,
+    speed: 60,
     damageType: "poison",
     damageMin: 1,
     damageMax: 5,
@@ -27,7 +27,7 @@ export const enemyDB: EnemyDB = {
   },
   skeleton: {
     hp: 200,
-    speed: 1,
+    speed: 50,
     damageType: "melee",
     damageMin: 10,
     damageMax: 20,
@@ -66,7 +66,7 @@ export const spellDB: SpellDB = {
     critChance: 0.5,
     range: 50,
     rangeMultiplier: 1,
-    cooldown: 20,
+    cooldown: 1,
     cooldownMultiplier: 1,
     type: "aura",
     lifetime: 0,
@@ -83,11 +83,11 @@ export const spellDB: SpellDB = {
     critChance: 0.1,
     range: 100,
     rangeMultiplier: 1,
-    cooldown: 40,
+    cooldown: 1,
     cooldownMultiplier: 1,
     type: "projectile-target",
-    lifetime: 50,
-    speed: 10,
+    lifetime: 3,
+    speed: 150,
     maxPierceCount: 1,
   },
 };

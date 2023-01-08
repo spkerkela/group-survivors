@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import {
   GAME_HEIGHT,
   GAME_WIDTH,
-  INVLUNERABILITY_FRAMES,
+  INVULNERABILITY_SECONDS,
   SCREEN_HEIGHT,
   SCREEN_WIDTH,
   SERVER_UPDATE_RATE,
@@ -311,7 +311,7 @@ export default class Game {
       scene.tweens.add({
         targets: target,
         alpha: 0,
-        duration: INVLUNERABILITY_FRAMES,
+        duration: INVULNERABILITY_SECONDS * 1000,
         ease: "Linear",
         onComplete: () => {
           target.clearTint();

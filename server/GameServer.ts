@@ -1,7 +1,6 @@
 import {
   GAME_HEIGHT,
   GAME_WIDTH,
-  SERVER_FRAME_RATE,
   SERVER_UPDATE_RATE,
 } from "../common/constants";
 import EventSystem from "../common/EventSystem";
@@ -13,6 +12,7 @@ import {
   Player,
   StaticObject,
 } from "../common/types";
+import { serverTimeScale } from "./config";
 import { ServerEventSystems } from "./eventSystems";
 
 import {
@@ -193,7 +193,7 @@ export class GameServer {
       const currentTime = Date.now();
       const elapsedTime = currentTime - previousTime;
       previousTime = currentTime;
-      this.deltaTime = elapsedTime / (1000 / SERVER_FRAME_RATE);
+      this.deltaTime = (elapsedTime / 1000) * serverTimeScale;
       this.update();
     }, SERVER_UPDATE_RATE);
     setInterval(() => {

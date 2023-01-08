@@ -2,7 +2,7 @@ import {
   ENEMY_SIZE,
   GAME_HEIGHT,
   GAME_WIDTH,
-  INVLUNERABILITY_FRAMES,
+  INVULNERABILITY_SECONDS,
   PLAYER_SIZE,
 } from "../common/constants";
 import { normalize } from "../common/math";
@@ -110,7 +110,7 @@ export function updateEnemies(
             damageType: enemy.damageType,
             amount: damage,
           });
-          player.invulnerabilityFrames = INVLUNERABILITY_FRAMES;
+          player.invulnerabilityFrames = INVULNERABILITY_SECONDS;
           player.hp -= damage;
           player.alive = player.hp > 0;
         }
@@ -432,7 +432,7 @@ export function createPlayer(
     hp: 200,
     maxHp: 200,
     alive: true,
-    speed: 6,
+    speed: 65,
     level: 1,
     experience: 0,
     invulnerabilityFrames: 0,
@@ -459,6 +459,6 @@ export function createGem(
     x: x,
     y: y,
     type: gemType,
-    lifetime: 1000 * 15,
+    lifetime: 15,
   };
 }
