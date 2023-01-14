@@ -432,7 +432,7 @@ export function createPlayer(
     hp: 200,
     maxHp: 200,
     alive: true,
-    speed: 65,
+    speed: 100,
     level: 1,
     experience: 0,
     invulnerabilityFrames: 0,

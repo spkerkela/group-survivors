@@ -1,7 +1,9 @@
 import { SERVER_UPDATE_RATE } from "../common/constants";
+import EventSystem from "../common/EventSystem";
 import { randomBetweenExclusive } from "../common/random";
 import {
   Enemy,
+  GameState,
   Gem,
   Player,
   Position,
@@ -208,4 +210,82 @@ export function removeInvalidGameObjects(
       destroyFn(child);
     }
   });
+}
+
+export function updateMiddleWare(gameState: GameState, mw: Middleware) {
+  gameState.players.forEach((p) => {
+    mw.updatePlayer(p);
+  });
+
+  const playerIds = gameState.players.map((p) => p.id);
+  // remove players that are no longer in the game
+  mw.removeInvalidGameObjects("player", playerIds);
+
+  gameState.enemies.forEach((e) => mw.updateEnemy(e));
+  const enemyIds = gameState.enemies.map((e) => e.id);
+  mw.removeInvalidGameObjects("enemy", enemyIds);
+
+  gameState.gems.forEach((g) => mw.updateGem(g));
+  const gemIds = gameState.gems.map((g) => g.id);
+  mw.removeInvalidGameObjects("gem", gemIds);
+  gameState.projectiles.forEach((p) => {
+    mw.updateProjectile(p);
+  });
+
+  const projectileIds = gameState.projectiles.map((p) => p.id);
+  mw.removeInvalidGameObjects("projectile", projectileIds);
+
+  gameState.staticObjects.forEach((s) => {
+    mw.updateStaticObject(s);
+  });
+
+  const staticObjectIds = gameState.staticObjects.map((s) => s.id);
+  mw.removeInvalidGameObjects("staticObject", staticObjectIds);
+}
+
+export interface GameFrontend {
+  init(gameStateFn: () => GameState, serverEventSystem: EventSystem): void;
+}
+
+export interface Middleware {
+  flashWhite(id: string): void;
+  showDamage(amount: number, position: Position, color: string): void;
+  showDamageToTarget(targetId: string, amount: number, color: string): void;
+  instantiatePlayer(player: Player): void;
+  updatePlayer(player: Player): void;
+  updatePlayerLevel(player: Player): void;
+  destroyPlayer(playerId: string): void;
+  instantiateEnemy(enemy: Enemy): void;
+  updateEnemy(enemy: Enemy): void;
+  instantiateGem(gem: Gem): void;
+  updateGem(gem: Gem): void;
+  instantiateProjectile(projectile: Projectile): void;
+  updateProjectile(projectile: Projectile): void;
+  instantiateStaticObject(staticObject: StaticObject): void;
+  updateStaticObject(staticObject: StaticObject): void;
+  removeInvalidGameObjects(type: string, validIds: string[]): void;
+}
+
+export class DummyFrontend implements GameFrontend {
+  init(gameStateFn: () => GameState, serverEventSystem: EventSystem): void {}
+}
+
+export class DummyMiddleware implements Middleware {
+  updateEnemy(enemy: Enemy): void {}
+  updateGem(gem: Gem): void {}
+  updateStaticObject(staticObject: StaticObject): void {}
+  updateGameObject<T extends Position>(id: string, obj: T): void {}
+  flashWhite(id: string): void {}
+  showDamage(amount: number, position: Position, color: string): void {}
+  showDamageToTarget(targetId: string, amount: number, color: string): void {}
+  instantiatePlayer(player: Player): void {}
+  updatePlayer(player: Player): void {}
+  updatePlayerLevel(player: Player): void {}
+  destroyPlayer(playerId: string): void {}
+  instantiateEnemy(enemy: Enemy): void {}
+  instantiateGem(gem: Gem): void {}
+  instantiateProjectile(projectile: Projectile): void {}
+  updateProjectile(projectile: Projectile): void {}
+  instantiateStaticObject(staticObject: StaticObject): void {}
+  removeInvalidGameObjects(type: string, validIds: string[]): void {}
 }

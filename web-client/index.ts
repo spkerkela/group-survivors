@@ -6,6 +6,7 @@ import parser from "socket.io-msgpack-parser";
 import { sanitizeName } from "../common/shared";
 import { globalEventSystem, initServerEventSystem } from "./eventSystems";
 import EventSystem from "../common/EventSystem";
+import PhaserMiddleware from "./phaser-middleware";
 
 const levelIndicatorDiv = document.getElementById("level");
 const socket = io({ parser });
@@ -40,4 +41,4 @@ globalEventSystem.addEventListener("enableJoinUI", () => {
   nameInput.disabled = false;
 });
 
-const game = new Game(canvasElement, serverEventSystem);
+const game = new Game(serverEventSystem, new PhaserMiddleware(canvasElement));
