@@ -66,6 +66,9 @@ export function initConnectedClientEventSystem(
       socket.emit("projectile", projectile);
     }
   );
+  eventSystem.addEventListener("joined", (gameState: GameState) => {
+    socket.emit("joined", gameState);
+  });
 
   return eventSystem;
 }

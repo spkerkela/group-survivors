@@ -5,13 +5,7 @@ import {
 } from "../common/constants";
 import EventSystem from "../common/EventSystem";
 import { sanitizeName } from "../common/shared";
-import {
-  GameState,
-  Gem,
-  MoveUpdate,
-  Player,
-  StaticObject,
-} from "../common/types";
+import { GameState, MoveUpdate, StaticObject } from "../common/types";
 import { serverTimeScale } from "./config";
 import { ServerEventSystems } from "./eventSystems";
 
@@ -93,6 +87,7 @@ export class Connector {
                 y: levelData.playerStartPosition.y,
               })
             );
+            connection.dispatchEvent("joined", { ...this.gameState, id });
           }
         });
         const newGameState: GameState = {
@@ -289,6 +284,7 @@ export class GameServer {
           speed: e.speed,
           maxPierceCount: e.maxPierceCount,
           hitEnemies: [],
+          spellId: e.spellId,
         }))
       )
       .filter((p) => p.lifetime > 0);

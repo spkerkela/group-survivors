@@ -6,6 +6,7 @@ import {
   SCREEN_HEIGHT,
   INVULNERABILITY_SECONDS,
 } from "../common/constants";
+import { spellDB } from "../common/data";
 import EventSystem from "../common/EventSystem";
 import { chooseRandom } from "../common/random";
 import { experienceRequiredForLevel } from "../common/shared";
@@ -97,6 +98,7 @@ export class UiScene extends Phaser.Scene {
 export class GameScene extends Phaser.Scene implements Middleware {
   gameStateFn: () => GameState;
   serverEventSystem: EventSystem;
+  gameObjectCache: { [key: string]: Phaser.GameObjects.GameObject } = {};
   constructor(gameStateFn: () => GameState, serverEventSystem: EventSystem) {
     super({ key: "Game", active: true });
     this.gameStateFn = gameStateFn;
@@ -172,7 +174,16 @@ export class GameScene extends Phaser.Scene implements Middleware {
   create() {
     this.cameras.main.setBounds(0, 0, GAME_WIDTH, GAME_HEIGHT);
     this.cameras.main.setZoom(2);
-    this.add.tileSprite(0, 0, GAME_WIDTH * 2, GAME_HEIGHT * 2, "background");
+    const background = this.add
+      .tileSprite(
+        SCREEN_WIDTH / 2,
+        SCREEN_HEIGHT / 2,
+        SCREEN_WIDTH,
+        SCREEN_HEIGHT,
+        "background"
+      )
+      .setName("background");
+    this.gameObjectCache["background"] = background;
     const gameState = this.gameStateFn();
 
     gameState.players.forEach((p) => {
@@ -180,6 +191,7 @@ export class GameScene extends Phaser.Scene implements Middleware {
       if (p.id === gameState.id) {
         this.cameras.main.startFollow(instantiated);
         this.launchUi();
+        this.setupSpellEmitters(p, instantiated);
       }
     });
     this.serverEventSystem.addEventListener(
@@ -191,12 +203,15 @@ export class GameScene extends Phaser.Scene implements Middleware {
         const color = colorFromDamageType(damageType);
         this.showDamage(amount, player, color);
         this.flashWhite(player.id);
+        this.cameras.main.flash(150, 255, 255, 255);
+        this.cameras.main.shake(150, 0.01);
       }
     );
     this.serverEventSystem.addEventListener(
       "spell",
       (data: SpellDamageEvent) => {
         const color = colorFromDamageType(data.damageType);
+        this.spellEffect(data.spellId);
         this.showDamageToTarget(data.targetId, data.damage, color);
         this.flashWhite(data.targetId);
       }
@@ -207,16 +222,59 @@ export class GameScene extends Phaser.Scene implements Middleware {
       globalEventSystem.dispatchEvent("level", data.player.level);
       this.updateLevel(data.player);
     });
+    this.serverEventSystem.addEventListener(
+      "joined",
+      (newGameState: GameState) => {
+        newGameState.players.forEach((p) => {
+          if (p.id === newGameState.id) {
+            const instantiated = instantiatePlayer(this, p);
+            this.cameras.main.startFollow(instantiated, true);
+            this.launchUi();
+            this.setupSpellEmitters(p, instantiated);
+            this.gameObjectCache[p.id] = instantiated;
+          }
+        });
+      }
+    );
+  }
+  setupSpellEmitters(p: Player, instantiated: Phaser.GameObjects.Sprite) {
+    const spellIds = Object.keys(p.spells);
+    spellIds.forEach((spellId) => {
+      if (spellId === "damageAura") {
+        const spell = spellDB[spellId];
+        const frequency = spell.cooldown * 1000;
+        const emitter = this.add.particles("projectile").createEmitter({
+          radial: true,
+          follow: instantiated,
+          speed: 100,
+          lifespan: 500,
+          scale: { start: 2, end: 0 },
+          blendMode: "ADD",
+          alpha: { start: 1, end: 0 },
+          quantity: 30,
+          frequency: frequency,
+        });
+        instantiated.setData("emitter", emitter);
+      }
+    });
   }
   update() {
     const gameState = this.gameStateFn();
-    const playerSprite = this.children.getByName(gameState.id);
-
-    if (playerSprite instanceof Phaser.GameObjects.Sprite) {
-      this.cameras.main.startFollow(playerSprite);
-      this.launchUi();
-    }
     updateMiddleWare(gameState, this);
+    const background = this.gameObjectCache["background"];
+    const player = this.gameObjectCache[gameState.id];
+    if (
+      background instanceof Phaser.GameObjects.TileSprite &&
+      player instanceof Phaser.GameObjects.Sprite
+    ) {
+      background.setPosition(player.x, player.y);
+      background.tilePositionX = player.x;
+      background.tilePositionY = player.y;
+    }
+  }
+  spellEffect(spellId: string) {
+    if (spellId === "damageAura") {
+    }
   }
   showDamageToTarget(targetId: string, amount: number, color: string = "red") {
     const target = this.children.getByName(targetId);

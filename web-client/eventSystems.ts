@@ -46,5 +46,9 @@ export function initServerEventSystem(
     sendJoinMessage(io, name);
   });
 
+  io.on("joined", (gameState: GameState) => {
+    serverEventSystem.dispatchEvent("joined", gameState);
+  });
+
   return serverEventSystem;
 }

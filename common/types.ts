@@ -81,7 +81,7 @@ export interface Enemy extends Position {
 
 export interface Projectile extends Position {
   id: string;
-  type: string;
+  spellId: string;
   speed: number;
   damage: number;
   critical: boolean;
@@ -102,6 +102,7 @@ export type FromServerEventMap = {
   level: (data: LevelEvent) => void;
   move: (moveMessage: MoveUpdate) => void;
   projectile: (projectile: SpellProjectileEvent) => void;
+  joined: (gameState: GameState) => void;
 };
 
 export type ToServerEventMap = {

@@ -16,7 +16,7 @@ import {
   Position,
   Projectile,
 } from "../common/types";
-import { gemDB, SpellData, spellDB } from "./data";
+import { gemDB, SpellData, spellDB } from "../common/data";
 
 export interface PlayerUpdate {
   x: number;
@@ -130,6 +130,7 @@ export interface SpellDamageEvent {
   damage: number;
   damageType: string;
   critical: boolean;
+  spellId: string;
 }
 
 export interface SpellProjectileEvent {
@@ -172,6 +173,7 @@ function tickAura(
       damage: damage * playerLevel,
       damageType: spellData.damageType,
       critical: critical,
+      spellId: spellData.id,
     };
   });
 }
@@ -410,6 +412,7 @@ export function updateProjectiles(
               damage: projectile.damage,
               damageType: projectile.damageType,
               critical: projectile.critical,
+              spellId: projectile.spellId,
             });
           }
         }

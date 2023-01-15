@@ -37,6 +37,10 @@ export default class Game {
         });
       }, SERVER_UPDATE_RATE);
     });
+    serverEventSystem.addEventListener("joined", (newGameState: GameState) => {
+      this.gameState = newGameState;
+      globalEventSystem.dispatchEvent("disableJoinUI");
+    });
 
     serverEventSystem.addEventListener("update", (newState: GameState) => {
       if (newState.id !== this.gameState.id) return;
