@@ -1,4 +1,5 @@
 import { SERVER_UPDATE_RATE } from "../common/constants";
+import { spellDB } from "../common/data";
 import EventSystem from "../common/EventSystem";
 import { randomBetweenExclusive } from "../common/random";
 import {
@@ -11,56 +12,108 @@ import {
   StaticObject,
 } from "../common/types";
 import Bar from "./Bar";
-
+function setupSpellEmitters(
+  p: Player,
+  instantiated: Phaser.GameObjects.GameObject
+) {
+  const spellIds = Object.keys(p.spells);
+  spellIds.forEach((spellId) => {
+    if (spellId === "damageAura") {
+      const spelldata = spellDB[spellId];
+      const spell = p.spells[spellId];
+      if (spell.level > 0) {
+        const emitter = instantiated.getData(
+          "auraEmitter"
+        ) as Phaser.GameObjects.Particles.ParticleEmitter;
+        if (emitter) {
+          emitter.setEmitZone({
+            source: new Phaser.Geom.Circle(0, 0, spelldata.range),
+            type: "edge",
+            quantity: 48,
+          });
+          emitter.start();
+        }
+      }
+    }
+  });
+}
 export function instantiatePlayer(
   scene: Phaser.Scene,
   player: Player
-): Phaser.GameObjects.Sprite {
-  const newPlayer = scene.add.sprite(player.x, player.y, "player");
+): Phaser.GameObjects.GameObject {
+  const playerContainer = scene.add
+    .container(player.x, player.y)
+    .setName(player.id);
+  const playerSprite = scene.add.sprite(0, 0, "player").setOrigin(0.5, 0.5);
+  playerContainer.add(playerSprite);
   const playerText = scene.add
-    .text(player.x, player.y - 32, player.screenName, {
+    .text(0, -32, player.screenName, {
       font: "12x Arial",
       stroke: "#000000",
       strokeThickness: 1,
     })
     .setOrigin(0.5, 0.5)
     .setShadow(2, 2, "#333333", 2, true, true);
-  newPlayer.setData("text", playerText);
-  newPlayer.setData("type", "player");
-  newPlayer.setData(
-    "bar",
-    new Bar(scene, {
-      value: player.hp,
-      maxValue: player.hp,
-      width: 32,
-      height: 4,
-      position: { x: player.x, y: player.y + 16 },
-      offset: { x: -16, y: 0 },
-      colorHex: 0xff0000,
-    })
-  );
-  newPlayer.setName(player.id);
-  newPlayer.setOrigin(0.5, 0.5);
-  newPlayer.on(
+  playerContainer.add(playerText);
+  playerContainer.setData("text", playerText);
+  playerContainer.setData("type", "player");
+  let damageAuraParticles = scene.children.getByName(
+    particleObjectName
+  ) as Phaser.GameObjects.Particles.ParticleEmitterManager;
+  if (!damageAuraParticles) {
+    damageAuraParticles = scene.add
+      .particles("projectile")
+      .setName(particleObjectName);
+  }
+
+  const emitter = damageAuraParticles.createEmitter({
+    blendMode: "ADD",
+    alpha: { start: 1, end: 0 },
+    scale: { start: 1, end: 0 },
+    follow: playerContainer,
+    tint: 0x0044ff,
+    reserve: 100,
+  });
+  emitter.stop();
+  playerContainer.setData("auraEmitter", emitter);
+  const barInstance = new Bar(scene, {
+    value: player.hp,
+    maxValue: player.hp,
+    width: 32,
+    height: 4,
+    position: { x: 0, y: 0 + 16 },
+    offset: { x: -16, y: 0 },
+    colorHex: 0xff0000,
+  });
+
+  playerContainer.setData("bar", barInstance);
+  playerContainer.add(barInstance.bar);
+
+  playerContainer.on(
     "changedata-health",
-    (p: Phaser.GameObjects.Sprite, newHp: number, oldHp: number) => {
+    (p: Phaser.GameObjects.GameObject, newHp: number, oldHp: number) => {
       p.getData("bar").setValue(newHp);
     }
   );
   // make player wobble
   scene.tweens.add({
-    targets: newPlayer,
+    targets: playerSprite,
     angle: 5,
     duration: randomBetweenExclusive(250, 350),
     ease: "Power1",
     yoyo: true,
     repeat: -1,
   });
-  return newPlayer;
+  playerContainer.on("destroy", () => {
+    emitter.stop();
+  });
+
+  setupSpellEmitters(player, playerContainer);
+  return playerContainer;
 }
 
 export function updatePlayer(
-  player: Phaser.GameObjects.Sprite,
+  player: Phaser.GameObjects.GameObject,
   serverPlayer: Player
 ) {
   const scene = player.scene;
@@ -71,32 +124,43 @@ export function updatePlayer(
     duration: SERVER_UPDATE_RATE,
     ease: "Power1",
   });
-  scene.add.tween({
-    targets: player.getData("text"),
-    x: serverPlayer.x,
-    y: serverPlayer.y - 32,
-    duration: SERVER_UPDATE_RATE,
-    ease: "Power1",
-  });
-  player.setData("health", serverPlayer.hp);
-  const barContainer = player.getData("bar");
 
-  scene.add.tween({
-    targets: barContainer.bar,
-    x: serverPlayer.x,
-    y: serverPlayer.y + 16,
-    duration: SERVER_UPDATE_RATE,
-    ease: "Power1",
-  });
+  player.setData("health", serverPlayer.hp);
 }
 
 export function destroyPlayer(player: Phaser.GameObjects.Sprite) {
   player.getData("bar")?.destroy();
-  player.getData("text")?.destroy();
   player.destroy();
 }
 
-export function instantiateEnemy(scene: Phaser.Scene, enemy: Enemy) {
+function getPixelParticle(scene: Phaser.Scene) {
+  let pixelParticle = scene.children.getByName(
+    whitePixelObjectName
+  ) as Phaser.GameObjects.Particles.ParticleEmitterManager;
+  if (!pixelParticle) {
+    pixelParticle = scene.add
+      .particles("white-pixel")
+      .setName(whitePixelObjectName);
+  }
+  return pixelParticle;
+}
+
+export function instantiateEnemy(
+  scene: Phaser.Scene,
+  enemy: Enemy
+): Phaser.GameObjects.GameObject {
+  const pixelParticle = getPixelParticle(scene);
+  const emitter = pixelParticle.createEmitter({
+    blendMode: "ADD",
+    lifespan: 2000,
+    speed: { min: 100, max: 200 },
+    alpha: { start: 1, end: 0 },
+    scale: { min: 1, max: 3 },
+    tint: 0xff0000,
+    gravityY: 1,
+    reserve: 100,
+  });
+  emitter.stop();
   const newEnemy = scene.add.sprite(enemy.x, enemy.y, enemy.type);
   newEnemy.setData("type", "enemy");
   newEnemy.setName(enemy.id);
@@ -110,15 +174,36 @@ export function instantiateEnemy(scene: Phaser.Scene, enemy: Enemy) {
     yoyo: true,
     repeat: -1,
   });
+  newEnemy.addListener("takeDamage", (amount: number) => {
+    emitter.explode(Math.min(amount, 100), newEnemy.x, newEnemy.y);
+  });
   return newEnemy;
 }
 
-export function instantiateGem(scene: Phaser.Scene, gem: Gem) {
+export function instantiateGem(
+  scene: Phaser.Scene,
+  gem: Gem
+): Phaser.GameObjects.GameObject {
+  const pixelParticle = getPixelParticle(scene);
+  const emitter = pixelParticle.createEmitter({
+    blendMode: "ADD",
+    lifespan: 200,
+    speed: { min: 100, max: 200 },
+    alpha: { start: 1, end: 0 },
+    scale: { start: 3, end: 0 },
+    tint: 0x00ccff,
+    reserve: 20,
+  });
+  emitter.stop();
   const newGem = scene.add.sprite(gem.x, gem.y, "diamond");
   newGem.setData("type", "gem");
   newGem.setName(gem.id);
   newGem.setScale(0.5);
   newGem.setOrigin(0.5, 0.5);
+  newGem.on("destroy", () => {
+    emitter.explode(20, gem.x, gem.y);
+    emitter.stop();
+  });
   return newGem;
 }
 
@@ -130,6 +215,8 @@ export function updateProjectile(
 }
 
 const particleObjectName = "projectileParticles";
+const whitePixelObjectName = "whitePixel";
+
 export function instantiateProjectile(
   scene: Phaser.Scene,
   projectile: Projectile
@@ -151,6 +238,7 @@ export function instantiateProjectile(
     scale: { start: 1, end: 0 },
     blendMode: "ADD",
     follow: projectileContainer,
+    reserve: 100,
   });
   projectileContainer.add(newProjectile);
   projectileContainer.setData("type", "projectile");

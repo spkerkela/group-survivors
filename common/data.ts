@@ -64,7 +64,7 @@ export const spellDB: SpellDB = {
     baseDamage: 10,
     critMultiplier: 1.5,
     critChance: 0.5,
-    range: 50,
+    range: 40,
     rangeMultiplier: 1,
     cooldown: 1,
     cooldownMultiplier: 1,

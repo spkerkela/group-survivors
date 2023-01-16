@@ -5,8 +5,8 @@ import {
   SCREEN_WIDTH,
   SCREEN_HEIGHT,
   INVULNERABILITY_SECONDS,
+  NUMBER_SCALE,
 } from "../common/constants";
-import { spellDB } from "../common/data";
 import EventSystem from "../common/EventSystem";
 import { chooseRandom } from "../common/random";
 import { experienceRequiredForLevel } from "../common/shared";
@@ -191,7 +191,6 @@ export class GameScene extends Phaser.Scene implements Middleware {
       if (p.id === gameState.id) {
         this.cameras.main.startFollow(instantiated);
         this.launchUi();
-        this.setupSpellEmitters(p, instantiated);
       }
     });
     this.serverEventSystem.addEventListener(
@@ -230,49 +229,13 @@ export class GameScene extends Phaser.Scene implements Middleware {
             const instantiated = instantiatePlayer(this, p);
             this.cameras.main.startFollow(instantiated, true);
             this.launchUi();
-            this.setupSpellEmitters(p, instantiated);
             this.gameObjectCache[p.id] = instantiated;
-            /*
-            if (newGameState.debug) {
-              const { x, y, width, height } = newGameState.debug.cullingRect;
-              const rect = this.add.rectangle(
-                x,
-                y,
-                width,
-                height,
-                0x000000,
-                0.5
-              );
-              rect.setOrigin(0, 0);
-              this.gameObjectCache["cullingRect"] = rect;
-            }
-            */
           }
         });
       }
     );
   }
-  setupSpellEmitters(p: Player, instantiated: Phaser.GameObjects.Sprite) {
-    const spellIds = Object.keys(p.spells);
-    spellIds.forEach((spellId) => {
-      if (spellId === "damageAura") {
-        const spell = spellDB[spellId];
-        const frequency = spell.cooldown * 1000;
-        const emitter = this.add.particles("projectile").createEmitter({
-          radial: true,
-          follow: instantiated,
-          speed: 100,
-          lifespan: 500,
-          scale: { start: 2, end: 0 },
-          blendMode: "ADD",
-          alpha: { start: 1, end: 0 },
-          quantity: 30,
-          frequency: frequency,
-        });
-        instantiated.setData("emitter", emitter);
-      }
-    });
-  }
+
   update() {
     const gameState = this.gameStateFn();
     updateMiddleWare(gameState, this);
@@ -301,15 +264,21 @@ export class GameScene extends Phaser.Scene implements Middleware {
     const target = this.children.getByName(targetId);
     if (target instanceof Phaser.GameObjects.Sprite) {
       this.showDamage(amount, target, color);
+      target.emit("takeDamage", amount);
     }
   }
   showDamage(amount: number, position: Position, color: string = "red") {
-    const text = this.add.text(position.x, position.y, `${amount}`, {
-      color: color,
-      font: "bold 24px Arial",
-      stroke: "#000000",
-      strokeThickness: 2,
-    });
+    const text = this.add.text(
+      position.x,
+      position.y,
+      `${(amount * NUMBER_SCALE).toLocaleString()}`,
+      {
+        color: color,
+        font: "bold 24px Arial",
+        stroke: "#000000",
+        strokeThickness: 2,
+      }
+    );
     text.setOrigin(0.5, 0.5);
     text.setShadow(2, 2, "#333333", 2, true, true);
     this.tweens.add({
