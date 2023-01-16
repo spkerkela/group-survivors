@@ -232,6 +232,21 @@ export class GameScene extends Phaser.Scene implements Middleware {
             this.launchUi();
             this.setupSpellEmitters(p, instantiated);
             this.gameObjectCache[p.id] = instantiated;
+            /*
+            if (newGameState.debug) {
+              const { x, y, width, height } = newGameState.debug.cullingRect;
+              const rect = this.add.rectangle(
+                x,
+                y,
+                width,
+                height,
+                0x000000,
+                0.5
+              );
+              rect.setOrigin(0, 0);
+              this.gameObjectCache["cullingRect"] = rect;
+            }
+            */
           }
         });
       }
@@ -270,6 +285,12 @@ export class GameScene extends Phaser.Scene implements Middleware {
       background.setPosition(player.x, player.y);
       background.tilePositionX = player.x;
       background.tilePositionY = player.y;
+    }
+    const debugRect = this.gameObjectCache["cullingRect"];
+    if (debugRect instanceof Phaser.GameObjects.Rectangle) {
+      const { x, y, width, height } = gameState.debug.cullingRect;
+      debugRect.setPosition(x, y);
+      debugRect.setSize(width, height);
     }
   }
   spellEffect(spellId: string) {

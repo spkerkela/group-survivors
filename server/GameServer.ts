@@ -153,10 +153,10 @@ export class Connector {
     if (!player) return { ...this.gameState, id: id };
 
     const visibleRectangle = {
-      x: player.x - SCREEN_WIDTH / 4,
-      y: player.y - SCREEN_HEIGHT / 4,
-      width: SCREEN_WIDTH / 2,
-      height: SCREEN_HEIGHT / 2,
+      x: player.x - SCREEN_WIDTH / 2,
+      y: player.y - SCREEN_HEIGHT / 2,
+      width: SCREEN_WIDTH,
+      height: SCREEN_HEIGHT,
     };
     const playerVisibleObjects =
       this.gameObjectQuadTree.retrieve(visibleRectangle);
@@ -184,6 +184,10 @@ export class Connector {
     if (!gameState.players.includes(player)) {
       gameState.players.push(player);
     }
+    gameState.debug = {
+      cullingRect: visibleRectangle,
+    };
+    this.gameState.debug = gameState.debug;
     return gameState;
   }
 }

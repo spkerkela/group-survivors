@@ -80,6 +80,7 @@ export function updatePlayer(
   });
   player.setData("health", serverPlayer.hp);
   const barContainer = player.getData("bar");
+
   scene.add.tween({
     targets: barContainer.bar,
     x: serverPlayer.x,
@@ -128,22 +129,40 @@ export function updateProjectile(
   projectile.setPosition(serverProjectile.x, serverProjectile.y);
 }
 
+const particleObjectName = "projectileParticles";
 export function instantiateProjectile(
   scene: Phaser.Scene,
   projectile: Projectile
-) {
-  const newProjectile = scene.add.sprite(
-    projectile.x,
-    projectile.y,
-    "projectile"
-  );
-  newProjectile.setData("type", "projectile");
-  newProjectile.setName(projectile.id);
-  newProjectile.setOrigin(0.5, 0.5);
-  return newProjectile;
+): Phaser.GameObjects.Container {
+  const newProjectile = scene.add
+    .sprite(0, 0, "projectile")
+    .setOrigin(0.5, 0.5);
+  let particles = scene.children.getByName(
+    particleObjectName
+  ) as Phaser.GameObjects.Particles.ParticleEmitterManager;
+  if (particles == null) {
+    particles = scene.add.particles("projectile").setName(particleObjectName);
+  }
+  const projectileContainer = scene.add
+    .container(projectile.x, projectile.y)
+    .setName(projectile.id);
+  const emitter = particles.createEmitter({
+    speed: [10, 20],
+    scale: { start: 1, end: 0 },
+    blendMode: "ADD",
+    follow: projectileContainer,
+  });
+  projectileContainer.add(newProjectile);
+  projectileContainer.setData("type", "projectile");
+  projectileContainer.on("destroy", () => {
+    emitter.setSpeed({ min: 50, max: 150 });
+    emitter.explode(50, projectileContainer.x, projectileContainer.y);
+  });
+
+  return projectileContainer;
 }
 
-export function simpleDestroy(gameObject: Phaser.GameObjects.Sprite) {
+export function simpleDestroy(gameObject: Phaser.GameObjects.GameObject) {
   gameObject.destroy();
 }
 
@@ -163,7 +182,7 @@ export function instantiateStaticObject(
 }
 
 export function simpleUpdate(
-  gameObject: Phaser.GameObjects.Sprite,
+  gameObject: Phaser.GameObjects.GameObject,
   obj: Position
 ) {
   const scene = gameObject.scene;
@@ -180,14 +199,14 @@ export function updateGameObject<T extends Position>(
   scene: Phaser.Scene,
   id: string,
   obj: T,
-  instantiateFn: (scene: Phaser.Scene, obj: T) => Phaser.GameObjects.Sprite,
+  instantiateFn: (scene: Phaser.Scene, obj: T) => Phaser.GameObjects.GameObject,
   updateFn: (
-    gameObject: Phaser.GameObjects.Sprite,
+    gameObject: Phaser.GameObjects.GameObject,
     obj: T
   ) => void = simpleUpdate
-): Phaser.GameObjects.Sprite {
+): Phaser.GameObjects.GameObject {
   const gameObject = scene.children.getByName(id);
-  if (gameObject instanceof Phaser.GameObjects.Sprite) {
+  if (gameObject instanceof Phaser.GameObjects.GameObject) {
     updateFn(gameObject, obj);
     return gameObject;
   } else if (gameObject == null) {
@@ -199,11 +218,11 @@ export function removeInvalidGameObjects(
   scene: Phaser.Scene,
   type: string,
   validIds: string[],
-  destroyFn: (gameObject: Phaser.GameObjects.Sprite) => void = simpleDestroy
+  destroyFn: (gameObject: Phaser.GameObjects.GameObject) => void = simpleDestroy
 ) {
   scene.children.each((child) => {
     if (
-      child instanceof Phaser.GameObjects.Sprite &&
+      child instanceof Phaser.GameObjects.GameObject &&
       child.getData("type") === type &&
       !validIds.includes(child.name)
     ) {

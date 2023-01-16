@@ -12,6 +12,7 @@ export interface GameState {
   projectiles: Projectile[];
   staticObjects: StaticObject[];
   id: string;
+  debug?: DebugInformation;
 }
 
 export interface Position {
@@ -116,6 +117,10 @@ export type ToServerEventMap = {
   join: (name: string) => void;
   move: (moveUpdate: MoveUpdate) => void;
 };
+
+export interface DebugInformation {
+  cullingRect: Rectangle;
+}
 
 export function isPlayer(object: GameObject): object is Player {
   return object.objectType === "player";

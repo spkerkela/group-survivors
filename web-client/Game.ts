@@ -49,6 +49,7 @@ export default class Game {
       this.gameState.gems = newState.gems;
       this.gameState.projectiles = newState.projectiles;
       this.gameState.staticObjects = newState.staticObjects;
+      this.gameState.debug = newState.debug;
       const player = newState.players.find((p) => p.id === this.gameState.id);
       if (player == null || !player.alive) {
         globalEventSystem.dispatchEvent("enableJoinUI");
