@@ -263,6 +263,9 @@ export class GameServer {
     this.connector.gameState.projectiles.forEach((projectile) => {
       this.connector.gameObjectQuadTree.insert(projectile);
     });
+    this.connector.gameState.staticObjects.forEach((staticObject) => {
+      this.connector.gameObjectQuadTree.insert(staticObject);
+    });
     const deltaTime = this.deltaTime;
     const gemsToSpawn = this.connector.gameState.enemies
       .filter((enemy) => !enemy.alive)
