@@ -176,8 +176,8 @@ export class GameScene extends Phaser.Scene implements Middleware {
     this.cameras.main.setZoom(2);
     const background = this.add
       .tileSprite(
-        SCREEN_WIDTH / 2,
-        SCREEN_HEIGHT / 2,
+        GAME_WIDTH / 2,
+        GAME_HEIGHT / 2,
         SCREEN_WIDTH,
         SCREEN_HEIGHT,
         "background"
@@ -243,7 +243,7 @@ export class GameScene extends Phaser.Scene implements Middleware {
     const player = this.gameObjectCache[gameState.id];
     if (
       background instanceof Phaser.GameObjects.TileSprite &&
-      player instanceof Phaser.GameObjects.Sprite
+      player instanceof Phaser.GameObjects.Container
     ) {
       background.setPosition(player.x, player.y);
       background.tilePositionX = player.x;
