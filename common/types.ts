@@ -31,6 +31,12 @@ export interface Rectangle extends Position {
 export interface StaticObject extends Position {
   id: string;
   type: string;
+  objectType: "staticObject";
+}
+
+export interface GameObject extends Position {
+  id: string;
+  objectType: string;
 }
 
 export interface InputState {
@@ -40,15 +46,15 @@ export interface InputState {
   right: boolean;
 }
 
-export interface Gem extends Position {
-  id: string;
+export interface Gem extends GameObject {
   type: string;
+  objectType: "gem";
   lifetime: number;
 }
 
-export interface Player extends Position {
+export interface Player extends GameObject {
   screenName: string;
-  id: string;
+  objectType: "player";
   level: number;
   experience: number;
   speed: number;
@@ -67,8 +73,8 @@ export interface MoveUpdate {
   right: boolean;
 }
 
-export interface Enemy extends Position {
-  id: string;
+export interface Enemy extends GameObject {
+  objectType: "enemy";
   hp: number;
   alive: boolean;
   speed: number;
@@ -79,8 +85,8 @@ export interface Enemy extends Position {
   gemType: string;
 }
 
-export interface Projectile extends Position {
-  id: string;
+export interface Projectile extends GameObject {
+  objectType: "projectile";
   spellId: string;
   speed: number;
   damage: number;
@@ -110,3 +116,22 @@ export type ToServerEventMap = {
   join: (name: string) => void;
   move: (moveUpdate: MoveUpdate) => void;
 };
+
+export function isPlayer(object: GameObject): object is Player {
+  return object.objectType === "player";
+}
+
+export function isEnemy(object: GameObject): object is Enemy {
+  return object.objectType === "enemy";
+}
+export function isGem(object: GameObject): object is Gem {
+  return object.objectType === "gem";
+}
+
+export function isProjectile(object: GameObject): object is Projectile {
+  return object.objectType === "projectile";
+}
+
+export function isStaticObject(object: GameObject): object is StaticObject {
+  return object.objectType === "staticObject";
+}

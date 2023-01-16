@@ -83,8 +83,12 @@ class QuadTreeNode<T extends Position> {
 
 export default class QuadTree<T extends Position> {
   private root: QuadTreeNode<T>;
+  private maxChildren: number;
+  private bounds: Rectangle;
 
   constructor(bounds: Rectangle, maxChildren: number) {
+    this.bounds = bounds;
+    this.maxChildren = maxChildren;
     this.root = new QuadTreeNode(bounds, maxChildren);
   }
 
@@ -94,5 +98,9 @@ export default class QuadTree<T extends Position> {
 
   public retrieve(bounds: Rectangle): T[] {
     return this.root.retrieve(bounds);
+  }
+
+  public clear() {
+    this.root = new QuadTreeNode(this.bounds, this.maxChildren);
   }
 }

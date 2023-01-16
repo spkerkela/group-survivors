@@ -4,12 +4,15 @@ import {
   GAME_WIDTH,
   INVULNERABILITY_SECONDS,
   PLAYER_SIZE,
+  SCREEN_HEIGHT,
+  SCREEN_WIDTH,
 } from "../common/constants";
 import { normalize } from "../common/math";
 import { randomBetweenExclusive } from "../common/random";
 import { experienceRequiredForLevel } from "../common/shared";
 import {
   Enemy,
+  GameObject,
   Gem,
   InputState,
   Player,
@@ -17,6 +20,7 @@ import {
   Projectile,
 } from "../common/types";
 import { gemDB, SpellData, spellDB } from "../common/data";
+import QuadTree from "../common/QuadTree";
 
 export interface PlayerUpdate {
   x: number;
@@ -70,13 +74,24 @@ function updateBots(players: Player[], deltaTime: number) {
 
 export function updateEnemies(
   enemies: Enemy[],
-  players: Player[],
+  gameObjectQuadTree: QuadTree<GameObject>,
   deltaTime: number
 ): DamageEvent[] {
   let events: DamageEvent[] = [];
   for (let i = 0; i < enemies.length; i++) {
     const enemy = enemies[i];
     if (!enemy.alive) continue;
+    const players = gameObjectQuadTree
+      .retrieve({
+        x: enemy.x - SCREEN_WIDTH / 2,
+        y: enemy.y - SCREEN_HEIGHT / 2,
+        width: SCREEN_WIDTH,
+        height: SCREEN_HEIGHT,
+      })
+      .filter(
+        (gameObject): gameObject is Player => gameObject.objectType === "player"
+      );
+
     const nearestPlayer = players.reduce(
       (nearest, player) => {
         const distance = Math.sqrt(
@@ -262,7 +277,7 @@ export function castSpell(
 
 export function updateSpells(
   players: Player[],
-  enemies: Enemy[],
+  gameObjectQuadTree: QuadTree<GameObject>,
   deltaTime: number
 ): SpellCastEvent {
   let events: SpellCastEvent = {
@@ -272,6 +287,17 @@ export function updateSpells(
   for (let i = 0; i < players.length; i++) {
     const player = players[i];
     if (player.alive) {
+      const enemies = gameObjectQuadTree
+        .retrieve({
+          x: player.x - SCREEN_WIDTH / 2,
+          y: player.y - SCREEN_HEIGHT / 2,
+          width: SCREEN_WIDTH,
+          height: SCREEN_HEIGHT,
+        })
+        .filter(
+          (gameObject): gameObject is Enemy => gameObject.objectType === "enemy"
+        );
+
       const spells = Object.keys(player.spells);
       for (let j = 0; j < spells.length; j++) {
         const spell = spells[j];
@@ -332,7 +358,7 @@ export interface LevelEvent {
 
 export function updateGems(
   gems: Gem[],
-  players: Player[],
+  gameObjectQuadTree: QuadTree<GameObject>,
   deltaTime: number
 ): { expiredGems: string[]; gemEvents: GemEvent[]; levelEvents: LevelEvent[] } {
   let events: {
@@ -352,6 +378,17 @@ export function updateGems(
       events.expiredGems.push(gem.id);
       continue;
     }
+    const players = gameObjectQuadTree
+      .retrieve({
+        x: gem.x - PLAYER_SIZE,
+        y: gem.y - PLAYER_SIZE,
+        width: PLAYER_SIZE * 2,
+        height: PLAYER_SIZE * 2,
+      })
+      .filter(
+        (gameObject): gameObject is Player => gameObject.objectType === "player"
+      );
+
     for (let j = 0; j < players.length; j++) {
       const player = players[j];
       if (player.alive) {
@@ -380,7 +417,7 @@ export function updateGems(
 
 export function updateProjectiles(
   projectiles: Projectile[],
-  enemies: Enemy[],
+  gameObjectQuadTree: QuadTree<GameObject>,
   deltaTime: number
 ): SpellDamageEvent[] {
   projectiles.forEach((projectile) => {
@@ -393,6 +430,16 @@ export function updateProjectiles(
   aliveProjectiles.forEach((projectile) => {
     projectile.x += projectile.direction.x * (projectile.speed * deltaTime);
     projectile.y += projectile.direction.y * (projectile.speed * deltaTime);
+    const enemies = gameObjectQuadTree
+      .retrieve({
+        x: projectile.x - ENEMY_SIZE,
+        y: projectile.y - ENEMY_SIZE,
+        width: projectile.x + ENEMY_SIZE,
+        height: projectile.y + ENEMY_SIZE,
+      })
+      .filter(
+        (gameObject): gameObject is Enemy => gameObject.objectType === "enemy"
+      );
     enemies.forEach((enemy) => {
       if (enemy.alive) {
         const distance = Math.sqrt(
@@ -429,6 +476,7 @@ export function createPlayer(
 ): Player {
   return {
     id: id,
+    objectType: "player",
     screenName: name,
     x: x,
     y: y,
@@ -459,6 +507,7 @@ export function createGem(
 ): Gem {
   return {
     id: id,
+    objectType: "gem",
     x: x,
     y: y,
     type: gemType,

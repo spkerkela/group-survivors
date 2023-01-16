@@ -18,6 +18,7 @@ export default class Spawner {
     const enemyInfo = enemyDB[enemyType];
     return {
       id: generateId(enemyType),
+      objectType: "enemy",
       x: randomBetweenExclusive(10, GAME_WIDTH - 10),
       y: randomBetweenExclusive(10, GAME_HEIGHT - 10),
       hp: enemyInfo.hp,

@@ -1,11 +1,24 @@
 import {
   GAME_HEIGHT,
   GAME_WIDTH,
+  SCREEN_HEIGHT,
+  SCREEN_WIDTH,
   SERVER_UPDATE_RATE,
 } from "../common/constants";
 import EventSystem from "../common/EventSystem";
+import QuadTree from "../common/QuadTree";
 import { sanitizeName } from "../common/shared";
-import { GameState, MoveUpdate, StaticObject } from "../common/types";
+import {
+  GameObject,
+  GameState,
+  isEnemy,
+  isGem,
+  isPlayer,
+  isProjectile,
+  isStaticObject,
+  MoveUpdate,
+  StaticObject,
+} from "../common/types";
 import { serverTimeScale } from "./config";
 import { ServerEventSystems } from "./eventSystems";
 
@@ -26,6 +39,7 @@ import { generateId } from "./id-generator";
 import Spawner from "./Spawner";
 
 export class Connector {
+  gameObjectQuadTree: QuadTree<GameObject>;
   gameState: GameState;
   updates: {
     moves: { [key: string]: PlayerUpdate };
@@ -37,6 +51,11 @@ export class Connector {
   lobby: string[];
 
   constructor(eventSystems: ServerEventSystems) {
+    this.gameObjectQuadTree = new QuadTree(
+      { x: 0, y: 0, width: GAME_WIDTH, height: GAME_HEIGHT },
+      5
+    );
+
     this.gameState = {
       players: [],
       enemies: [],
@@ -87,18 +106,11 @@ export class Connector {
                 y: levelData.playerStartPosition.y,
               })
             );
-            connection.dispatchEvent("joined", { ...this.gameState, id });
+            connection.dispatchEvent("joined", this.createGameStateMessage(id));
           }
         });
-        const newGameState: GameState = {
-          players: this.gameState.players,
-          id: id,
-          enemies: [],
-          gems: [],
-          projectiles: [],
-          staticObjects: levelData.staticObjects,
-        };
-        connection.dispatchEvent("begin", newGameState);
+
+        connection.dispatchEvent("begin", this.createGameStateMessage(id));
         connection.addEventListener("disconnect", () => {
           this.gameState.players = this.gameState.players.filter(
             (p) => p.id !== id
@@ -125,7 +137,8 @@ export class Connector {
   update() {
     Object.entries(this.eventSystems.connectionSystems).forEach(
       ([id, connection]) => {
-        connection.dispatchEvent("update", { ...this.gameState, id: id });
+        const gameState = this.createGameStateMessage(id);
+        connection.dispatchEvent("update", gameState);
         if (this.events[id] != null) {
           this.events[id].forEach((e) => {
             connection.dispatchEvent(e.name, e.data);
@@ -134,6 +147,44 @@ export class Connector {
         this.events[id] = [];
       }
     );
+  }
+  createGameStateMessage(id: string) {
+    const player = this.getPlayer(id);
+    if (!player) return { ...this.gameState, id: id };
+
+    const visibleRectangle = {
+      x: player.x - SCREEN_WIDTH / 4,
+      y: player.y - SCREEN_HEIGHT / 4,
+      width: SCREEN_WIDTH / 2,
+      height: SCREEN_HEIGHT / 2,
+    };
+    const playerVisibleObjects =
+      this.gameObjectQuadTree.retrieve(visibleRectangle);
+    let gameState: GameState = {
+      players: [],
+      enemies: [],
+      gems: [],
+      projectiles: [],
+      staticObjects: [],
+      id: id,
+    };
+    playerVisibleObjects.forEach((o) => {
+      if (isPlayer(o)) {
+        gameState.players.push(o);
+      } else if (isEnemy(o)) {
+        gameState.enemies.push(o);
+      } else if (isGem(o)) {
+        gameState.gems.push(o);
+      } else if (isProjectile(o)) {
+        gameState.projectiles.push(o);
+      } else if (isStaticObject(o)) {
+        gameState.staticObjects.push(o);
+      }
+    });
+    if (!gameState.players.includes(player)) {
+      gameState.players.push(player);
+    }
+    return gameState;
   }
 }
 
@@ -199,6 +250,19 @@ export class GameServer {
   }
 
   private gameLoop() {
+    this.connector.gameObjectQuadTree.clear();
+    this.connector.gameState.players.forEach((player) => {
+      this.connector.gameObjectQuadTree.insert(player);
+    });
+    this.connector.gameState.enemies.forEach((enemy) => {
+      this.connector.gameObjectQuadTree.insert(enemy);
+    });
+    this.connector.gameState.gems.forEach((gem) => {
+      this.connector.gameObjectQuadTree.insert(gem);
+    });
+    this.connector.gameState.projectiles.forEach((projectile) => {
+      this.connector.gameObjectQuadTree.insert(projectile);
+    });
     const deltaTime = this.deltaTime;
     const gemsToSpawn = this.connector.gameState.enemies
       .filter((enemy) => !enemy.alive)
@@ -222,12 +286,12 @@ export class GameServer {
     );
     const spellEvents = updateSpells(
       this.connector.gameState.players,
-      this.connector.gameState.enemies,
+      this.connector.gameObjectQuadTree,
       deltaTime
     );
     const projectileEvents = updateProjectiles(
       this.connector.gameState.projectiles,
-      this.connector.gameState.enemies,
+      this.connector.gameObjectQuadTree,
       deltaTime
     );
 
@@ -246,7 +310,7 @@ export class GameServer {
     });
     const enemyEvents = updateEnemies(
       this.connector.gameState.enemies,
-      this.connector.gameState.players,
+      this.connector.gameObjectQuadTree,
       deltaTime
     );
     this.connector.gameState.players.forEach((p) => {
@@ -272,6 +336,7 @@ export class GameServer {
       .concat(
         spellEvents.projectileEvents.map((e: SpellProjectileEvent) => ({
           id: generateId(e.spellId),
+          objectType: "projectile",
           type: e.spellId,
           x: e.position.x,
           y: e.position.y,
@@ -290,7 +355,7 @@ export class GameServer {
       .filter((p) => p.lifetime > 0);
     const { gemEvents, levelEvents, expiredGems } = updateGems(
       this.connector.gameState.gems,
-      this.connector.gameState.players,
+      this.connector.gameObjectQuadTree,
       deltaTime
     );
 
@@ -304,6 +369,7 @@ export class GameServer {
       if (!p.alive) {
         this.connector.gameState.staticObjects.push({
           id: generateId("grave"),
+          objectType: "staticObject",
           type: "grave",
           x: p.x,
           y: p.y,
