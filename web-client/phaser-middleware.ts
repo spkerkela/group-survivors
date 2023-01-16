@@ -174,6 +174,7 @@ export class GameScene extends Phaser.Scene implements Middleware {
   create() {
     this.cameras.main.setBounds(0, 0, GAME_WIDTH, GAME_HEIGHT);
     this.cameras.main.setZoom(2);
+    this.cameras.main.centerOn(GAME_WIDTH / 2, GAME_HEIGHT / 2);
     const background = this.add
       .tileSprite(
         GAME_WIDTH / 2,
@@ -276,11 +277,10 @@ export class GameScene extends Phaser.Scene implements Middleware {
         color: color,
         font: "bold 24px Arial",
         stroke: "#000000",
-        strokeThickness: 2,
+        strokeThickness: 3,
       }
     );
     text.setOrigin(0.5, 0.5);
-    text.setShadow(2, 2, "#333333", 2, true, true);
     this.tweens.add({
       targets: text,
       y: position.y - chooseRandom([20, 50, 75]),
