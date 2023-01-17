@@ -20,7 +20,7 @@ import {
   StaticObject,
 } from "../common/types";
 import { LevelEvent, SpellDamageEvent } from "../server/game-logic";
-import { assets } from "./assets";
+import { assets, spriteSheets } from "./assets";
 import Bar from "./Bar";
 import { globalEventSystem } from "./eventSystems";
 import {
@@ -164,6 +164,9 @@ export class GameScene extends Phaser.Scene implements Middleware {
     assets.forEach(({ id, url }) => {
       this.load.image(id, url);
     });
+    spriteSheets.forEach(({ id, url, frameWidth = 16, frameHeight = 16 }) => {
+      this.load.spritesheet(id, url, { frameWidth, frameHeight });
+    });
   }
   launchUi() {
     if (!this.scene.isActive("UI")) {
@@ -173,8 +176,19 @@ export class GameScene extends Phaser.Scene implements Middleware {
 
   create() {
     this.cameras.main.setBounds(0, 0, GAME_WIDTH, GAME_HEIGHT);
-    this.cameras.main.setZoom(2);
+    this.cameras.main.setZoom(3);
     this.cameras.main.centerOn(GAME_WIDTH / 2, GAME_HEIGHT / 2);
+    spriteSheets.forEach(({ id }) => {
+      this.anims.create({
+        key: id,
+        frames: this.anims.generateFrameNumbers(id, {
+          start: 0,
+          end: 1,
+        }),
+        frameRate: 4,
+      });
+    });
+
     const background = this.add
       .tileSprite(
         GAME_WIDTH / 2,
@@ -278,7 +292,7 @@ export class GameScene extends Phaser.Scene implements Middleware {
         color: color,
         fontFamily: "Arial",
         fontStyle: "bold",
-        fontSize: `${amountWithScale > 1_000_000 ? 12 : 24}px`,
+        fontSize: `${amountWithScale > 1_000_000 ? 12 : 16}px`,
         stroke: "#000000",
         strokeThickness: amountWithScale > 1_000_000 ? 2 : 3,
       }

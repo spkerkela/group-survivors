@@ -1,7 +1,7 @@
-const playerAsset = new URL("assets/jyrki.png", import.meta.url);
-const batAsset = new URL("assets/bat.png", import.meta.url);
-const zombieAsset = new URL("assets/zombie.png", import.meta.url);
-const skeletonAsset = new URL("assets/skull.png", import.meta.url);
+const playerAnim = new URL("assets/player_anim.png", import.meta.url);
+const beeAnim = new URL("assets/bee_anim.png", import.meta.url);
+const zombieAnim = new URL("assets/zombie_anim.png", import.meta.url);
+const skeletonAnim = new URL("assets/golem_anim.png", import.meta.url);
 const tombstoneAsset = new URL("assets/tombstone.png", import.meta.url);
 const diamondAsset = new URL("assets/diamond.png", import.meta.url);
 const backgroundAsset = new URL("assets/bg.png", import.meta.url);
@@ -9,19 +9,22 @@ const projectileAsset = new URL("assets/projectile.png", import.meta.url);
 const whitePixel = new URL("assets/white_pixel.png", import.meta.url);
 
 export const assets = [
-  {
-    id: "player",
-    url: playerAsset.href,
-  },
-  {
-    id: "bat",
-    url: batAsset.href,
-  },
-  { id: "zombie", url: zombieAsset.href },
-  { id: "skeleton", url: skeletonAsset.href },
   { id: "grave", url: tombstoneAsset.href },
   { id: "diamond", url: diamondAsset.href },
   { id: "background", url: backgroundAsset.href },
   { id: "projectile", url: projectileAsset.href },
   { id: "white-pixel", url: whitePixel.href },
+];
+
+export interface SpriteSheet {
+  id: string;
+  url: string;
+  frameWidth?: number;
+  frameHeight?: number;
+}
+export const spriteSheets: SpriteSheet[] = [
+  { id: "player", url: playerAnim.href },
+  { id: "zombie", url: zombieAnim.href },
+  { id: "skeleton", url: skeletonAnim.href },
+  { id: "bat", url: beeAnim.href },
 ];

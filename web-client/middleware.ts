@@ -45,12 +45,13 @@ export function instantiatePlayer(
     .container(player.x, player.y)
     .setName(player.id);
   const playerSprite = scene.add.sprite(0, 0, "player").setOrigin(0.5, 0.5);
+  playerSprite.play({ key: "player", repeat: -1 });
   playerContainer.add(playerSprite);
   const playerText = scene.add
     .text(0, -32, player.screenName, {
-      font: "12x Arial",
+      font: "24x Arial",
       stroke: "#000000",
-      strokeThickness: 1,
+      strokeThickness: 2,
     })
     .setOrigin(0.5, 0.5)
     .setShadow(2, 2, "#333333", 2, true, true);
@@ -95,15 +96,6 @@ export function instantiatePlayer(
       p.getData("bar").setValue(newHp);
     }
   );
-  // make player wobble
-  scene.tweens.add({
-    targets: playerSprite,
-    angle: 5,
-    duration: randomBetweenExclusive(250, 350),
-    ease: "Power1",
-    yoyo: true,
-    repeat: -1,
-  });
   playerContainer.on("destroy", () => {
     emitter.stop();
   });
@@ -161,19 +153,13 @@ export function instantiateEnemy(
     reserve: 100,
   });
   emitter.stop();
+
   const newEnemy = scene.add.sprite(enemy.x, enemy.y, enemy.type);
+  newEnemy.play({ key: enemy.type, repeat: -1 });
   newEnemy.setData("type", "enemy");
   newEnemy.setName(enemy.id);
   newEnemy.setOrigin(0.5, 0.5);
 
-  scene.tweens.add({
-    targets: newEnemy,
-    angle: 10,
-    duration: randomBetweenExclusive(250, 350),
-    ease: "Sine.easeInOut",
-    yoyo: true,
-    repeat: -1,
-  });
   newEnemy.addListener("takeDamage", (amount: number) => {
     emitter.explode(Math.min(amount, 100), newEnemy.x, newEnemy.y);
   });
