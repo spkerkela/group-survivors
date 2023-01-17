@@ -6,4 +6,4 @@ export const SERVER_UPDATE_RATE = 32;
 export const INVULNERABILITY_SECONDS = 0.3;
 export const PLAYER_SIZE = 16;
 export const ENEMY_SIZE = 16;
-export const NUMBER_SCALE = 1232146;
+export const NUMBER_SCALE = 12321;

@@ -269,15 +269,18 @@ export class GameScene extends Phaser.Scene implements Middleware {
     }
   }
   showDamage(amount: number, position: Position, color: string = "red") {
+    const amountWithScale = amount * NUMBER_SCALE;
     const text = this.add.text(
       position.x,
       position.y,
-      `${(amount * NUMBER_SCALE).toLocaleString()}`,
+      `${amountWithScale.toLocaleString()}`,
       {
         color: color,
-        font: "bold 24px Arial",
+        fontFamily: "Arial",
+        fontStyle: "bold",
+        fontSize: `${amountWithScale > 1_000_000 ? 12 : 24}px`,
         stroke: "#000000",
-        strokeThickness: 3,
+        strokeThickness: amountWithScale > 1_000_000 ? 2 : 3,
       }
     );
     text.setOrigin(0.5, 0.5);

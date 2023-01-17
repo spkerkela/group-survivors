@@ -150,11 +150,12 @@ export class Connector {
   }
   createGameStateMessage(id: string) {
     const player = this.getPlayer(id);
-    if (!player) return { ...this.gameState, id: id };
+    const rectX = player ? player.x : GAME_WIDTH / 2;
+    const rectY = player ? player.y : GAME_HEIGHT / 2;
 
     const visibleRectangle = {
-      x: player.x - SCREEN_WIDTH / 2,
-      y: player.y - SCREEN_HEIGHT / 2,
+      x: rectX - SCREEN_WIDTH / 2,
+      y: rectY - SCREEN_HEIGHT / 2,
       width: SCREEN_WIDTH,
       height: SCREEN_HEIGHT,
     };
@@ -181,7 +182,7 @@ export class Connector {
         gameState.staticObjects.push(o);
       }
     });
-    if (!gameState.players.includes(player)) {
+    if (player && !gameState.players.includes(player)) {
       gameState.players.push(player);
     }
     gameState.debug = {
@@ -250,7 +251,7 @@ export class GameServer {
       if (this.playersAlive()) {
         this.spawner.spawnEnemy(this.connector.gameState);
       }
-    }, 100);
+    }, 1000);
   }
 
   private gameLoop() {

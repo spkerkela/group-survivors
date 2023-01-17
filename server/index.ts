@@ -34,12 +34,12 @@ initGameEventSystem(events.gameEventSystem, io);
 
 const gameServer = new GameServer(new Connector(events), {
   name: "Level 1",
-  bots: 60,
+  bots: 6,
   playerStartPosition: { x: GAME_WIDTH / 2, y: GAME_HEIGHT / 2 },
   enemyTable: {
-    zombie: 15,
-    skeleton: 20,
-    bat: 30,
+    zombie: 1500,
+    skeleton: 2000,
+    bat: 3000,
   },
   staticObjects: [],
 });
