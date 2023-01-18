@@ -39,7 +39,7 @@ describe("Quadtree", () => {
     qt.insert({ x: 52, y: 52 });
 
     qt.insert({ x: 60, y: 60 });
-    expect(qt.retrieve({ x: 50, y: 50, width: 1, height: 1 })).toHaveLength(3);
+    expect(qt.retrieve({ x: 49, y: 49, width: 3, height: 3 })).toHaveLength(3);
   });
   it("should retrieve from multiple child nodes", () => {
     const qt = new QuadTree({ x: 0, y: 0, width: 60, height: 60 }, 1);

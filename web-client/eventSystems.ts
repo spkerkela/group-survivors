@@ -14,8 +14,8 @@ export function initServerEventSystem(
   serverEventSystem: EventSystem,
   io: Socket<FromServerEventMap, ToServerEventMap>
 ) {
-  io.on("begin", (gameState: GameState) => {
-    serverEventSystem.dispatchEvent("begin", gameState);
+  io.on("beginMatch", (gameState: GameState) => {
+    serverEventSystem.dispatchEvent("beginMatch", gameState);
   });
 
   io.on("disconnect", () => {
@@ -48,6 +48,10 @@ export function initServerEventSystem(
 
   io.on("joined", (gameState: GameState) => {
     serverEventSystem.dispatchEvent("joined", gameState);
+  });
+
+  io.on("endMatch", () => {
+    serverEventSystem.dispatchEvent("endMatch");
   });
 
   return serverEventSystem;

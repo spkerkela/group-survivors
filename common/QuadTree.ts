@@ -71,8 +71,12 @@ class QuadTreeNode<T extends Position> {
     const found: T[] = [];
 
     if (!rectangleIntersects(this.bounds, bounds)) return found;
+    this.children.forEach((child) => {
+      if (rectangleContains(bounds, child)) {
+        found.push(child);
+      }
+    });
 
-    found.push(...this.children);
     for (let i = 0; i < this.nodes.length; i++) {
       found.push(...this.nodes[i].retrieve(bounds));
     }

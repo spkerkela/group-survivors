@@ -43,6 +43,7 @@ describe("player death", () => {
     );
     testConnection.dispatchEvent("join", testId);
     testConnection2.dispatchEvent("join", "test-id-2");
+    game.update();
     game.adminEvents.dispatchEvent("killPlayer", testId);
     game.update();
     expect(game.connector.lobby).toContain(testId);
@@ -62,6 +63,7 @@ describe("player death", () => {
     );
     testConnection.dispatchEvent("join", testId);
     testConnection2.dispatchEvent("join", "test-id-2");
+    game.update();
     game.adminEvents.dispatchEvent("killPlayer", testId);
     game.update();
     expect(game.connector.gameState.players.length).toBe(1);

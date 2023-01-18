@@ -101,7 +101,6 @@ export interface Projectile extends GameObject {
 }
 
 export type FromServerEventMap = {
-  begin: (gameState: GameState) => void;
   disconnect: () => void;
   spell: (data: SpellDamageEvent) => void;
   update: (gameState: GameState) => void;
@@ -110,6 +109,8 @@ export type FromServerEventMap = {
   move: (moveMessage: MoveUpdate) => void;
   projectile: (projectile: SpellProjectileEvent) => void;
   joined: (gameState: GameState) => void;
+  beginMatch: (gameState: GameState) => void;
+  endMatch: () => void;
 };
 
 export type ToServerEventMap = {

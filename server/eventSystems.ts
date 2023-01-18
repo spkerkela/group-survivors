@@ -4,7 +4,6 @@ import {
   FromServerEventMap,
   GameState,
   MoveUpdate,
-  Projectile,
   ToServerEventMap,
 } from "../common/types";
 import {
@@ -38,8 +37,8 @@ export function initConnectedClientEventSystem(
     eventSystem.dispatchEvent("join", joinName);
   });
 
-  eventSystem.addEventListener("begin", (gameState: GameState) => {
-    socket.emit("begin", gameState);
+  eventSystem.addEventListener("beginMatch", (gameState: GameState) => {
+    socket.emit("beginMatch", gameState);
   });
 
   eventSystem.addEventListener("update", (gameState: GameState) => {
@@ -69,6 +68,8 @@ export function initConnectedClientEventSystem(
   eventSystem.addEventListener("joined", (gameState: GameState) => {
     socket.emit("joined", gameState);
   });
-
+  eventSystem.addEventListener("endMatch", () => {
+    socket.emit("endMatch");
+  });
   return eventSystem;
 }

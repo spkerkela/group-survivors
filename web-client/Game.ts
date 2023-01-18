@@ -27,19 +27,34 @@ export default class Game {
     frontend.init(() => this.gameState, serverEventSystem);
 
     let inputInterval: NodeJS.Timeout | null = null;
-    serverEventSystem.addEventListener("begin", (newGameState: GameState) => {
-      this.gameState = newGameState;
-      inputInterval = setInterval(() => {
-        const inputState = this.getInputState();
-        serverEventSystem.dispatchEvent("move", {
-          ...inputState,
-          id: this.gameState.id,
-        });
-      }, SERVER_UPDATE_RATE);
-    });
+    serverEventSystem.addEventListener(
+      "beginMatch",
+      (newGameState: GameState) => {
+        this.gameState = newGameState;
+        console.log("beginMatch", newGameState);
+        inputInterval = setInterval(() => {
+          const inputState = this.getInputState();
+          serverEventSystem.dispatchEvent("move", {
+            ...inputState,
+            id: this.gameState.id,
+          });
+        }, SERVER_UPDATE_RATE);
+      }
+    );
     serverEventSystem.addEventListener("joined", (newGameState: GameState) => {
       this.gameState = newGameState;
       globalEventSystem.dispatchEvent("disableJoinUI");
+    });
+
+    serverEventSystem.addEventListener("endMatch", () => {
+      this.gameState = {
+        id: this.gameState.id,
+        players: [],
+        enemies: [],
+        gems: [],
+        projectiles: [],
+        staticObjects: [],
+      };
     });
 
     serverEventSystem.addEventListener("update", (newState: GameState) => {

@@ -120,7 +120,7 @@ export function updatePlayer(
   player.setData("health", serverPlayer.hp);
 }
 
-export function destroyPlayer(player: Phaser.GameObjects.Sprite) {
+export function destroyPlayer(player: Phaser.GameObjects.GameObject) {
   player.getData("bar")?.destroy();
   player.destroy();
 }

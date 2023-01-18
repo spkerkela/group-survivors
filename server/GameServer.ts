@@ -20,21 +20,11 @@ import {
   StaticObject,
 } from "../common/types";
 import { serverTimeScale } from "./config";
+import ConnectionStateMachine from "./ConnectionStateMachine";
 import { ServerEventSystems } from "./eventSystems";
 
-import {
-  createMoveUpdate,
-  PlayerUpdate,
-  updateEnemies,
-  updatePlayers,
-  updateSpells,
-  removeDeadEnemies,
-  updateGems,
-  createPlayer,
-  createGem,
-  SpellProjectileEvent,
-  updateProjectiles,
-} from "./game-logic";
+import { createMoveUpdate, PlayerUpdate, createPlayer } from "./game-logic";
+import GameSessionStateMachine from "./GameSessionStateMachine";
 import { generateId } from "./id-generator";
 import Spawner from "./Spawner";
 
@@ -43,20 +33,33 @@ export class Connector {
   gameState: GameState;
   updates: {
     moves: { [key: string]: PlayerUpdate };
+    newPlayers: { id: string; screenName: string }[];
   };
   events: {
     [key: string]: { name: string; data: any }[];
   };
   eventSystems: ServerEventSystems;
   lobby: string[];
+  readyToJoin: { id: string; screenName: string }[];
+  loadedLevel: LevelData;
 
+  private instantJoin = false;
   constructor(eventSystems: ServerEventSystems) {
     this.gameObjectQuadTree = new QuadTree(
       { x: 0, y: 0, width: GAME_WIDTH, height: GAME_HEIGHT },
       5
     );
 
-    this.gameState = {
+    this.gameState = this.newGameState();
+    this.updates = { moves: {}, newPlayers: [] };
+    this.events = {};
+    this.lobby = [];
+    this.eventSystems = eventSystems;
+    this.readyToJoin = [];
+  }
+
+  newGameState(): GameState {
+    return {
       players: [],
       enemies: [],
       gems: [],
@@ -64,10 +67,66 @@ export class Connector {
       id: "",
       staticObjects: [],
     };
-    this.updates = { moves: {} };
-    this.events = {};
-    this.lobby = [];
-    this.eventSystems = eventSystems;
+  }
+
+  gameCanStart(playersRequired: number): boolean {
+    const connected = this.connectionIds().slice().sort();
+    const readyToJoin = this.readyToJoin
+      .map(({ id }) => id)
+      .slice()
+      .sort();
+    if (
+      connected.length === readyToJoin.length &&
+      connected.length >= playersRequired
+    ) {
+      // check if all players are ready to join
+      for (let i = 0; i < connected.length; i++) {
+        if (connected[i] !== readyToJoin[i]) {
+          return false;
+        }
+      }
+      return true;
+    }
+    return false;
+  }
+
+  enableInstantJoin() {
+    this.instantJoin = true;
+  }
+  disableInstantJoin() {
+    this.instantJoin = false;
+  }
+
+  loadLevel(levelData: LevelData) {
+    this.loadedLevel = levelData;
+    for (let i = 0; i < levelData.bots; i++) {
+      this.gameState.players.push(
+        createPlayer(generateId("bot"), `Mr Bot ${i + 1}`, {
+          x: Math.random() * GAME_WIDTH,
+          y: Math.random() * GAME_HEIGHT,
+        })
+      );
+    }
+  }
+
+  updateQuadTree() {
+    const connector = this;
+    connector.gameObjectQuadTree.clear();
+    connector.gameState.players.forEach((player) => {
+      connector.gameObjectQuadTree.insert(player);
+    });
+    connector.gameState.enemies.forEach((enemy) => {
+      connector.gameObjectQuadTree.insert(enemy);
+    });
+    connector.gameState.gems.forEach((gem) => {
+      connector.gameObjectQuadTree.insert(gem);
+    });
+    connector.gameState.projectiles.forEach((projectile) => {
+      connector.gameObjectQuadTree.insert(projectile);
+    });
+    connector.gameState.staticObjects.forEach((staticObject) => {
+      connector.gameObjectQuadTree.insert(staticObject);
+    });
   }
 
   pushEvent(name: string, playerId: string, data: any) {
@@ -78,16 +137,32 @@ export class Connector {
   getPlayer(id: string) {
     return this.gameState.players.find((p) => p.id === id);
   }
-
+  private addPlayerToState(
+    id: string,
+    screenName: string,
+    levelData: LevelData
+  ) {
+    this.lobby = this.lobby.filter((p) => p !== id);
+    this.gameState.players = this.gameState.players.filter((p) => p.id !== id);
+    this.gameState.players.push(
+      createPlayer(id, sanitizeName(screenName), {
+        x: levelData.playerStartPosition.x,
+        y: levelData.playerStartPosition.y,
+      })
+    );
+  }
+  connectReadyPlayers(levelData: LevelData) {
+    this.readyToJoin.forEach((player) => {
+      this.addPlayerToState(player.id, player.screenName, levelData);
+    });
+    this.updateQuadTree();
+    this.readyToJoin.forEach(({ id }) => {
+      const message = this.createGameStateMessage(id);
+      this.eventSystems.connectionSystems[id].dispatchEvent("joined", message);
+    });
+    this.readyToJoin = [];
+  }
   start(levelData: LevelData) {
-    for (let i = 0; i < levelData.bots; i++) {
-      this.gameState.players.push(
-        createPlayer(generateId("bot"), `Mr Bot ${i + 1}`, {
-          x: Math.random() * GAME_WIDTH,
-          y: Math.random() * GAME_HEIGHT,
-        })
-      );
-    }
     this.eventSystems.gameEventSystem.addEventListener(
       "connection",
       (id: string, connection: EventSystem) => {
@@ -96,21 +171,26 @@ export class Connector {
         this.events[id] = [];
         connection.addEventListener("join", (screenName: string) => {
           if (this.lobby.includes(id)) {
-            this.lobby = this.lobby.filter((p) => p !== id);
-            this.gameState.players = this.gameState.players.filter(
-              (p) => p.id !== id
-            );
-            this.gameState.players.push(
-              createPlayer(id, sanitizeName(screenName), {
-                x: levelData.playerStartPosition.x,
-                y: levelData.playerStartPosition.y,
-              })
-            );
-            connection.dispatchEvent("joined", this.createGameStateMessage(id));
+            if (this.instantJoin) {
+              this.events[id].push({
+                name: "joined",
+                data: this.createGameStateMessage(id),
+              });
+              this.updates.newPlayers.push({ id, screenName });
+            } else {
+              this.readyToJoin.push({ id, screenName });
+              this.events[id].push({
+                name: "joined",
+                data: this.createGameStateMessage(id),
+              });
+              this.events[id].push({
+                name: "beginMatch",
+                data: this.createGameStateMessage(id),
+              });
+            }
           }
         });
 
-        connection.dispatchEvent("begin", this.createGameStateMessage(id));
         connection.addEventListener("disconnect", () => {
           this.gameState.players = this.gameState.players.filter(
             (p) => p.id !== id
@@ -134,11 +214,12 @@ export class Connector {
       }
     );
   }
-  update() {
+  connectionIds(): string[] {
+    return Object.keys(this.eventSystems.connectionSystems);
+  }
+  sendEvents(): void {
     Object.entries(this.eventSystems.connectionSystems).forEach(
       ([id, connection]) => {
-        const gameState = this.createGameStateMessage(id);
-        connection.dispatchEvent("update", gameState);
         if (this.events[id] != null) {
           this.events[id].forEach((e) => {
             connection.dispatchEvent(e.name, e.data);
@@ -207,6 +288,8 @@ export class GameServer {
   spawner: Spawner;
   adminEvents: EventSystem;
   deltaTime: number;
+  gameStateMachine: GameSessionStateMachine;
+  connectionStateMachine: ConnectionStateMachine;
 
   constructor(connector: Connector, levelData: LevelData) {
     this.connector = connector;
@@ -225,17 +308,17 @@ export class GameServer {
       }
     });
     this.deltaTime = 0;
-  }
-
-  private playersAlive() {
-    return this.connector.gameState.players.filter((p) => p.alive).length > 0;
+    this.gameStateMachine = new GameSessionStateMachine(
+      connector,
+      levelData,
+      1
+    );
+    this.connectionStateMachine = new ConnectionStateMachine(connector, 1);
   }
 
   update() {
-    this.connector.update();
-    if (this.playersAlive() || this.connector.lobby.length > 0) {
-      this.gameLoop();
-    }
+    this.gameStateMachine.update(this.deltaTime);
+    this.connectionStateMachine.update(this.deltaTime);
   }
 
   start() {
@@ -247,148 +330,5 @@ export class GameServer {
       this.deltaTime = (elapsedTime / 1000) * serverTimeScale;
       this.update();
     }, SERVER_UPDATE_RATE);
-    setInterval(() => {
-      if (this.playersAlive()) {
-        this.spawner.spawnEnemy(this.connector.gameState);
-      }
-    }, 1000);
-  }
-
-  private gameLoop() {
-    this.connector.gameObjectQuadTree.clear();
-    this.connector.gameState.players.forEach((player) => {
-      this.connector.gameObjectQuadTree.insert(player);
-    });
-    this.connector.gameState.enemies.forEach((enemy) => {
-      this.connector.gameObjectQuadTree.insert(enemy);
-    });
-    this.connector.gameState.gems.forEach((gem) => {
-      this.connector.gameObjectQuadTree.insert(gem);
-    });
-    this.connector.gameState.projectiles.forEach((projectile) => {
-      this.connector.gameObjectQuadTree.insert(projectile);
-    });
-    this.connector.gameState.staticObjects.forEach((staticObject) => {
-      this.connector.gameObjectQuadTree.insert(staticObject);
-    });
-    const deltaTime = this.deltaTime;
-    const gemsToSpawn = this.connector.gameState.enemies
-      .filter((enemy) => !enemy.alive)
-      .map((enemy) =>
-        createGem(generateId(`gem-${enemy.id}`), enemy.gemType, {
-          x: enemy.x,
-          y: enemy.y,
-        })
-      );
-
-    this.connector.gameState.gems =
-      this.connector.gameState.gems.concat(gemsToSpawn);
-
-    this.connector.gameState.enemies = removeDeadEnemies(
-      this.connector.gameState.enemies
-    );
-    updatePlayers(
-      this.connector.gameState.players,
-      this.connector.updates,
-      deltaTime
-    );
-    const spellEvents = updateSpells(
-      this.connector.gameState.players,
-      this.connector.gameObjectQuadTree,
-      deltaTime
-    );
-    const projectileEvents = updateProjectiles(
-      this.connector.gameState.projectiles,
-      this.connector.gameObjectQuadTree,
-      deltaTime
-    );
-
-    const spellDamageEvents = spellEvents.damageEvents.concat(projectileEvents);
-
-    spellDamageEvents.forEach((spellEvent) => {
-      const target = this.connector.gameState.enemies.find(
-        (e) => e.id === spellEvent.targetId
-      );
-      if (target) {
-        target.hp -= spellEvent.damage;
-        if (target.hp <= 0) {
-          target.alive = false;
-        }
-      }
-    });
-    const enemyEvents = updateEnemies(
-      this.connector.gameState.enemies,
-      this.connector.gameObjectQuadTree,
-      deltaTime
-    );
-    this.connector.gameState.players.forEach((p) => {
-      if (p.id.startsWith("bot-")) {
-        return;
-      }
-      if (!p.alive) {
-        this.connector.lobby.push(p.id);
-        return;
-      }
-    });
-    enemyEvents.forEach((e) => {
-      this.connector.pushEvent("damage", e.playerId, e);
-    });
-
-    spellDamageEvents.forEach((e) => {
-      this.connector.pushEvent("spell", e.fromId, e);
-    });
-    spellEvents.projectileEvents.forEach((e) => {
-      this.connector.pushEvent("projectile", e.fromId, e);
-    });
-    this.connector.gameState.projectiles = this.connector.gameState.projectiles
-      .concat(
-        spellEvents.projectileEvents.map((e: SpellProjectileEvent) => ({
-          id: generateId(e.spellId),
-          objectType: "projectile",
-          type: e.spellId,
-          x: e.position.x,
-          y: e.position.y,
-          direction: e.targetDirection,
-          damageType: e.damageType,
-          damage: e.damage,
-          critical: e.critical,
-          lifetime: e.lifetime,
-          fromId: e.fromId,
-          speed: e.speed,
-          maxPierceCount: e.maxPierceCount,
-          hitEnemies: [],
-          spellId: e.spellId,
-        }))
-      )
-      .filter((p) => p.lifetime > 0);
-    const { gemEvents, levelEvents, expiredGems } = updateGems(
-      this.connector.gameState.gems,
-      this.connector.gameObjectQuadTree,
-      deltaTime
-    );
-
-    this.connector.gameState.gems = this.connector.gameState.gems.filter(
-      (g) => !gemEvents.map((e) => e.gemId).includes(g.id) // remove gems that have been picked up
-    );
-    levelEvents.forEach((e) => {
-      this.connector.pushEvent("level", e.playerId, e);
-    });
-    this.connector.gameState.players.forEach((p) => {
-      if (!p.alive) {
-        this.connector.gameState.staticObjects.push({
-          id: generateId("grave"),
-          objectType: "staticObject",
-          type: "grave",
-          x: p.x,
-          y: p.y,
-        });
-      }
-    });
-    this.connector.gameState.players = this.connector.gameState.players.filter(
-      (p) => p.alive
-    );
-    this.connector.gameState.gems = this.connector.gameState.gems.filter(
-      (g) => !expiredGems.includes(g.id)
-    );
   }
 }
