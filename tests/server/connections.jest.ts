@@ -219,4 +219,17 @@ describe("Connections", () => {
     sm.update(10);
     expect(sm.stateMachine.state).toBeInstanceOf(LobbyState);
   });
+  it("should move from Retrospetive to Lobby state if no players connected", () => {
+    const p1Conn = createTestConnection(serverScene, "test-id");
+    const p2Conn = createTestConnection(serverScene, "test-id-2");
+    p1Conn.dispatchEvent("join", "Random Name");
+    p2Conn.dispatchEvent("join", "Random Name 2");
+    sm.update(0);
+    sm.update(0);
+    expect(sm.stateMachine.state).toBeInstanceOf(GameRetrospectiveState);
+    p1Conn.dispatchEvent("disconnect");
+    p2Conn.dispatchEvent("disconnect");
+    sm.update(0);
+    expect(sm.stateMachine.state).toBeInstanceOf(LobbyState);
+  });
 });

@@ -61,14 +61,14 @@ export class GameRetrospectiveState implements State<ConnectionData> {
   update(dt: number, data: ConnectionData): State<ConnectionData> {
     data.connector.sendEvents();
     this.time -= dt;
-    if (this.time <= 0) {
+    if (this.time <= 0 || data.connector.connectionIds().length === 0) {
       return new LobbyState();
     }
     return this;
   }
 
   enter(data: ConnectionData): void {
-    this.time = 5;
+    this.time = 10;
   }
 
   exit(data: ConnectionData): void {}
