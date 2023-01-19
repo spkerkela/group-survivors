@@ -7,6 +7,7 @@ import { sanitizeName } from "../common/shared";
 import { globalEventSystem, initServerEventSystem } from "./eventSystems";
 import EventSystem from "../common/EventSystem";
 import PhaserMiddleware from "./phaser-middleware";
+import ClientStateMachine from "./ClientStateMachine";
 
 const levelIndicatorDiv = document.getElementById("level");
 const socket = io({ parser });
@@ -41,4 +42,25 @@ globalEventSystem.addEventListener("enableJoinUI", () => {
   nameInput.disabled = false;
 });
 
+const sm = new ClientStateMachine(
+  serverEventSystem,
+  new PhaserMiddleware(canvasElement)
+);
+let previousTime = Date.now();
+let deltaTime = 0;
+
+function update() {
+  const currentTime = Date.now();
+  const elapsedTime = currentTime - previousTime;
+  previousTime = currentTime;
+  deltaTime = elapsedTime / 1000;
+  sm.update(deltaTime);
+  requestAnimationFrame(update);
+}
+
+requestAnimationFrame(update);
+/*
 const game = new Game(serverEventSystem, new PhaserMiddleware(canvasElement));
+
+
+ */

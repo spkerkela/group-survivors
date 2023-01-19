@@ -10,9 +10,10 @@ import {
   updateGems,
   createPlayer,
 } from "./game-logic";
-import { Connector, LevelData } from "./GameServer";
+import { LevelData } from "./GameServer";
 import { generateId } from "./id-generator";
 import Spawner from "./Spawner";
+import { ServerScene } from "./ServerScene";
 
 class PreMatchState implements State<StateMachineData> {
   update(dt: number, { connector, playersRequired }: StateMachineData) {
@@ -202,7 +203,7 @@ class EndMatchState implements State<StateMachineData> {
 }
 
 interface StateMachineData {
-  connector: Connector;
+  connector: ServerScene;
   levelData: LevelData;
   playersRequired: number;
 }
@@ -211,7 +212,7 @@ export default class GameSessionStateMachine {
   stateMachine: StateMachine<StateMachineData>;
   data: StateMachineData;
   constructor(
-    connector: Connector,
+    connector: ServerScene,
     levelData: LevelData,
     playersRequired: number = 2
   ) {

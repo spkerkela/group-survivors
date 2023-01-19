@@ -24,7 +24,7 @@ export default class Game {
       staticObjects: [],
     };
 
-    frontend.init(() => this.gameState, serverEventSystem);
+    frontend.init(this.gameState, serverEventSystem);
 
     let inputInterval: NodeJS.Timeout | null = null;
     serverEventSystem.addEventListener(

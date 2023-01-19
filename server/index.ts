@@ -3,10 +3,11 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import path from "path";
 import { GAME_HEIGHT, GAME_WIDTH } from "../common/constants";
-import { GameServer, Connector } from "./GameServer";
+import { GameServer } from "./GameServer";
 import parser from "socket.io-msgpack-parser";
 import EventSystem from "../common/EventSystem";
 import { initGameEventSystem, ServerEventSystems } from "./eventSystems";
+import { ServerScene } from "./ServerScene";
 
 const app = express();
 
@@ -32,9 +33,9 @@ const events: ServerEventSystems = {
 
 initGameEventSystem(events.gameEventSystem, io);
 
-const gameServer = new GameServer(new Connector(events), {
+const gameServer = new GameServer(new ServerScene(events), {
   name: "Level 1",
-  bots: 1,
+  bots: 0,
   playerStartPosition: { x: GAME_WIDTH / 2, y: GAME_HEIGHT / 2 },
   enemyTable: {
     zombie: 1500,

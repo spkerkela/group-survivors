@@ -2,10 +2,10 @@ import { rectangleContains, rectangleIntersects } from "./math";
 import { Position, Rectangle } from "./types";
 
 class QuadTreeNode<T extends Position> {
-  private bounds: Rectangle;
-  private maxChildren: number;
-  private children: T[];
-  private nodes: QuadTreeNode<T>[];
+  private readonly bounds: Rectangle;
+  private readonly maxChildren: number;
+  private readonly children: T[];
+  private readonly nodes: QuadTreeNode<T>[];
 
   constructor(bounds: Rectangle, maxChildren: number) {
     this.bounds = bounds;
@@ -87,8 +87,8 @@ class QuadTreeNode<T extends Position> {
 
 export default class QuadTree<T extends Position> {
   private root: QuadTreeNode<T>;
-  private maxChildren: number;
-  private bounds: Rectangle;
+  private readonly maxChildren: number;
+  private readonly bounds: Rectangle;
 
   constructor(bounds: Rectangle, maxChildren: number) {
     this.bounds = bounds;

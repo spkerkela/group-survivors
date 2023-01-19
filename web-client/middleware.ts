@@ -337,7 +337,11 @@ export function updateMiddleWare(gameState: GameState, mw: Middleware) {
 }
 
 export interface GameFrontend {
-  init(gameStateFn: () => GameState, serverEventSystem: EventSystem): void;
+  init(initialGameState: GameState, serverEventSystem: EventSystem): void;
+
+  update(gameState: GameState): void;
+
+  restart(gameState: GameState): void;
 }
 
 export interface Middleware {
@@ -357,28 +361,4 @@ export interface Middleware {
   instantiateStaticObject(staticObject: StaticObject): void;
   updateStaticObject(staticObject: StaticObject): void;
   removeInvalidGameObjects(type: string, validIds: string[]): void;
-}
-
-export class DummyFrontend implements GameFrontend {
-  init(gameStateFn: () => GameState, serverEventSystem: EventSystem): void {}
-}
-
-export class DummyMiddleware implements Middleware {
-  updateEnemy(enemy: Enemy): void {}
-  updateGem(gem: Gem): void {}
-  updateStaticObject(staticObject: StaticObject): void {}
-  updateGameObject<T extends Position>(id: string, obj: T): void {}
-  flashWhite(id: string): void {}
-  showDamage(amount: number, position: Position, color: string): void {}
-  showDamageToTarget(targetId: string, amount: number, color: string): void {}
-  instantiatePlayer(player: Player): void {}
-  updatePlayer(player: Player): void {}
-  updatePlayerLevel(player: Player): void {}
-  destroyPlayer(playerId: string): void {}
-  instantiateEnemy(enemy: Enemy): void {}
-  instantiateGem(gem: Gem): void {}
-  instantiateProjectile(projectile: Projectile): void {}
-  updateProjectile(projectile: Projectile): void {}
-  instantiateStaticObject(staticObject: StaticObject): void {}
-  removeInvalidGameObjects(type: string, validIds: string[]): void {}
 }

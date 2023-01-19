@@ -1,8 +1,8 @@
 import StateMachine, { State } from "../common/StateMachine";
-import { Connector } from "./GameServer";
+import { ServerScene } from "./ServerScene";
 
 interface ConnectionData {
-  connector: Connector;
+  connector: ServerScene;
   playersRequired: number;
 }
 
@@ -19,7 +19,9 @@ export class LobbyState implements State<ConnectionData> {
 
     return this;
   }
+
   enter(data: ConnectionData): void {}
+
   exit(data: ConnectionData): void {}
 }
 
@@ -31,6 +33,7 @@ export class GameUpdateState implements State<ConnectionData> {
     }
     return this;
   }
+
   enter(data: ConnectionData): void {
     data.connector.enableInstantJoin();
     data.connector.readyToJoin.forEach(({ id, screenName }) => {
@@ -43,6 +46,7 @@ export class GameUpdateState implements State<ConnectionData> {
       });
     });
   }
+
   exit(data: ConnectionData): void {
     data.connector.disableInstantJoin();
     data.connector.connectionIds().forEach((id) => {
@@ -53,6 +57,7 @@ export class GameUpdateState implements State<ConnectionData> {
 
 export class GameRetrospectiveState implements State<ConnectionData> {
   time: number;
+
   update(dt: number, data: ConnectionData): State<ConnectionData> {
     data.connector.sendEvents();
     this.time -= dt;
@@ -61,22 +66,26 @@ export class GameRetrospectiveState implements State<ConnectionData> {
     }
     return this;
   }
+
   enter(data: ConnectionData): void {
     this.time = 5;
   }
+
   exit(data: ConnectionData): void {}
 }
 
 export default class ConnectionStateMachine {
   stateMachine: StateMachine<ConnectionData>;
   data: ConnectionData;
-  constructor(connector: Connector, playersRequired: number = 2) {
+
+  constructor(connector: ServerScene, playersRequired: number = 2) {
     this.data = { connector, playersRequired };
     this.stateMachine = new StateMachine<ConnectionData>(
       new LobbyState(),
       this.data
     );
   }
+
   update(dt: number) {
     this.stateMachine.update(dt, this.data);
   }

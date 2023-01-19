@@ -19,7 +19,11 @@ import {
   Projectile,
   StaticObject,
 } from "../common/types";
-import { LevelEvent, SpellDamageEvent } from "../server/game-logic";
+import {
+  DamageEvent,
+  LevelEvent,
+  SpellDamageEvent,
+} from "../server/game-logic";
 import { assets, spriteSheets } from "./assets";
 import Bar from "./Bar";
 import { globalEventSystem } from "./eventSystems";
@@ -37,6 +41,7 @@ import {
   updatePlayer,
   updateMiddleWare,
 } from "./middleware";
+import { LevelData } from "../server/GameServer";
 
 const colorFromDamageType = (damageType: string) => {
   switch (damageType) {
@@ -56,11 +61,13 @@ const colorFromDamageType = (damageType: string) => {
 export class UiScene extends Phaser.Scene {
   experienceBar: Bar;
   eventSystem: EventSystem;
-  gameStateFn: () => GameState;
-  constructor(gameStateFn: () => GameState, eventSystem: EventSystem) {
+  gameState: GameState;
+  constructor(gameState: GameState, eventSystem: EventSystem) {
     super({ key: "UI", active: false });
-    this.gameStateFn = gameStateFn;
     this.eventSystem = eventSystem;
+  }
+  init(data: { gameState: GameState }) {
+    this.data.set("gameState", data.gameState);
   }
   create() {
     this.experienceBar = new Bar(this, {
@@ -71,8 +78,11 @@ export class UiScene extends Phaser.Scene {
       value: 0,
       maxValue: experienceRequiredForLevel(2),
     });
-    this.eventSystem.addEventListener("level", ({ playerId, player }) => {
-      const gameState = this.gameStateFn();
+    const levelCallback: (data: LevelEvent) => void = ({
+      playerId,
+      player,
+    }) => {
+      const gameState = this.gameState;
       if (playerId !== gameState.id) {
         return;
       }
@@ -80,11 +90,15 @@ export class UiScene extends Phaser.Scene {
         experienceRequiredForLevel(player.level + 1) -
           experienceRequiredForLevel(player.level)
       );
+    };
+    this.eventSystem.addEventListener("level", levelCallback);
+    this.events.on("destroy", () => {
+      this.eventSystem.removeEventListener("level", levelCallback);
     });
   }
 
   update() {
-    const gameState = this.gameStateFn();
+    const gameState = this.data.get("gameState");
     gameState.players.forEach((p) => {
       if (p.id === gameState.id) {
         this.experienceBar.setValue(
@@ -96,13 +110,25 @@ export class UiScene extends Phaser.Scene {
 }
 
 export class GameScene extends Phaser.Scene implements Middleware {
-  gameStateFn: () => GameState;
   serverEventSystem: EventSystem;
   gameObjectCache: { [key: string]: Phaser.GameObjects.GameObject } = {};
-  constructor(gameStateFn: () => GameState, serverEventSystem: EventSystem) {
-    super({ key: "Game", active: true });
-    this.gameStateFn = gameStateFn;
+  constructor(gameState: GameState, serverEventSystem: EventSystem) {
+    super({ key: "Game", active: false });
     this.serverEventSystem = serverEventSystem;
+  }
+  restartGame(data: { gameState: GameState }) {
+    this.scene.restart(data);
+  }
+  init(data: { gameState: GameState }) {
+    this.data.set("gameState", data.gameState);
+    data.gameState.players.forEach((p) => {
+      if (p.id === data.gameState.id) {
+        const instantiated = instantiatePlayer(this, p);
+        this.cameras.main.startFollow(instantiated, true);
+        this.launchUi();
+        this.gameObjectCache[p.id] = instantiated;
+      }
+    });
   }
   updateEnemy(enemy: Enemy): void {
     updateGameObject(this, enemy.id, enemy, instantiateEnemy);
@@ -170,7 +196,9 @@ export class GameScene extends Phaser.Scene implements Middleware {
   }
   launchUi() {
     if (!this.scene.isActive("UI")) {
-      this.scene.launch("UI");
+      this.scene.launch("UI", {
+        gameState: this.data.get("gameState") as GameState,
+      });
     }
   }
 
@@ -199,7 +227,7 @@ export class GameScene extends Phaser.Scene implements Middleware {
       )
       .setName("background");
     this.gameObjectCache["background"] = background;
-    const gameState = this.gameStateFn();
+    const gameState = this.data.get("gameState") as GameState;
 
     gameState.players.forEach((p) => {
       const instantiated = instantiatePlayer(this, p);
@@ -208,51 +236,45 @@ export class GameScene extends Phaser.Scene implements Middleware {
         this.launchUi();
       }
     });
-    this.serverEventSystem.addEventListener(
-      "damage",
-      ({ amount, damageType }) => {
-        const gameState = this.gameStateFn();
-        const player = gameState.players.find((p) => p.id === gameState.id);
-        if (!player) return;
-        const color = colorFromDamageType(damageType);
-        this.showDamage(amount, player, color);
-        this.flashWhite(player.id);
-        this.cameras.main.flash(150, 255, 255, 255);
-        this.cameras.main.shake(150, 0.01);
-      }
-    );
-    this.serverEventSystem.addEventListener(
-      "spell",
-      (data: SpellDamageEvent) => {
-        const color = colorFromDamageType(data.damageType);
-        this.spellEffect(data.spellId);
-        this.showDamageToTarget(data.targetId, data.damage, color);
-        this.flashWhite(data.targetId);
-      }
-    );
-    this.serverEventSystem.addEventListener("level", (data: LevelEvent) => {
-      const gameState = this.gameStateFn();
+    const damageCallback: (data: DamageEvent) => void = ({
+      amount,
+      damageType,
+    }) => {
+      const gameState = this.data.get("gameState") as GameState;
+      const player = gameState.players.find((p) => p.id === gameState.id);
+      if (!player) return;
+      const color = colorFromDamageType(damageType);
+      this.showDamage(amount, player, color);
+      this.flashWhite(player.id);
+      this.cameras.main.flash(150, 255, 255, 255);
+      this.cameras.main.shake(150, 0.01);
+    };
+    this.serverEventSystem.addEventListener("damage", damageCallback);
+
+    const spellCallBack: (s: SpellDamageEvent) => void = (data) => {
+      const color = colorFromDamageType(data.damageType);
+      this.spellEffect(data.spellId);
+      this.showDamageToTarget(data.targetId, data.damage, color);
+      this.flashWhite(data.targetId);
+    };
+    this.serverEventSystem.addEventListener("spell", spellCallBack);
+    const levelCallback: (e: LevelEvent) => void = (data) => {
+      const gameState = this.data.get("gameState") as GameState;
       if (data.playerId !== gameState.id) return;
       globalEventSystem.dispatchEvent("level", data.player.level);
       this.updateLevel(data.player);
+    };
+    this.serverEventSystem.addEventListener("level", levelCallback);
+    this.events.on("destroy", () => {
+      console.log("destroying game scene");
+      this.serverEventSystem.removeEventListener("level", levelCallback);
+      this.serverEventSystem.removeEventListener("spell", spellCallBack);
+      this.serverEventSystem.removeEventListener("damage", damageCallback);
     });
-    this.serverEventSystem.addEventListener(
-      "joined",
-      (newGameState: GameState) => {
-        newGameState.players.forEach((p) => {
-          if (p.id === newGameState.id) {
-            const instantiated = instantiatePlayer(this, p);
-            this.cameras.main.startFollow(instantiated, true);
-            this.launchUi();
-            this.gameObjectCache[p.id] = instantiated;
-          }
-        });
-      }
-    );
   }
 
   update() {
-    const gameState = this.gameStateFn();
+    const gameState = this.data.get("gameState") as GameState;
     updateMiddleWare(gameState, this);
     const background = this.gameObjectCache["background"];
     const player = this.gameObjectCache[gameState.id];
@@ -328,7 +350,7 @@ export class GameScene extends Phaser.Scene implements Middleware {
   }
 
   private getActivePlayer(): Phaser.GameObjects.GameObject {
-    return this.children.getByName(this.gameStateFn().id);
+    return this.children.getByName(this.data.get("gameState").id);
   }
 
   updateLevel(serverPlayer: Player) {
@@ -344,7 +366,33 @@ export default class PhaserMiddleware implements GameFrontend {
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
   }
-  init(gameStateFn: () => GameState, serverEventSystem: EventSystem): void {
+
+  update(gameState: GameState) {
+    if (this.phaserInstance) {
+      if (this.phaserInstance.scene.isActive("Game")) {
+        this.phaserInstance.scene
+          .getScene("Game")
+          .data.set("gameState", gameState);
+      }
+      if (this.phaserInstance.scene.isActive("UI")) {
+        this.phaserInstance.scene
+          .getScene("UI")
+          .data.set("gameState", gameState);
+      }
+    }
+  }
+  restart(gameState: GameState) {
+    if (this.phaserInstance) {
+      if (this.phaserInstance.scene.isActive("Game")) {
+        this.phaserInstance.scene.remove("Game");
+        this.phaserInstance.scene.start("Game", { gameState });
+      }
+      if (this.phaserInstance.scene.isActive("UI")) {
+        this.phaserInstance.scene.remove("UI");
+      }
+    }
+  }
+  init(gameState: GameState, serverEventSystem: EventSystem): void {
     this.phaserInstance = new Phaser.Game({
       canvas: this.canvas,
       width: SCREEN_WIDTH,
@@ -353,10 +401,11 @@ export default class PhaserMiddleware implements GameFrontend {
       roundPixels: false,
       pixelArt: true,
       scene: [
-        new GameScene(gameStateFn, serverEventSystem),
-        new UiScene(gameStateFn, serverEventSystem),
+        new GameScene(gameState, serverEventSystem),
+        new UiScene(gameState, serverEventSystem),
       ],
       backgroundColor: "#170332",
     });
+    this.phaserInstance.scene.start("Game", { gameState });
   }
 }

@@ -4,17 +4,19 @@ import ConnectionStateMachine, {
   GameUpdateState,
   LobbyState,
 } from "../../server/ConnectionStateMachine";
-import { ServerEventSystems } from "../../server/eventSystems";
 import { createPlayer } from "../../server/game-logic";
-import { Connector, GameServer } from "../../server/GameServer";
 import { levelData } from "./fixtures";
+import { ServerScene } from "../../server/ServerScene";
 
-function createTestConnection(connector: Connector, id: string): EventSystem {
+function createTestConnection(
+  serverScene: ServerScene,
+  id: string
+): EventSystem {
   const system = new EventSystem();
 
   system.addEventListener("joined", () => {});
   system.addEventListener("beginMatch", () => {});
-  connector.eventSystems.gameEventSystem.dispatchEvent(
+  serverScene.eventSystems.gameEventSystem.dispatchEvent(
     "connection",
     id,
     system
@@ -24,38 +26,38 @@ function createTestConnection(connector: Connector, id: string): EventSystem {
 
 describe("Connections", () => {
   let sm: ConnectionStateMachine = null;
-  let connector: Connector = null;
+  let serverScene: ServerScene = null;
   beforeEach(() => {
-    connector = new Connector({
+    serverScene = new ServerScene({
       gameEventSystem: new EventSystem(),
       connectionSystems: {},
     });
-    connector.start(levelData);
-    sm = new ConnectionStateMachine(connector, 2);
+    serverScene.start(levelData);
+    sm = new ConnectionStateMachine(serverScene, 2);
   });
   it("should start in the lobby state", () => {
     expect(sm.stateMachine.state).toBeInstanceOf(LobbyState);
   });
   it("should remain in the lobby state when someone connects", () => {
-    createTestConnection(connector, "test-id");
+    createTestConnection(serverScene, "test-id");
     sm.update(0);
     expect(sm.stateMachine.state).toBeInstanceOf(LobbyState);
   });
   it("should remain in lobby even if enough players join but they have not sent a join evenet", () => {
-    createTestConnection(connector, "test-id");
-    createTestConnection(connector, "test-id-2");
+    createTestConnection(serverScene, "test-id");
+    createTestConnection(serverScene, "test-id-2");
     sm.update(0);
     expect(sm.stateMachine.state).toBeInstanceOf(LobbyState);
   });
   it("should remain in lobby if only some players join", () => {
-    const p1Conn = createTestConnection(connector, "test-id");
-    createTestConnection(connector, "test-id-2");
+    const p1Conn = createTestConnection(serverScene, "test-id");
+    createTestConnection(serverScene, "test-id-2");
     p1Conn.dispatchEvent("join", "Random Name");
     sm.update(0);
     expect(sm.stateMachine.state).toBeInstanceOf(LobbyState);
   });
   it("should send 'joined' event to player in response to 'join' event", () => {
-    const p1Conn = createTestConnection(connector, "test-id");
+    const p1Conn = createTestConnection(serverScene, "test-id");
     const p1JoinedSpy = jest.fn();
     p1Conn.addEventListener("joined", p1JoinedSpy);
     p1Conn.dispatchEvent("join", "Random Name");
@@ -63,16 +65,16 @@ describe("Connections", () => {
     expect(p1JoinedSpy).toHaveBeenCalled();
   });
   it("should move to the game state if enough players join", () => {
-    const p1Conn = createTestConnection(connector, "test-id");
-    const p2Conn = createTestConnection(connector, "test-id-2");
+    const p1Conn = createTestConnection(serverScene, "test-id");
+    const p2Conn = createTestConnection(serverScene, "test-id-2");
     p1Conn.dispatchEvent("join", "Random Name");
     p2Conn.dispatchEvent("join", "Random Name 2");
     sm.update(0);
     expect(sm.stateMachine.state).toBeInstanceOf(GameUpdateState);
   });
   it("should send 'beginMatch' event to all players when the game starts", () => {
-    const p1Conn = createTestConnection(connector, "test-id");
-    const p2Conn = createTestConnection(connector, "test-id-2");
+    const p1Conn = createTestConnection(serverScene, "test-id");
+    const p2Conn = createTestConnection(serverScene, "test-id-2");
     const p1JoinedSpy = jest.fn();
     const p2JoinedSpy = jest.fn();
     p1Conn.addEventListener("beginMatch", p1JoinedSpy);
@@ -85,12 +87,12 @@ describe("Connections", () => {
     expect(p2JoinedSpy).toHaveBeenCalled();
   });
   it("should add to newPlayers list when the game starts", () => {
-    const p1Conn = createTestConnection(connector, "test-id");
-    const p2Conn = createTestConnection(connector, "test-id-2");
+    const p1Conn = createTestConnection(serverScene, "test-id");
+    const p2Conn = createTestConnection(serverScene, "test-id-2");
     p1Conn.dispatchEvent("join", "Random Name");
     p2Conn.dispatchEvent("join", "Random Name 2");
     sm.update(0);
-    expect(connector.updates.newPlayers).toStrictEqual([
+    expect(serverScene.updates.newPlayers).toStrictEqual([
       {
         id: "test-id",
         screenName: "Random Name",
@@ -102,35 +104,37 @@ describe("Connections", () => {
     ]);
   });
   it("should send an 'update' event to all players when the game is in update", () => {
-    const p1Conn = createTestConnection(connector, "test-id");
-    const p2Conn = createTestConnection(connector, "test-id-2");
+    const p1Conn = createTestConnection(serverScene, "test-id");
+    const p2Conn = createTestConnection(serverScene, "test-id-2");
     const p1JoinedSpy = jest.fn();
     const p2JoinedSpy = jest.fn();
     p1Conn.addEventListener("update", p1JoinedSpy);
     p2Conn.addEventListener("update", p2JoinedSpy);
     p1Conn.dispatchEvent("join", "Random Name");
     p2Conn.dispatchEvent("join", "Random Name 2");
-    connector.gameState.players = [
+    serverScene.gameState.players = [
       createPlayer("test-id", "Random Name", { x: 500, y: 500 }),
       createPlayer("test-id-2", "Random Name 2", { x: 1000, y: 1000 }),
     ];
-    connector.updateQuadTree();
+    serverScene.updateQuadTree();
     const gameStates = [];
-    Object.entries(connector.eventSystems.connectionSystems).forEach(([id]) => {
-      const gameState = connector.createGameStateMessage(id);
-      gameStates.push(gameState);
-      connector.pushEvent("update", id, gameState);
-    });
+    Object.entries(serverScene.eventSystems.connectionSystems).forEach(
+      ([id]) => {
+        const gameState = serverScene.createGameStateMessage(id);
+        gameStates.push(gameState);
+        serverScene.pushEvent("update", id, gameState);
+      }
+    );
     sm.update(0);
     expect(p1JoinedSpy).toHaveBeenCalledWith(gameStates[0]);
     expect(p2JoinedSpy).toHaveBeenCalledWith(gameStates[1]);
   });
   it("should not send positions of players that are not close to each other", () => {
-    const p1Conn = createTestConnection(connector, "test-id");
-    const p2Conn = createTestConnection(connector, "test-id-2");
+    const p1Conn = createTestConnection(serverScene, "test-id");
+    const p2Conn = createTestConnection(serverScene, "test-id-2");
     p1Conn.dispatchEvent("join", "Random Name");
     p2Conn.dispatchEvent("join", "Random Name 2");
-    connector.gameState.players = [
+    serverScene.gameState.players = [
       createPlayer("test-id", "Random Name", { x: 1, y: 1 }),
       createPlayer("test-id-2", "Random Name 2", { x: 1000, y: 1000 }),
       createPlayer("test-id-3", "Random Name 3", { x: 1001, y: 1000 }),
@@ -141,45 +145,47 @@ describe("Connections", () => {
       createPlayer("test-id-8", "Random Name 8", { x: 1006, y: 1000 }),
       createPlayer("test-id-9", "Random Name 9", { x: 1007, y: 1000 }),
     ];
-    connector.updateQuadTree();
+    serverScene.updateQuadTree();
     const gameStates = [];
-    Object.entries(connector.eventSystems.connectionSystems).forEach(([id]) => {
-      const gameState = connector.createGameStateMessage(id);
-      gameStates.push(gameState);
-      connector.pushEvent("update", id, gameState);
-    });
+    Object.entries(serverScene.eventSystems.connectionSystems).forEach(
+      ([id]) => {
+        const gameState = serverScene.createGameStateMessage(id);
+        gameStates.push(gameState);
+        serverScene.pushEvent("update", id, gameState);
+      }
+    );
     sm.update(0);
     expect(gameStates[0].players).toHaveLength(1);
     expect(gameStates[1].players).toHaveLength(8);
   });
   it("should move to retrospective state when the game is over", () => {
-    const p1Conn = createTestConnection(connector, "test-id");
-    const p2Conn = createTestConnection(connector, "test-id-2");
+    const p1Conn = createTestConnection(serverScene, "test-id");
+    const p2Conn = createTestConnection(serverScene, "test-id-2");
     p1Conn.dispatchEvent("join", "Random Name");
     p2Conn.dispatchEvent("join", "Random Name 2");
     sm.update(0);
     sm.update(0);
-    connector.gameState.players = [];
+    serverScene.gameState.players = [];
     sm.update(0);
     expect(sm.stateMachine.state).toBeInstanceOf(GameRetrospectiveState);
   });
   it("should add new players when they join a game that is in update", () => {
-    const p1Conn = createTestConnection(connector, "test-id");
-    const p2Conn = createTestConnection(connector, "test-id-2");
+    const p1Conn = createTestConnection(serverScene, "test-id");
+    const p2Conn = createTestConnection(serverScene, "test-id-2");
     p1Conn.dispatchEvent("join", "Random Name");
     p2Conn.dispatchEvent("join", "Random Name 2");
-    connector.gameState.players = [
+    serverScene.gameState.players = [
       createPlayer("test-id", "Random Name", { x: 500, y: 500 }),
       createPlayer("test-id-2", "Random Name 2", { x: 1000, y: 1000 }),
     ];
     sm.update(0);
     sm.update(0);
-    connector.updates.newPlayers = [];
-    const p3Conn = createTestConnection(connector, "test-id-3");
+    serverScene.updates.newPlayers = [];
+    const p3Conn = createTestConnection(serverScene, "test-id-3");
     p3Conn.dispatchEvent("join", "Random Name 3");
     sm.update(0);
     expect(sm.stateMachine.state).toBeInstanceOf(GameUpdateState);
-    expect(connector.updates.newPlayers).toStrictEqual([
+    expect(serverScene.updates.newPlayers).toStrictEqual([
       {
         id: "test-id-3",
         screenName: "Random Name 3",
@@ -187,8 +193,8 @@ describe("Connections", () => {
     ]);
   });
   it("should send endMatch event to all players when the game is over", () => {
-    const p1Conn = createTestConnection(connector, "test-id");
-    const p2Conn = createTestConnection(connector, "test-id-2");
+    const p1Conn = createTestConnection(serverScene, "test-id");
+    const p2Conn = createTestConnection(serverScene, "test-id-2");
     const p1JoinedSpy = jest.fn();
     const p2JoinedSpy = jest.fn();
     p1Conn.addEventListener("endMatch", p1JoinedSpy);
@@ -197,9 +203,20 @@ describe("Connections", () => {
     p2Conn.dispatchEvent("join", "Random Name 2");
     sm.update(0);
     sm.update(0);
-    connector.gameState.players = [];
+    serverScene.gameState.players = [];
     sm.update(0);
     expect(p1JoinedSpy).toHaveBeenCalled();
     expect(p2JoinedSpy).toHaveBeenCalled();
+  });
+  it("should move to the lobby state after ten seconds", () => {
+    const p1Conn = createTestConnection(serverScene, "test-id");
+    const p2Conn = createTestConnection(serverScene, "test-id-2");
+    p1Conn.dispatchEvent("join", "Random Name");
+    p2Conn.dispatchEvent("join", "Random Name 2");
+    sm.update(0);
+    sm.update(0);
+    serverScene.gameState.players = [];
+    sm.update(10);
+    expect(sm.stateMachine.state).toBeInstanceOf(LobbyState);
   });
 });
