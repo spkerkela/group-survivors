@@ -15,21 +15,23 @@ import { generateId } from "./id-generator";
 import Spawner from "./Spawner";
 import { ServerScene } from "./ServerScene";
 
-class PreMatchState implements State<StateMachineData> {
-  update(dt: number, { connector, playersRequired }: StateMachineData) {
-    if (connector.gameCanStart(playersRequired)) {
+export class PreMatchState implements State<StateMachineData> {
+  update(dt: number, { scene, playersRequired }: StateMachineData) {
+    if (scene.gameCanStart(playersRequired)) {
       return new MatchState();
     }
     return this;
   }
 }
 
-class MatchState implements State<StateMachineData> {
+export class MatchState implements State<StateMachineData> {
   spawner: Spawner;
   spawnTicker: number;
-  update(dt: number, { levelData, connector }: StateMachineData) {
-    connector.updates.newPlayers.forEach((player) => {
-      connector.gameState.players.push(
+  update(dt: number, { levelData, scene }: StateMachineData) {
+    if (scene.updates.newPlayers.length > 0) {
+    }
+    scene.updates.newPlayers.forEach((player) => {
+      scene.gameState.players.push(
         createPlayer(
           player.id,
           player.screenName,
@@ -37,9 +39,9 @@ class MatchState implements State<StateMachineData> {
         )
       );
     });
-    connector.updates.newPlayers = [];
+    scene.updates.newPlayers = [];
 
-    const gemsToSpawn = connector.gameState.enemies
+    const gemsToSpawn = scene.gameState.enemies
       .filter((enemy) => !enemy.alive)
       .map((enemy) =>
         createGem(generateId(`gem-${enemy.id}`), enemy.gemType, {
@@ -48,27 +50,25 @@ class MatchState implements State<StateMachineData> {
         })
       );
 
-    connector.gameState.gems = connector.gameState.gems.concat(gemsToSpawn);
+    scene.gameState.gems = scene.gameState.gems.concat(gemsToSpawn);
 
-    connector.gameState.enemies = removeDeadEnemies(
-      connector.gameState.enemies
-    );
-    updatePlayers(connector.gameState.players, connector.updates, dt);
+    scene.gameState.enemies = removeDeadEnemies(scene.gameState.enemies);
+    updatePlayers(scene.gameState.players, scene.updates, dt);
     const spellEvents = updateSpells(
-      connector.gameState.players,
-      connector.gameObjectQuadTree,
+      scene.gameState.players,
+      scene.gameObjectQuadTree,
       dt
     );
     const projectileEvents = updateProjectiles(
-      connector.gameState.projectiles,
-      connector.gameObjectQuadTree,
+      scene.gameState.projectiles,
+      scene.gameObjectQuadTree,
       dt
     );
 
     const spellDamageEvents = spellEvents.damageEvents.concat(projectileEvents);
 
     spellDamageEvents.forEach((spellEvent) => {
-      const target = connector.gameState.enemies.find(
+      const target = scene.gameState.enemies.find(
         (e) => e.id === spellEvent.targetId
       );
       if (target) {
@@ -79,30 +79,30 @@ class MatchState implements State<StateMachineData> {
       }
     });
     const enemyEvents = updateEnemies(
-      connector.gameState.enemies,
-      connector.gameObjectQuadTree,
+      scene.gameState.enemies,
+      scene.gameObjectQuadTree,
       dt
     );
-    connector.gameState.players.forEach((p) => {
+    scene.gameState.players.forEach((p) => {
       if (p.id.startsWith("bot-")) {
         return;
       }
       if (!p.alive) {
-        connector.lobby.push(p.id);
+        scene.lobby.push(p.id);
         return;
       }
     });
     enemyEvents.forEach((e) => {
-      connector.pushEvent("damage", e.playerId, e);
+      scene.pushEvent("damage", e.playerId, e);
     });
 
     spellDamageEvents.forEach((e) => {
-      connector.pushEvent("spell", e.fromId, e);
+      scene.pushEvent("spell", e.fromId, e);
     });
     spellEvents.projectileEvents.forEach((e) => {
-      connector.pushEvent("projectile", e.fromId, e);
+      scene.pushEvent("projectile", e.fromId, e);
     });
-    connector.gameState.projectiles = connector.gameState.projectiles
+    scene.gameState.projectiles = scene.gameState.projectiles
       .concat(
         spellEvents.projectileEvents.map((e: SpellProjectileEvent) => ({
           id: generateId(e.spellId),
@@ -124,20 +124,20 @@ class MatchState implements State<StateMachineData> {
       )
       .filter((p) => p.lifetime > 0);
     const { gemEvents, levelEvents, expiredGems } = updateGems(
-      connector.gameState.gems,
-      connector.gameObjectQuadTree,
+      scene.gameState.gems,
+      scene.gameObjectQuadTree,
       dt
     );
 
-    connector.gameState.gems = connector.gameState.gems.filter(
+    scene.gameState.gems = scene.gameState.gems.filter(
       (g) => !gemEvents.map((e) => e.gemId).includes(g.id) // remove gems that have been picked up
     );
     levelEvents.forEach((e) => {
-      connector.pushEvent("level", e.playerId, e);
+      scene.pushEvent("level", e.playerId, e);
     });
-    connector.gameState.players.forEach((p) => {
+    scene.gameState.players.forEach((p) => {
       if (!p.alive) {
-        connector.gameState.staticObjects.push({
+        scene.gameState.staticObjects.push({
           id: generateId("grave"),
           objectType: "staticObject",
           type: "grave",
@@ -146,49 +146,46 @@ class MatchState implements State<StateMachineData> {
         });
       }
     });
-    connector.gameState.players = connector.gameState.players.filter(
-      (p) => p.alive
-    );
-    connector.gameState.gems = connector.gameState.gems.filter(
+    scene.gameState.players = scene.gameState.players.filter((p) => p.alive);
+    scene.gameState.gems = scene.gameState.gems.filter(
       (g) => !expiredGems.includes(g.id)
     );
 
     this.spawnTicker += dt;
-    if (this.spawnTicker > 1) {
+    if (this.spawnTicker > levelData.spawnRate) {
       this.spawnTicker = 0;
-      this.spawner.spawnEnemy(connector.gameState);
+      this.spawner.spawnEnemy(scene.gameState);
     }
 
-    connector.updateQuadTree();
-    Object.entries(connector.eventSystems.connectionSystems).forEach(([id]) => {
-      const gameState = connector.createGameStateMessage(id);
-      connector.pushEvent("update", id, gameState);
+    scene.updateQuadTree();
+    Object.entries(scene.eventSystems.connectionSystems).forEach(([id]) => {
+      const gameState = scene.createGameStateMessage(id);
+      scene.pushEvent("update", id, gameState);
     });
-    if (connector.gameState.players.length === 0) {
+    if (scene.gameState.players.length === 0) {
       return new EndMatchState();
     }
     return this;
   }
-  enter({ levelData, connector }: StateMachineData): void {
+  enter({ levelData, scene }: StateMachineData): void {
     this.spawner = new Spawner(levelData.enemyTable);
-    connector.loadLevel(levelData);
-    connector.enableInstantJoin();
+    scene.initializeState();
+    scene.loadLevel(levelData);
+    scene.enableInstantJoin();
     this.spawnTicker = 0;
-    connector.updateQuadTree();
+    scene.updateQuadTree();
   }
-  exit({ connector }: StateMachineData): void {
+  exit({ scene }: StateMachineData): void {
     this.spawner = null;
-    connector.disableInstantJoin();
-    connector.gameState.players.forEach((p) => {
-      connector.lobby.push(p.id);
+    scene.disableInstantJoin();
+    scene.gameState.players.forEach((p) => {
+      scene.lobby.push(p.id);
     });
-    connector
-      .connectionIds()
-      .forEach((id) => connector.pushEvent("endMatch", id, {}));
+    scene.connectionIds().forEach((id) => scene.pushEvent("endMatch", id, {}));
   }
 }
 
-class EndMatchState implements State<StateMachineData> {
+export class EndMatchState implements State<StateMachineData> {
   timeRemaining: number;
   constructor(seconds: number = 10) {
     this.timeRemaining = seconds;
@@ -203,7 +200,7 @@ class EndMatchState implements State<StateMachineData> {
 }
 
 interface StateMachineData {
-  connector: ServerScene;
+  scene: ServerScene;
   levelData: LevelData;
   playersRequired: number;
 }
@@ -212,12 +209,12 @@ export default class GameSessionStateMachine {
   stateMachine: StateMachine<StateMachineData>;
   data: StateMachineData;
   constructor(
-    connector: ServerScene,
+    scene: ServerScene,
     levelData: LevelData,
     playersRequired: number = 2
   ) {
     this.data = {
-      connector,
+      scene: scene,
       levelData,
       playersRequired,
     };

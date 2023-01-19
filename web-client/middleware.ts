@@ -4,7 +4,7 @@ import EventSystem from "../common/EventSystem";
 import { randomBetweenExclusive } from "../common/random";
 import {
   Enemy,
-  GameState,
+  ClientGameState,
   Gem,
   Player,
   Position,
@@ -305,7 +305,7 @@ export function removeInvalidGameObjects(
   });
 }
 
-export function updateMiddleWare(gameState: GameState, mw: Middleware) {
+export function updateMiddleWare(gameState: ClientGameState, mw: Middleware) {
   gameState.players.forEach((p) => {
     mw.updatePlayer(p);
   });
@@ -336,12 +336,11 @@ export function updateMiddleWare(gameState: GameState, mw: Middleware) {
   mw.removeInvalidGameObjects("staticObject", staticObjectIds);
 }
 
+export type FrontendGameScene = "lobby" | "game" | "gameOver";
 export interface GameFrontend {
-  init(initialGameState: GameState, serverEventSystem: EventSystem): void;
-
-  update(gameState: GameState): void;
-
-  restart(gameState: GameState): void;
+  init(initialGameState: ClientGameState, serverEventSystem: EventSystem): void;
+  update(gameState: ClientGameState): void;
+  setScene(scene: FrontendGameScene): void;
 }
 
 export interface Middleware {

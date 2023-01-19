@@ -13,7 +13,6 @@ export default class StateMachine<T> {
   update(dt: number, data: T) {
     const newState = this.state.update(dt, data);
     if (newState !== this.state) {
-      console.log(this.state, " -> ", newState);
       this.state.exit?.(data);
       newState.enter?.(data);
       this.state = newState;

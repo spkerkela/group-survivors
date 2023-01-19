@@ -7,22 +7,7 @@ import ConnectionStateMachine, {
 import { createPlayer } from "../../server/game-logic";
 import { levelData } from "./fixtures";
 import { ServerScene } from "../../server/ServerScene";
-
-function createTestConnection(
-  serverScene: ServerScene,
-  id: string
-): EventSystem {
-  const system = new EventSystem();
-
-  system.addEventListener("joined", () => {});
-  system.addEventListener("beginMatch", () => {});
-  serverScene.eventSystems.gameEventSystem.dispatchEvent(
-    "connection",
-    id,
-    system
-  );
-  return system;
-}
+import { createTestConnection } from "./connectionUtils";
 
 describe("Connections", () => {
   let sm: ConnectionStateMachine = null;
@@ -85,23 +70,6 @@ describe("Connections", () => {
     sm.update(0);
     expect(p1JoinedSpy).toHaveBeenCalled();
     expect(p2JoinedSpy).toHaveBeenCalled();
-  });
-  it("should add to newPlayers list when the game starts", () => {
-    const p1Conn = createTestConnection(serverScene, "test-id");
-    const p2Conn = createTestConnection(serverScene, "test-id-2");
-    p1Conn.dispatchEvent("join", "Random Name");
-    p2Conn.dispatchEvent("join", "Random Name 2");
-    sm.update(0);
-    expect(serverScene.updates.newPlayers).toStrictEqual([
-      {
-        id: "test-id",
-        screenName: "Random Name",
-      },
-      {
-        id: "test-id-2",
-        screenName: "Random Name 2",
-      },
-    ]);
   });
   it("should send an 'update' event to all players when the game is in update", () => {
     const p1Conn = createTestConnection(serverScene, "test-id");

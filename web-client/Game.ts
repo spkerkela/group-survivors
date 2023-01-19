@@ -1,5 +1,5 @@
 import { SERVER_UPDATE_RATE } from "../common/constants";
-import { GameState } from "../common/types";
+import { ClientGameState } from "../common/types";
 import { GameFrontend } from "./middleware";
 import EventSystem from "../common/EventSystem";
 import { globalEventSystem } from "./eventSystems";
@@ -12,7 +12,7 @@ window.onkeydown = function (e: { keyCode: string | number }) {
 };
 
 export default class Game {
-  gameState: GameState;
+  gameState: ClientGameState;
 
   constructor(serverEventSystem: EventSystem, frontend: GameFrontend) {
     this.gameState = {
@@ -27,24 +27,14 @@ export default class Game {
     frontend.init(this.gameState, serverEventSystem);
 
     let inputInterval: NodeJS.Timeout | null = null;
+
     serverEventSystem.addEventListener(
-      "beginMatch",
-      (newGameState: GameState) => {
+      "joined",
+      (newGameState: ClientGameState) => {
         this.gameState = newGameState;
-        console.log("beginMatch", newGameState);
-        inputInterval = setInterval(() => {
-          const inputState = this.getInputState();
-          serverEventSystem.dispatchEvent("move", {
-            ...inputState,
-            id: this.gameState.id,
-          });
-        }, SERVER_UPDATE_RATE);
+        globalEventSystem.dispatchEvent("disableJoinUI");
       }
     );
-    serverEventSystem.addEventListener("joined", (newGameState: GameState) => {
-      this.gameState = newGameState;
-      globalEventSystem.dispatchEvent("disableJoinUI");
-    });
 
     serverEventSystem.addEventListener("endMatch", () => {
       this.gameState = {
@@ -57,31 +47,26 @@ export default class Game {
       };
     });
 
-    serverEventSystem.addEventListener("update", (newState: GameState) => {
-      if (newState.id !== this.gameState.id) return;
-      this.gameState.players = newState.players;
-      this.gameState.enemies = newState.enemies;
-      this.gameState.gems = newState.gems;
-      this.gameState.projectiles = newState.projectiles;
-      this.gameState.staticObjects = newState.staticObjects;
-      this.gameState.debug = newState.debug;
-      const player = newState.players.find((p) => p.id === this.gameState.id);
-      if (player == null || !player.alive) {
-        globalEventSystem.dispatchEvent("enableJoinUI");
+    serverEventSystem.addEventListener(
+      "update",
+      (newState: ClientGameState) => {
+        if (newState.id !== this.gameState.id) return;
+        this.gameState.players = newState.players;
+        this.gameState.enemies = newState.enemies;
+        this.gameState.gems = newState.gems;
+        this.gameState.projectiles = newState.projectiles;
+        this.gameState.staticObjects = newState.staticObjects;
+        this.gameState.debug = newState.debug;
+        const player = newState.players.find((p) => p.id === this.gameState.id);
+        if (player == null || !player.alive) {
+          globalEventSystem.dispatchEvent("enableJoinUI");
+        }
       }
-    });
+    );
     serverEventSystem.addEventListener("disconnect", () => {
       if (inputInterval) {
         clearInterval(inputInterval);
       }
     });
-  }
-
-  getInputState() {
-    const up = pressedKeys[38] || pressedKeys[87];
-    const down = pressedKeys[40] || pressedKeys[83];
-    const left = pressedKeys[37] || pressedKeys[65];
-    const right = pressedKeys[39] || pressedKeys[68];
-    return { up, down, left, right };
   }
 }

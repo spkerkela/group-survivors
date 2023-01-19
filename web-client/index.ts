@@ -44,7 +44,7 @@ globalEventSystem.addEventListener("enableJoinUI", () => {
 
 const sm = new ClientStateMachine(
   serverEventSystem,
-  new PhaserMiddleware(canvasElement)
+  new PhaserMiddleware(canvasElement, serverEventSystem)
 );
 let previousTime = Date.now();
 let deltaTime = 0;

@@ -10,4 +10,5 @@ export const levelData: LevelData = {
     bat: 200,
   },
   staticObjects: [],
+  spawnRate: 1,
 };

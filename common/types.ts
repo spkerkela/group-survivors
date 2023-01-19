@@ -11,6 +11,8 @@ export interface GameState {
   gems: Gem[];
   projectiles: Projectile[];
   staticObjects: StaticObject[];
+}
+export interface ClientGameState extends GameState {
   id: string;
   debug?: DebugInformation;
 }
@@ -100,17 +102,22 @@ export interface Projectile extends GameObject {
   hitEnemies: string[];
 }
 
+export interface GameOverData {
+  monstersKilled: number;
+}
+
 export type FromServerEventMap = {
   disconnect: () => void;
   spell: (data: SpellDamageEvent) => void;
-  update: (gameState: GameState) => void;
+  update: (gameState: ClientGameState) => void;
   damage: (data: DamageEvent) => void;
   level: (data: LevelEvent) => void;
   move: (moveMessage: MoveUpdate) => void;
   projectile: (projectile: SpellProjectileEvent) => void;
-  joined: (gameState: GameState) => void;
-  beginMatch: (gameState: GameState) => void;
+  joined: (gameState: ClientGameState) => void;
+  beginMatch: (gameState: ClientGameState) => void;
   endMatch: () => void;
+  gameOver: (data: GameOverData) => void;
 };
 
 export type ToServerEventMap = {

@@ -302,7 +302,7 @@ export function updateSpells(
       for (let j = 0; j < spells.length; j++) {
         const spell = spells[j];
         const spellData = player.spells[spell];
-        if (spellData.cooldown > 0) {
+        if (spellData.cooldown >= 0) {
           spellData.cooldown -= deltaTime;
         } else {
           spellData.cooldown = Math.max(

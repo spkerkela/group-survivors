@@ -2,7 +2,8 @@ import { Server, Socket } from "socket.io";
 import EventSystem from "../common/EventSystem";
 import {
   FromServerEventMap,
-  GameState,
+  GameOverData,
+  ClientGameState,
   MoveUpdate,
   ToServerEventMap,
 } from "../common/types";
@@ -37,11 +38,11 @@ export function initConnectedClientEventSystem(
     eventSystem.dispatchEvent("join", joinName);
   });
 
-  eventSystem.addEventListener("beginMatch", (gameState: GameState) => {
+  eventSystem.addEventListener("beginMatch", (gameState: ClientGameState) => {
     socket.emit("beginMatch", gameState);
   });
 
-  eventSystem.addEventListener("update", (gameState: GameState) => {
+  eventSystem.addEventListener("update", (gameState: ClientGameState) => {
     socket.emit("update", gameState);
   });
   socket.on("disconnect", () => {
@@ -65,11 +66,14 @@ export function initConnectedClientEventSystem(
       socket.emit("projectile", projectile);
     }
   );
-  eventSystem.addEventListener("joined", (gameState: GameState) => {
+  eventSystem.addEventListener("joined", (gameState: ClientGameState) => {
     socket.emit("joined", gameState);
   });
   eventSystem.addEventListener("endMatch", () => {
     socket.emit("endMatch");
+  });
+  eventSystem.addEventListener("gameOver", (data: GameOverData) => {
+    socket.emit("gameOver", data);
   });
   return eventSystem;
 }

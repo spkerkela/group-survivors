@@ -1,13 +1,14 @@
 import QuadTree from "../common/QuadTree";
 import {
   GameObject,
-  GameState,
+  ClientGameState,
   isEnemy,
   isGem,
   isPlayer,
   isProjectile,
   isStaticObject,
   MoveUpdate,
+  GameState,
 } from "../common/types";
 import { createMoveUpdate, createPlayer, PlayerUpdate } from "./game-logic";
 import { ServerEventSystems } from "./eventSystems";
@@ -18,7 +19,6 @@ import {
   SCREEN_WIDTH,
 } from "../common/constants";
 import { generateId } from "./id-generator";
-import { sanitizeName } from "../common/shared";
 import EventSystem from "../common/EventSystem";
 import { LevelData } from "./GameServer";
 
@@ -53,7 +53,7 @@ export class ServerScene {
     this.readyToJoin = [];
   }
 
-  newGameState(): GameState {
+  newGameState(): ClientGameState {
     return {
       players: [],
       enemies: [],
@@ -130,62 +130,10 @@ export class ServerScene {
     this.events[playerId].push({ name, data });
   }
 
-  getPlayer(id: string) {
+  private getPlayer(id: string) {
     return this.gameState.players.find((p) => p.id === id);
   }
-  start(levelData: LevelData) {
-    this.eventSystems.gameEventSystem.addEventListener(
-      "connection",
-      (id: string, connection: EventSystem) => {
-        this.eventSystems.connectionSystems[id] = connection;
-        this.lobby.push(id);
-        this.events[id] = [];
-        connection.addEventListener("join", (screenName: string) => {
-          if (this.lobby.includes(id)) {
-            if (this.instantJoin) {
-              this.events[id].push({
-                name: "joined",
-                data: this.createGameStateMessage(id),
-              });
-              this.updates.newPlayers.push({ id, screenName });
-              this.events[id].push({
-                name: "beginMatch",
-                data: this.createGameStateMessage(id),
-              });
-            } else {
-              this.readyToJoin.push({ id, screenName });
-              this.events[id].push({
-                name: "joined",
-                data: this.createGameStateMessage(id),
-              });
-            }
-          }
-        });
-
-        connection.addEventListener("disconnect", () => {
-          this.gameState.players = this.gameState.players.filter(
-            (p) => p.id !== id
-          );
-          this.lobby = this.lobby.filter((p) => p !== id);
-          this.readyToJoin = this.readyToJoin.filter((p) => p.id !== id);
-          delete this.events[id];
-          delete this.eventSystems.connectionSystems[id];
-        });
-        connection.addEventListener("move", (data: MoveUpdate) => {
-          if (data.id !== id) return;
-          if (this.getPlayer(id)) {
-            const { up, down, left, right } = data;
-            this.updates.moves[id] = createMoveUpdate({
-              up,
-              down,
-              left,
-              right,
-            });
-          }
-        });
-      }
-    );
-  }
+  start(levelData: LevelData) {}
 
   connectionIds(): string[] {
     return Object.keys(this.eventSystems.connectionSystems);
@@ -204,7 +152,7 @@ export class ServerScene {
     );
   }
 
-  createGameStateMessage(id: string) {
+  createGameStateMessage(id: string): ClientGameState {
     const player = this.getPlayer(id);
     const rectX = player ? player.x : GAME_WIDTH / 2;
     const rectY = player ? player.y : GAME_HEIGHT / 2;
@@ -217,7 +165,7 @@ export class ServerScene {
     };
     const playerVisibleObjects =
       this.gameObjectQuadTree.retrieve(visibleRectangle);
-    let gameState: GameState = {
+    let gameState: ClientGameState = {
       players: [],
       enemies: [],
       gems: [],
@@ -244,7 +192,19 @@ export class ServerScene {
     gameState.debug = {
       cullingRect: visibleRectangle,
     };
-    this.gameState.debug = gameState.debug;
     return gameState;
+  }
+
+  initializeState() {
+    this.gameState = {
+      players: [],
+      enemies: [],
+      gems: [],
+      projectiles: [],
+      staticObjects: [],
+    };
+    this.readyToJoin.forEach((p) => {
+      this.updates.newPlayers.push(p);
+    });
   }
 }

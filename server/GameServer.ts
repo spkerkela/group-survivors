@@ -10,6 +10,7 @@ export interface LevelData {
   bots: number;
   playerStartPosition: { x: number; y: number };
   enemyTable: { [key: string]: number };
+  spawnRate: number;
   staticObjects: StaticObject[];
 }
 
@@ -23,7 +24,6 @@ export class GameServer {
   constructor(serverScene: ServerScene, levelData: LevelData) {
     this.scene = serverScene;
     this.levelData = levelData;
-    this.scene.start(this.levelData);
 
     this.deltaTime = 0;
     this.gameStateMachine = new GameSessionStateMachine(
@@ -43,6 +43,7 @@ export class GameServer {
   }
 
   start() {
+    this.scene.start(this.levelData);
     let previousTime = Date.now();
     let deltaTime = 0;
     setInterval(() => {

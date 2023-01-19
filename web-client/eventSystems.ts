@@ -1,7 +1,7 @@
 import { Socket } from "socket.io-client";
 import EventSystem from "../common/EventSystem";
 import {
-  GameState,
+  ClientGameState,
   FromServerEventMap,
   MoveUpdate,
   ToServerEventMap,
@@ -14,7 +14,7 @@ export function initServerEventSystem(
   serverEventSystem: EventSystem,
   io: Socket<FromServerEventMap, ToServerEventMap>
 ) {
-  io.on("beginMatch", (gameState: GameState) => {
+  io.on("beginMatch", (gameState: ClientGameState) => {
     serverEventSystem.dispatchEvent("beginMatch", gameState);
   });
 
@@ -26,7 +26,7 @@ export function initServerEventSystem(
     serverEventSystem.dispatchEvent("spell", data);
   });
 
-  io.on("update", (gameState: GameState) => {
+  io.on("update", (gameState: ClientGameState) => {
     serverEventSystem.dispatchEvent("update", gameState);
   });
 
@@ -46,7 +46,7 @@ export function initServerEventSystem(
     sendJoinMessage(io, name);
   });
 
-  io.on("joined", (gameState: GameState) => {
+  io.on("joined", (gameState: ClientGameState) => {
     serverEventSystem.dispatchEvent("joined", gameState);
   });
 

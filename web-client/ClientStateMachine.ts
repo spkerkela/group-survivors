@@ -1,6 +1,6 @@
 import StateMachine, { State } from "../common/StateMachine";
 import EventSystem from "../common/EventSystem";
-import { GameState } from "../common/types";
+import { ClientGameState } from "../common/types";
 import { GameFrontend } from "./middleware";
 
 interface ClientState {
@@ -17,7 +17,7 @@ class DisconnectedState implements State<ClientState> {
     }
     return this;
   }
-  setId: (state: GameState) => void;
+  setId: (state: ClientGameState) => void;
 
   enter({ serverEvents, frontend }: ClientState): void {
     this.setId = (state) => {
@@ -39,8 +39,9 @@ class ConnectedState implements State<ClientState> {
   }
   receivedMatchBegin: boolean = false;
   receivedDisconnect: boolean = false;
-  update(dt: number, data: ClientState): State<ClientState> {
+  update(dt: number, { frontend }: ClientState): State<ClientState> {
     if (this.receivedDisconnect) {
+      frontend.setScene("lobby");
       return new DisconnectedState();
     }
     if (this.receivedMatchBegin) {
@@ -48,29 +49,25 @@ class ConnectedState implements State<ClientState> {
     }
     return this;
   }
-  updatesCalled: number = 0;
-  updateCallback = () => {
-    this.updatesCalled++;
-  };
   beginMatchCallback = () => {
     this.receivedMatchBegin = true;
   };
+  disconnectCallback = () => {
+    this.receivedDisconnect = true;
+  };
   enter({ serverEvents }: ClientState): void {
-    serverEvents.addEventListener("disconnect", () => {
-      this.receivedDisconnect = true;
-    });
+    serverEvents.addEventListener("disconnect", this.disconnectCallback);
     serverEvents.addEventListener("beginMatch", this.beginMatchCallback);
-    serverEvents.addEventListener("update", this.updateCallback);
   }
   exit({ serverEvents }: ClientState): void {
-    serverEvents.removeEventListener("update", this.updateCallback);
+    serverEvents.removeEventListener("disconnect", this.disconnectCallback);
     serverEvents.removeEventListener("beginMatch", this.beginMatchCallback);
   }
 }
 
 class GameLoopState implements State<ClientState> {
   id: string;
-  gameState: GameState;
+  gameState: ClientGameState;
   endMatchCalled: boolean = false;
   constructor(id: string) {
     this.id = id;
@@ -86,17 +83,18 @@ class GameLoopState implements State<ClientState> {
     data.frontend.update(this.gameState);
     return this;
   }
-  updateCallback: (data: GameState) => void = (data) => {
+  updateCallback: (data: ClientGameState) => void = (data) => {
     this.gameState = data;
   };
   endMatchCallback: () => void;
   enter({ frontend, serverEvents }: ClientState) {
     this.endMatchCallback = () => {
       this.endMatchCalled = true;
-      frontend.restart(this.gameState);
+      frontend.setScene("gameOver");
     };
     serverEvents.addEventListener("update", this.updateCallback);
     serverEvents.addEventListener("endMatch", this.endMatchCallback);
+    frontend.setScene("game");
   }
   exit({ serverEvents }: ClientState) {
     serverEvents.removeEventListener("update", this.updateCallback);

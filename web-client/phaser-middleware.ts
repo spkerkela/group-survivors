@@ -12,7 +12,7 @@ import { chooseRandom } from "../common/random";
 import { experienceRequiredForLevel } from "../common/shared";
 import {
   Enemy,
-  GameState,
+  ClientGameState,
   Gem,
   Player,
   Position,
@@ -40,8 +40,8 @@ import {
   Middleware,
   updatePlayer,
   updateMiddleWare,
+  FrontendGameScene,
 } from "./middleware";
-import { LevelData } from "../server/GameServer";
 
 const colorFromDamageType = (damageType: string) => {
   switch (damageType) {
@@ -58,15 +58,35 @@ const colorFromDamageType = (damageType: string) => {
   }
 };
 
+class LobbyScene extends Phaser.Scene {
+  constructor() {
+    super({ key: "Lobby", active: false });
+  }
+  create() {
+    this.add.text(10, 10, "Lobby");
+  }
+  update() {}
+}
+
+class GameOverScene extends Phaser.Scene {
+  constructor() {
+    super({ key: "GameOver", active: false });
+  }
+  create() {
+    this.add.text(10, 10, "Game Over");
+  }
+  update() {}
+}
+
 export class UiScene extends Phaser.Scene {
   experienceBar: Bar;
   eventSystem: EventSystem;
-  gameState: GameState;
-  constructor(gameState: GameState, eventSystem: EventSystem) {
+  gameState: ClientGameState;
+  constructor(eventSystem: EventSystem) {
     super({ key: "UI", active: false });
     this.eventSystem = eventSystem;
   }
-  init(data: { gameState: GameState }) {
+  init(data: { gameState: ClientGameState }) {
     this.data.set("gameState", data.gameState);
   }
   create() {
@@ -111,24 +131,13 @@ export class UiScene extends Phaser.Scene {
 
 export class GameScene extends Phaser.Scene implements Middleware {
   serverEventSystem: EventSystem;
-  gameObjectCache: { [key: string]: Phaser.GameObjects.GameObject } = {};
-  constructor(gameState: GameState, serverEventSystem: EventSystem) {
+  inputKeys: { [key: string]: Phaser.Input.Keyboard.Key } = {};
+  constructor(serverEventSystem: EventSystem) {
     super({ key: "Game", active: false });
     this.serverEventSystem = serverEventSystem;
   }
-  restartGame(data: { gameState: GameState }) {
+  restartGame(data: { gameState: ClientGameState }) {
     this.scene.restart(data);
-  }
-  init(data: { gameState: GameState }) {
-    this.data.set("gameState", data.gameState);
-    data.gameState.players.forEach((p) => {
-      if (p.id === data.gameState.id) {
-        const instantiated = instantiatePlayer(this, p);
-        this.cameras.main.startFollow(instantiated, true);
-        this.launchUi();
-        this.gameObjectCache[p.id] = instantiated;
-      }
-    });
   }
   updateEnemy(enemy: Enemy): void {
     updateGameObject(this, enemy.id, enemy, instantiateEnemy);
@@ -197,15 +206,32 @@ export class GameScene extends Phaser.Scene implements Middleware {
   launchUi() {
     if (!this.scene.isActive("UI")) {
       this.scene.launch("UI", {
-        gameState: this.data.get("gameState") as GameState,
+        gameState: this.data.get("gameState") as ClientGameState,
       });
     }
   }
 
-  create() {
-    this.cameras.main.setBounds(0, 0, GAME_WIDTH, GAME_HEIGHT);
-    this.cameras.main.setZoom(3);
-    this.cameras.main.centerOn(GAME_WIDTH / 2, GAME_HEIGHT / 2);
+  setupCamera() {
+    if (this.data.get("cameraSet")) {
+      return;
+    }
+    try {
+      this.cameras.main.setBounds(0, 0, GAME_WIDTH, GAME_HEIGHT);
+      this.cameras.main.setZoom(3);
+      this.cameras.main.centerOn(GAME_WIDTH / 2, GAME_HEIGHT / 2);
+      this.data.set("cameraSet", true);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  create(data: { gameState: ClientGameState }) {
+    this.data.set("gameState", data.gameState);
+    this.data.set("cameraSet", false);
+    if (this.cameras.main != null) {
+      this.setupCamera();
+      this.cameras.main.fadeFrom(900, 0, 0, 0);
+    }
     spriteSheets.forEach(({ id }) => {
       this.anims.create({
         key: id,
@@ -216,6 +242,12 @@ export class GameScene extends Phaser.Scene implements Middleware {
         frameRate: 4,
       });
     });
+    this.inputKeys = this.input.keyboard.addKeys({
+      up: Phaser.Input.Keyboard.KeyCodes.W,
+      down: Phaser.Input.Keyboard.KeyCodes.S,
+      left: Phaser.Input.Keyboard.KeyCodes.A,
+      right: Phaser.Input.Keyboard.KeyCodes.D,
+    }) as { [key: string]: Phaser.Input.Keyboard.Key };
 
     const background = this.add
       .tileSprite(
@@ -226,12 +258,10 @@ export class GameScene extends Phaser.Scene implements Middleware {
         "background"
       )
       .setName("background");
-    this.gameObjectCache["background"] = background;
-    const gameState = this.data.get("gameState") as GameState;
 
-    gameState.players.forEach((p) => {
+    data.gameState.players.forEach((p) => {
       const instantiated = instantiatePlayer(this, p);
-      if (p.id === gameState.id) {
+      if (p.id === data.gameState.id) {
         this.cameras.main.startFollow(instantiated);
         this.launchUi();
       }
@@ -240,7 +270,7 @@ export class GameScene extends Phaser.Scene implements Middleware {
       amount,
       damageType,
     }) => {
-      const gameState = this.data.get("gameState") as GameState;
+      const gameState = this.data.get("gameState") as ClientGameState;
       const player = gameState.players.find((p) => p.id === gameState.id);
       if (!player) return;
       const color = colorFromDamageType(damageType);
@@ -259,14 +289,18 @@ export class GameScene extends Phaser.Scene implements Middleware {
     };
     this.serverEventSystem.addEventListener("spell", spellCallBack);
     const levelCallback: (e: LevelEvent) => void = (data) => {
-      const gameState = this.data.get("gameState") as GameState;
+      const gameState = this.data.get("gameState") as ClientGameState;
       if (data.playerId !== gameState.id) return;
       globalEventSystem.dispatchEvent("level", data.player.level);
       this.updateLevel(data.player);
     };
     this.serverEventSystem.addEventListener("level", levelCallback);
     this.events.on("destroy", () => {
-      console.log("destroying game scene");
+      this.serverEventSystem.removeEventListener("level", levelCallback);
+      this.serverEventSystem.removeEventListener("spell", spellCallBack);
+      this.serverEventSystem.removeEventListener("damage", damageCallback);
+    });
+    this.events.on("shutdown", () => {
       this.serverEventSystem.removeEventListener("level", levelCallback);
       this.serverEventSystem.removeEventListener("spell", spellCallBack);
       this.serverEventSystem.removeEventListener("damage", damageCallback);
@@ -274,10 +308,15 @@ export class GameScene extends Phaser.Scene implements Middleware {
   }
 
   update() {
-    const gameState = this.data.get("gameState") as GameState;
+    const gameState = this.data.get("gameState") as ClientGameState;
+    const inputState = this.getInputState();
+    this.serverEventSystem.dispatchEvent("move", {
+      ...inputState,
+      id: gameState.id,
+    });
     updateMiddleWare(gameState, this);
-    const background = this.gameObjectCache["background"];
-    const player = this.gameObjectCache[gameState.id];
+    const background = this.children.getByName("background");
+    const player = this.getActivePlayer();
     if (
       background instanceof Phaser.GameObjects.TileSprite &&
       player instanceof Phaser.GameObjects.Container
@@ -285,12 +324,8 @@ export class GameScene extends Phaser.Scene implements Middleware {
       background.setPosition(player.x, player.y);
       background.tilePositionX = player.x;
       background.tilePositionY = player.y;
-    }
-    const debugRect = this.gameObjectCache["cullingRect"];
-    if (debugRect instanceof Phaser.GameObjects.Rectangle) {
-      const { x, y, width, height } = gameState.debug.cullingRect;
-      debugRect.setPosition(x, y);
-      debugRect.setSize(width, height);
+      this.setupCamera();
+      this.cameras.main.startFollow(player);
     }
   }
   spellEffect(spellId: string) {
@@ -332,6 +367,13 @@ export class GameScene extends Phaser.Scene implements Middleware {
       },
     });
   }
+  getInputState() {
+    const up = this.inputKeys.up.isDown;
+    const down = this.inputKeys.down.isDown;
+    const left = this.inputKeys.left.isDown;
+    const right = this.inputKeys.right.isDown;
+    return { up, down, left, right };
+  }
   flashWhite(id: string) {
     const target = this.children.getByName(id);
     if (target instanceof Phaser.GameObjects.Sprite) {
@@ -362,12 +404,36 @@ export class GameScene extends Phaser.Scene implements Middleware {
 
 export default class PhaserMiddleware implements GameFrontend {
   phaserInstance: Phaser.Game;
+  currentScene: Phaser.Scene;
+  private gameState: ClientGameState;
   canvas: HTMLCanvasElement;
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, serverEventSystem: EventSystem) {
     this.canvas = canvas;
+    this.phaserInstance = new Phaser.Game({
+      canvas: this.canvas,
+      width: SCREEN_WIDTH,
+      height: SCREEN_HEIGHT,
+      type: Phaser.WEBGL,
+      roundPixels: false,
+      pixelArt: true,
+      scene: [
+        new LobbyScene(),
+        new GameScene(serverEventSystem),
+        new UiScene(serverEventSystem),
+        new GameOverScene(),
+      ],
+      backgroundColor: "#170332",
+    });
+
+    this.phaserInstance.scene.start("Lobby");
   }
 
-  update(gameState: GameState) {
+  update(gameState: ClientGameState) {
+    this.gameState = gameState;
+    if (this.currentScene instanceof GameScene) {
+      this.currentScene.data.set("gameState", gameState);
+    }
+    /*
     if (this.phaserInstance) {
       if (this.phaserInstance.scene.isActive("Game")) {
         this.phaserInstance.scene
@@ -380,32 +446,30 @@ export default class PhaserMiddleware implements GameFrontend {
           .data.set("gameState", gameState);
       }
     }
+     */
   }
-  restart(gameState: GameState) {
-    if (this.phaserInstance) {
-      if (this.phaserInstance.scene.isActive("Game")) {
-        this.phaserInstance.scene.remove("Game");
-        this.phaserInstance.scene.start("Game", { gameState });
-      }
-      if (this.phaserInstance.scene.isActive("UI")) {
-        this.phaserInstance.scene.remove("UI");
-      }
+
+  init(gameState: ClientGameState): void {
+    this.gameState = gameState;
+    this.currentScene = this.phaserInstance.scene.getScene("Lobby");
+  }
+
+  setScene(scene: FrontendGameScene, data?: ClientGameState): void {
+    switch (scene) {
+      case "lobby":
+        this.currentScene.scene.start("Lobby");
+        this.currentScene = this.phaserInstance.scene.getScene("Lobby");
+        break;
+      case "game":
+        this.currentScene.scene.start("Game", { gameState: this.gameState });
+        this.currentScene = this.phaserInstance.scene.getScene("Game");
+        break;
+      case "gameOver":
+        this.currentScene.scene.start("GameOver");
+        this.currentScene = this.phaserInstance.scene.getScene("GameOver");
+        break;
+      default:
+        break;
     }
-  }
-  init(gameState: GameState, serverEventSystem: EventSystem): void {
-    this.phaserInstance = new Phaser.Game({
-      canvas: this.canvas,
-      width: SCREEN_WIDTH,
-      height: SCREEN_HEIGHT,
-      type: Phaser.WEBGL,
-      roundPixels: false,
-      pixelArt: true,
-      scene: [
-        new GameScene(gameState, serverEventSystem),
-        new UiScene(gameState, serverEventSystem),
-      ],
-      backgroundColor: "#170332",
-    });
-    this.phaserInstance.scene.start("Game", { gameState });
   }
 }
