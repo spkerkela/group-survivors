@@ -28,6 +28,7 @@ export class ServerScene {
   updates: {
     moves: { [key: string]: PlayerUpdate };
     newPlayers: { id: string; screenName: string }[];
+    playersToRemove: string[];
   };
   events: {
     [key: string]: { name: string; data: any }[];
@@ -46,7 +47,7 @@ export class ServerScene {
     );
 
     this.gameState = this.newGameState();
-    this.updates = { moves: {}, newPlayers: [] };
+    this.updates = { moves: {}, newPlayers: [], playersToRemove: [] };
     this.events = {};
     this.lobby = [];
     this.eventSystems = eventSystems;

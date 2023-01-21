@@ -160,6 +160,7 @@ export default class ConnectionStateMachine {
       );
       delete this.data.scene.events[id];
       delete this.data.scene.eventSystems.connectionSystems[id];
+      this.data.scene.updates.playersToRemove.push(id);
     };
     this.callbacks.join[id] = (screenName: string) => {
       const sanitizedName = sanitizeName(screenName);

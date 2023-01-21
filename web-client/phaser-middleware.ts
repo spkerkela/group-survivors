@@ -8,7 +8,7 @@ import {
   NUMBER_SCALE,
 } from "../common/constants";
 import EventSystem from "../common/EventSystem";
-import { chooseRandom } from "../common/random";
+import { chooseRandom, randomBetweenExclusive } from "../common/random";
 import { experienceRequiredForLevel } from "../common/shared";
 import {
   Enemy,
@@ -24,7 +24,7 @@ import {
   LevelEvent,
   SpellDamageEvent,
 } from "../server/game-logic";
-import { assets, spriteSheets } from "./assets";
+import { assets, sounds, spriteSheets } from "./assets";
 import Bar from "./Bar";
 import { globalEventSystem } from "./eventSystems";
 import {
@@ -202,6 +202,9 @@ export class GameScene extends Phaser.Scene implements Middleware {
     spriteSheets.forEach(({ id, url, frameWidth = 16, frameHeight = 16 }) => {
       this.load.spritesheet(id, url, { frameWidth, frameHeight });
     });
+    sounds.forEach(({ id, url }) => {
+      this.load.audio(id, url);
+    });
   }
   launchUi() {
     if (!this.scene.isActive("UI")) {
@@ -286,6 +289,7 @@ export class GameScene extends Phaser.Scene implements Middleware {
       this.spellEffect(data.spellId);
       this.showDamageToTarget(data.targetId, data.damage, color);
       this.flashWhite(data.targetId);
+      this.sound.play("hit", { volume: 0.5 , detune: randomBetweenExclusive(0,1000)});
     };
     this.serverEventSystem.addEventListener("spell", spellCallBack);
     const levelCallback: (e: LevelEvent) => void = (data) => {
@@ -305,6 +309,7 @@ export class GameScene extends Phaser.Scene implements Middleware {
       this.serverEventSystem.removeEventListener("spell", spellCallBack);
       this.serverEventSystem.removeEventListener("damage", damageCallback);
     });
+    this.sound.add("hit");
   }
 
   update() {

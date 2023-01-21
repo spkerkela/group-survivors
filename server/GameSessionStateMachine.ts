@@ -40,6 +40,11 @@ export class MatchState implements State<StateMachineData> {
       );
     });
     scene.updates.newPlayers = [];
+    scene.updates.playersToRemove.forEach((playerId) => {
+      scene.gameState.players = scene.gameState.players.filter(
+        (p) => p.id !== playerId
+      );
+    });
 
     const gemsToSpawn = scene.gameState.enemies
       .filter((enemy) => !enemy.alive)

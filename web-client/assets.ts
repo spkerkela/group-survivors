@@ -13,7 +13,7 @@ export const assets = [
   { id: "diamond", url: diamondAsset.href },
   { id: "background", url: backgroundAsset.href },
   { id: "projectile", url: projectileAsset.href },
-  { id: "white-pixel", url: whitePixel.href },
+  { id: "white-pixel", url: whitePixel.href }
 ];
 
 export interface SpriteSheet {
@@ -22,9 +22,17 @@ export interface SpriteSheet {
   frameWidth?: number;
   frameHeight?: number;
 }
+
 export const spriteSheets: SpriteSheet[] = [
   { id: "player", url: playerAnim.href },
   { id: "zombie", url: zombieAnim.href },
   { id: "skeleton", url: skeletonAnim.href },
-  { id: "bat", url: beeAnim.href },
+  { id: "bat", url: beeAnim.href }
+];
+
+export const sounds = [
+  { id: "hit", url: new URL("assets/hitHurt.wav", import.meta.url).href },
+  { id: "explosion", url: new URL("assets/explosion.wav", import.meta.url).href },
+  { id: "pickup", url: new URL("assets/pickupCoin.wav", import.meta.url).href },
+  { id: "shoot", url: new URL("assets/laserShoot.wav", import.meta.url).href }
 ];

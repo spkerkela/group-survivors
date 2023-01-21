@@ -43,7 +43,7 @@ const gameServer = new GameServer(new ServerScene(events), {
     bat: 3000,
   },
   staticObjects: [],
-  spawnRate: 10,
+  spawnRate: 1,
 });
 
 gameServer.start();

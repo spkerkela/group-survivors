@@ -9,7 +9,7 @@ interface ClientState {
   frontend: GameFrontend;
 }
 
-class DisconnectedState implements State<ClientState> {
+export class DisconnectedState implements State<ClientState> {
   id: string = "";
   update(dt: number, _: ClientState): State<ClientState> {
     if (this.id !== "") {
@@ -32,22 +32,26 @@ class DisconnectedState implements State<ClientState> {
   }
 }
 
-class ConnectedState implements State<ClientState> {
+export class ConnectedState implements State<ClientState> {
   id: string;
   constructor(id: string) {
     this.id = id;
   }
   receivedMatchBegin: boolean = false;
   receivedDisconnect: boolean = false;
+  receivedUpdate: boolean = false;
   update(dt: number, { frontend }: ClientState): State<ClientState> {
     if (this.receivedDisconnect) {
       frontend.setScene("lobby");
       return new DisconnectedState();
     }
-    if (this.receivedMatchBegin) {
+    if (this.receivedMatchBegin || this.receivedUpdate) {
       return new GameLoopState(this.id);
     }
     return this;
+  }
+  updateCallback: (data: ClientGameState) => void = (data) => {
+    this.receivedUpdate = true;
   }
   beginMatchCallback = () => {
     this.receivedMatchBegin = true;
@@ -58,14 +62,16 @@ class ConnectedState implements State<ClientState> {
   enter({ serverEvents }: ClientState): void {
     serverEvents.addEventListener("disconnect", this.disconnectCallback);
     serverEvents.addEventListener("beginMatch", this.beginMatchCallback);
+    serverEvents.addEventListener("update", this.updateCallback);
   }
   exit({ serverEvents }: ClientState): void {
     serverEvents.removeEventListener("disconnect", this.disconnectCallback);
     serverEvents.removeEventListener("beginMatch", this.beginMatchCallback);
+    serverEvents.removeEventListener("update", this.updateCallback);
   }
 }
 
-class GameLoopState implements State<ClientState> {
+export class GameLoopState implements State<ClientState> {
   id: string;
   gameState: ClientGameState;
   endMatchCalled: boolean = false;
@@ -111,6 +117,7 @@ export default class ClientStateMachine {
       serverEvents,
       frontend,
     };
+
     this.stateMachine = new StateMachine(new DisconnectedState(), this.data);
   }
   update(dt: number) {

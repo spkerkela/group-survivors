@@ -187,7 +187,7 @@ describe("Connections", () => {
     sm.update(10);
     expect(sm.stateMachine.state).toBeInstanceOf(LobbyState);
   });
-  it("should move from Retrospetive to Lobby state if no players connected", () => {
+  it("should move from Retrospective to Lobby state if no players connected", () => {
     const p1Conn = createTestConnection(serverScene, "test-id");
     const p2Conn = createTestConnection(serverScene, "test-id-2");
     p1Conn.dispatchEvent("join", "Random Name");
