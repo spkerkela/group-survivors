@@ -249,6 +249,7 @@ export function instantiateStaticObject(
     staticObject.y,
     staticObject.type
   );
+  newStaticObject.setDepth(-1);
   newStaticObject.setName(staticObject.id);
   newStaticObject.setOrigin(0.5, 0.5);
   newStaticObject.setData("type", "staticObject");

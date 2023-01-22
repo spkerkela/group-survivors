@@ -19,6 +19,7 @@ import {
 } from "../common/constants";
 import { generateId } from "./id-generator";
 import { LevelData } from "./GameServer";
+import { randomBetweenExclusive } from "../common/random";
 
 export class ServerScene {
   gameObjectQuadTree: QuadTree<GameObject>;
@@ -192,6 +193,16 @@ export class ServerScene {
       projectiles: [],
       staticObjects: [],
     };
+    const rockCount = 100;
+    for (let i = 0; i < rockCount; i++) {
+      this.gameState.staticObjects.push({
+        id: generateId("rock"),
+        objectType: "staticObject",
+        type: "rock",
+        x: randomBetweenExclusive(0, GAME_WIDTH),
+        y: randomBetweenExclusive(0, GAME_HEIGHT),
+      });
+    }
     this.readyToJoin.forEach((p) => {
       this.updates.newPlayers.push(p);
     });

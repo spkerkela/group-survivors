@@ -12,6 +12,10 @@ export const assets = [
     id: "white-pixel",
     url: new URL("assets/white_pixel.png", import.meta.url).href,
   },
+  {
+    id: "rock",
+    url: new URL("assets/rock.png", import.meta.url).href,
+  },
 ];
 
 export interface SpriteSheet {

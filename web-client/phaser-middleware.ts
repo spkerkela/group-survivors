@@ -274,6 +274,7 @@ export class GameScene extends Phaser.Scene implements Middleware {
         "background"
       )
       .setName("background");
+    background.setDepth(-2);
 
     data.gameState.players.forEach((p) => {
       const instantiated = instantiatePlayer(this, p);
