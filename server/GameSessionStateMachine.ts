@@ -1,19 +1,20 @@
 import StateMachine, { State } from "../common/StateMachine";
 import {
-  createGem,
+  createPickUp,
   removeDeadEnemies,
   updatePlayers,
   updateSpells,
   updateProjectiles,
   updateEnemies,
   SpellProjectileEvent,
-  updateGems,
+  updatePickUps,
   createPlayer,
 } from "./game-logic";
 import { LevelData } from "./GameServer";
 import { generateId } from "./id-generator";
 import Spawner from "./Spawner";
 import { ServerScene } from "./ServerScene";
+import { chooseRandom } from "../common/random";
 
 export class PreMatchState implements State<StateMachineData> {
   update(dt: number, { scene, playersRequired }: StateMachineData) {
@@ -28,16 +29,16 @@ export class MatchState implements State<StateMachineData> {
   spawner: Spawner;
   spawnTicker: number;
   update(dt: number, { levelData, scene }: StateMachineData) {
-    if (scene.updates.newPlayers.length > 0) {
-    }
     scene.updates.newPlayers.forEach((player) => {
-      scene.gameState.players.push(
-        createPlayer(
-          player.id,
-          player.screenName,
-          levelData.playerStartPosition
-        )
-      );
+      if (!scene.gameState.players.find((p) => p.id === player.id)) {
+        scene.gameState.players.push(
+          createPlayer(
+            player.id,
+            player.screenName,
+            levelData.playerStartPosition
+          )
+        );
+      }
     });
     scene.updates.newPlayers = [];
     scene.updates.playersToRemove.forEach((playerId) => {
@@ -45,17 +46,22 @@ export class MatchState implements State<StateMachineData> {
         (p) => p.id !== playerId
       );
     });
+    scene.updates.playersToRemove = [];
 
-    const gemsToSpawn = scene.gameState.enemies
+    const pickUpsToSpawn = scene.gameState.enemies
       .filter((enemy) => !enemy.alive)
       .map((enemy) =>
-        createGem(generateId(`gem-${enemy.id}`), enemy.gemType, {
-          x: enemy.x,
-          y: enemy.y,
-        })
+        createPickUp(
+          generateId(`pickup-${enemy.id}`),
+          chooseRandom(enemy.dropTable),
+          {
+            x: enemy.x,
+            y: enemy.y,
+          }
+        )
       );
 
-    scene.gameState.gems = scene.gameState.gems.concat(gemsToSpawn);
+    scene.gameState.pickUps = scene.gameState.pickUps.concat(pickUpsToSpawn);
 
     scene.gameState.enemies = removeDeadEnemies(scene.gameState.enemies);
     updatePlayers(scene.gameState.players, scene.updates, dt);
@@ -128,14 +134,14 @@ export class MatchState implements State<StateMachineData> {
         }))
       )
       .filter((p) => p.lifetime > 0);
-    const { gemEvents, levelEvents, expiredGems } = updateGems(
-      scene.gameState.gems,
+    const { pickUpEvents, levelEvents, expiredPickUps } = updatePickUps(
+      scene.gameState.pickUps,
       scene.gameObjectQuadTree,
       dt
     );
 
-    scene.gameState.gems = scene.gameState.gems.filter(
-      (g) => !gemEvents.map((e) => e.gemId).includes(g.id) // remove gems that have been picked up
+    scene.gameState.pickUps = scene.gameState.pickUps.filter(
+      (g) => !pickUpEvents.map((e) => e.pickUpId).includes(g.id) // remove gems that have been picked up
     );
     levelEvents.forEach((e) => {
       scene.pushEvent("level", e.playerId, e);
@@ -152,8 +158,8 @@ export class MatchState implements State<StateMachineData> {
       }
     });
     scene.gameState.players = scene.gameState.players.filter((p) => p.alive);
-    scene.gameState.gems = scene.gameState.gems.filter(
-      (g) => !expiredGems.includes(g.id)
+    scene.gameState.pickUps = scene.gameState.pickUps.filter(
+      (g) => !expiredPickUps.includes(g.id)
     );
 
     this.spawnTicker += dt;
@@ -176,13 +182,11 @@ export class MatchState implements State<StateMachineData> {
     this.spawner = new Spawner(levelData.enemyTable);
     scene.initializeState();
     scene.loadLevel(levelData);
-    scene.enableInstantJoin();
     this.spawnTicker = 0;
     scene.updateQuadTree();
   }
   exit({ scene }: StateMachineData): void {
     this.spawner = null;
-    scene.disableInstantJoin();
     scene.gameState.players.forEach((p) => {
       scene.lobby.push(p.id);
     });

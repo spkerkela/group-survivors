@@ -1,13 +1,6 @@
 import { ServerScene } from "../../server/ServerScene";
 import EventSystem from "../../common/EventSystem";
 
-export function addReadyPlayer(scene: ServerScene, id: string) {
-  scene.readyToJoin.push({
-    id,
-    screenName: "Test Name",
-  });
-  scene.eventSystems.connectionSystems[id] = createTestConnection(scene, id);
-}
 export function createTestConnection(
   serverScene: ServerScene,
   id: string

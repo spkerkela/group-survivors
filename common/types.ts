@@ -8,7 +8,7 @@ import {
 export interface GameState {
   players: Player[];
   enemies: Enemy[];
-  gems: Gem[];
+  pickUps: PickUp[];
   projectiles: Projectile[];
   staticObjects: StaticObject[];
 }
@@ -49,10 +49,11 @@ export interface InputState {
   right: boolean;
 }
 
-export interface Gem extends GameObject {
+export interface PickUp extends GameObject {
   type: string;
-  objectType: "gem";
+  objectType: "pickup";
   lifetime: number;
+  visual: string;
 }
 
 export interface Player extends GameObject {
@@ -66,6 +67,7 @@ export interface Player extends GameObject {
   invulnerabilityFrames: number;
   alive: boolean;
   spells: { [key: string]: { cooldown: number; level: number } };
+  gold: number;
 }
 
 export interface MoveUpdate {
@@ -85,7 +87,7 @@ export interface Enemy extends GameObject {
   damageType: string;
   damageMin: number;
   damageMax: number;
-  gemType: string;
+  dropTable: string[];
 }
 
 export interface Projectile extends GameObject {
@@ -137,8 +139,8 @@ export function isPlayer(object: GameObject): object is Player {
 export function isEnemy(object: GameObject): object is Enemy {
   return object.objectType === "enemy";
 }
-export function isGem(object: GameObject): object is Gem {
-  return object.objectType === "gem";
+export function isPickUp(object: GameObject): object is PickUp {
+  return object.objectType === "pickup";
 }
 
 export function isProjectile(object: GameObject): object is Projectile {

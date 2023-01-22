@@ -13,13 +13,13 @@ import { experienceRequiredForLevel } from "../common/shared";
 import {
   Enemy,
   GameObject,
-  Gem,
+  PickUp,
   InputState,
   Player,
   Position,
   Projectile,
 } from "../common/types";
-import { gemDB, SpellData, spellDB } from "../common/data";
+import { pickUpDB, SpellData, spellDB } from "../common/data";
 import QuadTree from "../common/QuadTree";
 
 export interface PlayerUpdate {
@@ -41,8 +41,7 @@ export function updatePlayers(
   updates: Updates,
   deltaTime: number
 ) {
-  for (let i = 0; i < players.length; i++) {
-    const player = players[i];
+  players.forEach((player) => {
     const update = updates.moves[player.id];
     if (player.alive && update) {
       player.x += update.x * (player.speed * deltaTime);
@@ -54,13 +53,12 @@ export function updatePlayers(
       if (player.y > GAME_HEIGHT) player.y = GAME_HEIGHT;
     }
     player.invulnerabilityFrames -= deltaTime;
-  }
+  });
   updateBots(players, deltaTime);
 }
 
 function updateBots(players: Player[], deltaTime: number) {
-  for (let i = 0; i < players.length; i++) {
-    const player = players[i];
+  players.forEach((player) => {
     if (player.alive && player.id.startsWith("bot")) {
       const x =
         player.x + Math.cos(player.y / 100) * (player.speed * deltaTime);
@@ -69,7 +67,7 @@ function updateBots(players: Player[], deltaTime: number) {
       player.x = x;
       player.y = y;
     }
-  }
+  });
 }
 
 export function updateEnemies(
@@ -78,9 +76,8 @@ export function updateEnemies(
   deltaTime: number
 ): DamageEvent[] {
   let events: DamageEvent[] = [];
-  for (let i = 0; i < enemies.length; i++) {
-    const enemy = enemies[i];
-    if (!enemy.alive) continue;
+  enemies.forEach((enemy) => {
+    if (!enemy.alive) return;
     const players = gameObjectQuadTree
       .retrieve({
         x: enemy.x - SCREEN_WIDTH / 2,
@@ -134,7 +131,7 @@ export function updateEnemies(
       enemy.x += Math.cos(enemy.y / 100) * (enemy.speed * deltaTime);
       enemy.y += Math.sin(enemy.x / 100) * (enemy.speed * deltaTime);
     }
-  }
+  });
 
   return events;
 }
@@ -346,9 +343,9 @@ export interface DamageEvent {
   amount: number;
 }
 
-export interface GemEvent {
+export interface PickUpEvent {
   playerId: string;
-  gemId: string;
+  pickUpId: string;
 }
 
 export interface LevelEvent {
@@ -356,32 +353,35 @@ export interface LevelEvent {
   player: Player;
 }
 
-export function updateGems(
-  gems: Gem[],
+export function updatePickUps(
+  pickUps: PickUp[],
   gameObjectQuadTree: QuadTree<GameObject>,
   deltaTime: number
-): { expiredGems: string[]; gemEvents: GemEvent[]; levelEvents: LevelEvent[] } {
+): {
+  expiredPickUps: string[];
+  pickUpEvents: PickUpEvent[];
+  levelEvents: LevelEvent[];
+} {
   let events: {
-    expiredGems: string[];
-    gemEvents: GemEvent[];
+    expiredPickUps: string[];
+    pickUpEvents: PickUpEvent[];
     levelEvents: LevelEvent[];
   } = {
-    gemEvents: [],
+    pickUpEvents: [],
     levelEvents: [],
-    expiredGems: [],
+    expiredPickUps: [],
   };
 
-  for (let i = 0; i < gems.length; i++) {
-    const gem = gems[i];
-    gem.lifetime -= deltaTime;
-    if (gem.lifetime <= 0) {
-      events.expiredGems.push(gem.id);
-      continue;
+  pickUps.forEach((pickUp) => {
+    pickUp.lifetime -= deltaTime;
+    if (pickUp.lifetime <= 0) {
+      events.expiredPickUps.push(pickUp.id);
+      return;
     }
     const players = gameObjectQuadTree
       .retrieve({
-        x: gem.x - PLAYER_SIZE,
-        y: gem.y - PLAYER_SIZE,
+        x: pickUp.x - PLAYER_SIZE,
+        y: pickUp.y - PLAYER_SIZE,
         width: PLAYER_SIZE * 2,
         height: PLAYER_SIZE * 2,
       })
@@ -389,19 +389,27 @@ export function updateGems(
         (gameObject): gameObject is Player => gameObject.objectType === "player"
       );
 
-    for (let j = 0; j < players.length; j++) {
-      const player = players[j];
+    players.forEach((player) => {
       if (player.alive) {
         const distance = Math.sqrt(
-          Math.pow(player.x - gem.x, 2) + Math.pow(player.y - gem.y, 2)
+          Math.pow(player.x - pickUp.x, 2) + Math.pow(player.y - pickUp.y, 2)
         );
 
         if (distance < PLAYER_SIZE) {
-          events.gemEvents.push({
+          events.pickUpEvents.push({
             playerId: player.id,
-            gemId: gem.id,
+            pickUpId: pickUp.id,
           });
-          player.experience += gemDB[gem.type].value;
+          if (pickUp.type === "exp") {
+            player.experience += pickUpDB[pickUp.type].value;
+          } else if (pickUp.type === "hp") {
+            player.hp = Math.min(
+              player.hp + pickUpDB[pickUp.type].value,
+              player.maxHp
+            );
+          } else if (pickUp.type === "gold") {
+            player.gold += pickUpDB[pickUp.type].value;
+          }
           while (checkPlayerExperience(player)) {
             events.levelEvents.push({
               playerId: player.id,
@@ -410,8 +418,8 @@ export function updateGems(
           }
         }
       }
-    }
-  }
+    });
+  });
   return events;
 }
 
@@ -497,20 +505,22 @@ export function createPlayer(
         level: 1,
       },
     },
+    gold: 0,
   };
 }
 
-export function createGem(
+export function createPickUp(
   id: string,
-  gemType: string,
+  type: string,
   { x, y }: Position
-): Gem {
+): PickUp {
   return {
     id: id,
-    objectType: "gem",
+    objectType: "pickup",
     x: x,
     y: y,
-    type: gemType,
+    type: type,
     lifetime: 15,
+    visual: pickUpDB[type].visual,
   };
 }

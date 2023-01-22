@@ -28,14 +28,8 @@ export default class Spawner {
       damageType: enemyInfo.damageType,
       damageMin: enemyInfo.damageMin,
       damageMax: enemyInfo.damageMax,
-      gemType: enemyInfo.gemType,
+      dropTable: enemyInfo.dropTable,
     };
-  }
-
-  spawnEnemyOfType(gameState: GameState, enemyType: string) {
-    const enemy = this.createEnemy(enemyType);
-    gameState.enemies.push(enemy);
-    return enemy;
   }
   spawnEnemy(gameState: GameState) {
     const enemyTypesThatCanSpawn = Object.keys(this.spawnTable).filter(

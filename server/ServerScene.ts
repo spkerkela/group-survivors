@@ -3,14 +3,13 @@ import {
   GameObject,
   ClientGameState,
   isEnemy,
-  isGem,
+  isPickUp,
   isPlayer,
   isProjectile,
   isStaticObject,
-  MoveUpdate,
   GameState,
 } from "../common/types";
-import { createMoveUpdate, createPlayer, PlayerUpdate } from "./game-logic";
+import { createPlayer, PlayerUpdate } from "./game-logic";
 import { ServerEventSystems } from "./eventSystems";
 import {
   GAME_HEIGHT,
@@ -19,7 +18,6 @@ import {
   SCREEN_WIDTH,
 } from "../common/constants";
 import { generateId } from "./id-generator";
-import EventSystem from "../common/EventSystem";
 import { LevelData } from "./GameServer";
 
 export class ServerScene {
@@ -37,8 +35,6 @@ export class ServerScene {
   lobby: string[];
   readyToJoin: { id: string; screenName: string }[];
   loadedLevel: LevelData;
-
-  private instantJoin = false;
 
   constructor(eventSystems: ServerEventSystems) {
     this.gameObjectQuadTree = new QuadTree(
@@ -58,7 +54,7 @@ export class ServerScene {
     return {
       players: [],
       enemies: [],
-      gems: [],
+      pickUps: [],
       projectiles: [],
       id: "",
       staticObjects: [],
@@ -86,14 +82,6 @@ export class ServerScene {
     return false;
   }
 
-  enableInstantJoin() {
-    this.instantJoin = true;
-  }
-
-  disableInstantJoin() {
-    this.instantJoin = false;
-  }
-
   loadLevel(levelData: LevelData) {
     this.loadedLevel = levelData;
     for (let i = 0; i < levelData.bots; i++) {
@@ -107,22 +95,22 @@ export class ServerScene {
   }
 
   updateQuadTree() {
-    const connector = this;
-    connector.gameObjectQuadTree.clear();
-    connector.gameState.players.forEach((player) => {
-      connector.gameObjectQuadTree.insert(player);
+    const scene = this;
+    scene.gameObjectQuadTree.clear();
+    scene.gameState.players.forEach((player) => {
+      scene.gameObjectQuadTree.insert(player);
     });
-    connector.gameState.enemies.forEach((enemy) => {
-      connector.gameObjectQuadTree.insert(enemy);
+    scene.gameState.enemies.forEach((enemy) => {
+      scene.gameObjectQuadTree.insert(enemy);
     });
-    connector.gameState.gems.forEach((gem) => {
-      connector.gameObjectQuadTree.insert(gem);
+    scene.gameState.pickUps.forEach((gem) => {
+      scene.gameObjectQuadTree.insert(gem);
     });
-    connector.gameState.projectiles.forEach((projectile) => {
-      connector.gameObjectQuadTree.insert(projectile);
+    scene.gameState.projectiles.forEach((projectile) => {
+      scene.gameObjectQuadTree.insert(projectile);
     });
-    connector.gameState.staticObjects.forEach((staticObject) => {
-      connector.gameObjectQuadTree.insert(staticObject);
+    scene.gameState.staticObjects.forEach((staticObject) => {
+      scene.gameObjectQuadTree.insert(staticObject);
     });
   }
 
@@ -169,7 +157,7 @@ export class ServerScene {
     let gameState: ClientGameState = {
       players: [],
       enemies: [],
-      gems: [],
+      pickUps: [],
       projectiles: [],
       staticObjects: [],
       id: id,
@@ -179,8 +167,8 @@ export class ServerScene {
         gameState.players.push(o);
       } else if (isEnemy(o)) {
         gameState.enemies.push(o);
-      } else if (isGem(o)) {
-        gameState.gems.push(o);
+      } else if (isPickUp(o)) {
+        gameState.pickUps.push(o);
       } else if (isProjectile(o)) {
         gameState.projectiles.push(o);
       } else if (isStaticObject(o)) {
@@ -200,7 +188,7 @@ export class ServerScene {
     this.gameState = {
       players: [],
       enemies: [],
-      gems: [],
+      pickUps: [],
       projectiles: [],
       staticObjects: [],
     };

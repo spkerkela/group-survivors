@@ -4,7 +4,7 @@ export interface EnemyData {
   damageType: string;
   damageMin: number;
   damageMax: number;
-  gemType: string;
+  dropTable: string[];
 }
 
 export type EnemyDB = { [key: string]: EnemyData };
@@ -15,7 +15,7 @@ export const enemyDB: EnemyDB = {
     damageType: "cold",
     damageMin: 20,
     damageMax: 40,
-    gemType: "exp",
+    dropTable: ["exp", "gold", "hp"],
   },
   bat: {
     hp: 20,
@@ -23,7 +23,7 @@ export const enemyDB: EnemyDB = {
     damageType: "poison",
     damageMin: 1,
     damageMax: 5,
-    gemType: "exp",
+    dropTable: ["exp"],
   },
   skeleton: {
     hp: 200,
@@ -31,7 +31,7 @@ export const enemyDB: EnemyDB = {
     damageType: "melee",
     damageMin: 10,
     damageMax: 20,
-    gemType: "exp",
+    dropTable: ["exp", "hp"],
   },
 };
 
@@ -92,17 +92,31 @@ export const spellDB: SpellDB = {
   },
 };
 
-export interface GemData {
+export interface PickUpData {
   name: string;
   type: string;
   value: number;
+  visual: string;
 }
 
-export type GemDB = { [key: string]: GemData };
-export const gemDB: GemDB = {
+export type PickUpDB = { [key: string]: PickUpData };
+export const pickUpDB: PickUpDB = {
   exp: {
     name: "Experience",
     type: "exp",
     value: 25,
+    visual: "diamond",
+  },
+  hp: {
+    name: "Health Potion",
+    type: "hp",
+    value: 25,
+    visual: "heart",
+  },
+  gold: {
+    name: "Gold",
+    type: "gold",
+    value: 25,
+    visual: "gold",
   },
 };

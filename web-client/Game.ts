@@ -18,7 +18,7 @@ export default class Game {
     this.gameState = {
       players: [],
       enemies: [],
-      gems: [],
+      pickUps: [],
       projectiles: [],
       id: "",
       staticObjects: [],
@@ -41,7 +41,7 @@ export default class Game {
         id: this.gameState.id,
         players: [],
         enemies: [],
-        gems: [],
+        pickUps: [],
         projectiles: [],
         staticObjects: [],
       };
@@ -53,7 +53,7 @@ export default class Game {
         if (newState.id !== this.gameState.id) return;
         this.gameState.players = newState.players;
         this.gameState.enemies = newState.enemies;
-        this.gameState.gems = newState.gems;
+        this.gameState.pickUps = newState.pickUps;
         this.gameState.projectiles = newState.projectiles;
         this.gameState.staticObjects = newState.staticObjects;
         this.gameState.debug = newState.debug;

@@ -5,7 +5,7 @@ import { randomBetweenExclusive } from "../common/random";
 import {
   Enemy,
   ClientGameState,
-  Gem,
+  PickUp,
   Player,
   Position,
   Projectile,
@@ -166,9 +166,9 @@ export function instantiateEnemy(
   return newEnemy;
 }
 
-export function instantiateGem(
+export function instantiatePickUp(
   scene: Phaser.Scene,
-  gem: Gem
+  pickUp: PickUp
 ): Phaser.GameObjects.GameObject {
   const pixelParticle = getPixelParticle(scene);
   const emitter = pixelParticle.createEmitter({
@@ -181,16 +181,16 @@ export function instantiateGem(
     reserve: 20,
   });
   emitter.stop();
-  const newGem = scene.add.sprite(gem.x, gem.y, "diamond");
-  newGem.setData("type", "gem");
-  newGem.setName(gem.id);
-  newGem.setScale(0.5);
-  newGem.setOrigin(0.5, 0.5);
-  newGem.on("destroy", () => {
-    emitter.explode(20, gem.x, gem.y);
+  const newPickUp = scene.add.sprite(pickUp.x, pickUp.y, pickUp.visual);
+  newPickUp.setData("type", "pickup");
+  newPickUp.setName(pickUp.id);
+  newPickUp.setScale(0.5);
+  newPickUp.setOrigin(0.5, 0.5);
+  newPickUp.on("destroy", () => {
+    emitter.explode(20, pickUp.x, pickUp.y);
     emitter.stop();
   });
-  return newGem;
+  return newPickUp;
 }
 
 export function updateProjectile(
@@ -318,9 +318,9 @@ export function updateMiddleWare(gameState: ClientGameState, mw: Middleware) {
   const enemyIds = gameState.enemies.map((e) => e.id);
   mw.removeInvalidGameObjects("enemy", enemyIds);
 
-  gameState.gems.forEach((g) => mw.updateGem(g));
-  const gemIds = gameState.gems.map((g) => g.id);
-  mw.removeInvalidGameObjects("gem", gemIds);
+  gameState.pickUps.forEach((g) => mw.updatePickUp(g));
+  const pickUpIds = gameState.pickUps.map((g) => g.id);
+  mw.removeInvalidGameObjects("pickup", pickUpIds);
   gameState.projectiles.forEach((p) => {
     mw.updateProjectile(p);
   });
@@ -353,8 +353,8 @@ export interface Middleware {
   destroyPlayer(playerId: string): void;
   instantiateEnemy(enemy: Enemy): void;
   updateEnemy(enemy: Enemy): void;
-  instantiateGem(gem: Gem): void;
-  updateGem(gem: Gem): void;
+  instantiatePickUp(pickUp: PickUp): void;
+  updatePickUp(pickUp: PickUp): void;
   instantiateProjectile(projectile: Projectile): void;
   updateProjectile(projectile: Projectile): void;
   instantiateStaticObject(staticObject: StaticObject): void;

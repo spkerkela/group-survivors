@@ -87,7 +87,6 @@ export class GameUpdateState implements State<ConnectionData> {
         this.setupMoveListener(id, connection, scene);
       }
     );
-    scene.enableInstantJoin();
     scene.readyToJoin.forEach(({ id, screenName }) => {
       scene.pushEvent("beginMatch", id, {
         gameState: scene.createGameStateMessage(id),
@@ -99,7 +98,6 @@ export class GameUpdateState implements State<ConnectionData> {
   }
 
   exit(data: ConnectionData): void {
-    data.scene.disableInstantJoin();
     data.scene.connectionIds().forEach((id) => {
       data.scene.pushEvent("endMatch", id, {});
     });

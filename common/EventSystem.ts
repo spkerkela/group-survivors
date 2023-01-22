@@ -29,7 +29,6 @@ export default class EventSystem {
         callback(...args);
       });
     } else {
-      console.warn(`Event ${event} not found`);
     }
   }
 }

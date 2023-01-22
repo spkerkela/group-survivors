@@ -13,7 +13,7 @@ import { experienceRequiredForLevel } from "../common/shared";
 import {
   Enemy,
   ClientGameState,
-  Gem,
+  PickUp,
   Player,
   Position,
   Projectile,
@@ -33,7 +33,7 @@ import {
   destroyPlayer,
   updateGameObject,
   instantiateEnemy,
-  instantiateGem,
+  instantiatePickUp,
   instantiateProjectile,
   instantiateStaticObject,
   GameFrontend,
@@ -81,7 +81,6 @@ class GameOverScene extends Phaser.Scene {
 export class UiScene extends Phaser.Scene {
   experienceBar: Bar;
   eventSystem: EventSystem;
-  gameState: ClientGameState;
   constructor(eventSystem: EventSystem) {
     super({ key: "UI", active: false });
     this.eventSystem = eventSystem;
@@ -89,7 +88,8 @@ export class UiScene extends Phaser.Scene {
   init(data: { gameState: ClientGameState }) {
     this.data.set("gameState", data.gameState);
   }
-  create() {
+  create(data: { gameState: ClientGameState }) {
+    this.data.set("gameState", data.gameState);
     this.experienceBar = new Bar(this, {
       position: { x: 10, y: 10 },
       width: SCREEN_WIDTH - 20,
@@ -102,7 +102,7 @@ export class UiScene extends Phaser.Scene {
       playerId,
       player,
     }) => {
-      const gameState = this.gameState;
+      const gameState = this.data.get("gameState");
       if (playerId !== gameState.id) {
         return;
       }
@@ -115,12 +115,25 @@ export class UiScene extends Phaser.Scene {
     this.events.on("destroy", () => {
       this.eventSystem.removeEventListener("level", levelCallback);
     });
+    this.events.on("shutdown", () => {
+      this.eventSystem.removeEventListener("level", levelCallback);
+    });
+
+    this.add
+      .text(10, SCREEN_HEIGHT - 20, "Gold: 0", {
+        fontSize: "20px",
+        color: "yellow",
+        fontStyle: "bold",
+      })
+      .setName("gold");
   }
 
   update() {
     const gameState = this.data.get("gameState");
     gameState.players.forEach((p) => {
       if (p.id === gameState.id) {
+        const text = this.children.getByName("gold") as Phaser.GameObjects.Text;
+        text.setText(`Gold: ${(p.gold * NUMBER_SCALE).toLocaleString()}`);
         this.experienceBar.setValue(
           p.experience - experienceRequiredForLevel(p.level)
         );
@@ -142,8 +155,8 @@ export class GameScene extends Phaser.Scene implements Middleware {
   updateEnemy(enemy: Enemy): void {
     updateGameObject(this, enemy.id, enemy, instantiateEnemy);
   }
-  updateGem(gem: Gem): void {
-    updateGameObject(this, gem.id, gem, instantiateGem);
+  updatePickUp(gem: PickUp): void {
+    updateGameObject(this, gem.id, gem, instantiatePickUp);
   }
   updateStaticObject(staticObject: StaticObject): void {
     updateGameObject(
@@ -171,8 +184,8 @@ export class GameScene extends Phaser.Scene implements Middleware {
   instantiateEnemy(enemy: Enemy): void {
     instantiateEnemy(this, enemy);
   }
-  instantiateGem(gem: Gem): void {
-    instantiateGem(this, gem);
+  instantiatePickUp(gem: PickUp): void {
+    instantiatePickUp(this, gem);
   }
   instantiateProjectile(projectile: Projectile): void {
     instantiateProjectile(this, projectile);
@@ -266,7 +279,6 @@ export class GameScene extends Phaser.Scene implements Middleware {
       const instantiated = instantiatePlayer(this, p);
       if (p.id === data.gameState.id) {
         this.cameras.main.startFollow(instantiated);
-        this.launchUi();
       }
     });
     const damageCallback: (data: DamageEvent) => void = ({
@@ -281,6 +293,10 @@ export class GameScene extends Phaser.Scene implements Middleware {
       this.flashWhite(player.id);
       this.cameras.main.flash(150, 255, 255, 255);
       this.cameras.main.shake(150, 0.01);
+      this.sound.play("hit", {
+        volume: 0.8,
+        detune: randomBetweenExclusive(0, 1000),
+      });
     };
     this.serverEventSystem.addEventListener("damage", damageCallback);
 
@@ -289,7 +305,10 @@ export class GameScene extends Phaser.Scene implements Middleware {
       this.spellEffect(data.spellId);
       this.showDamageToTarget(data.targetId, data.damage, color);
       this.flashWhite(data.targetId);
-      this.sound.play("hit", { volume: 0.5 , detune: randomBetweenExclusive(0,1000)});
+      this.sound.play("hit", {
+        volume: 0.5,
+        detune: randomBetweenExclusive(0, 1000),
+      });
     };
     this.serverEventSystem.addEventListener("spell", spellCallBack);
     const levelCallback: (e: LevelEvent) => void = (data) => {
@@ -298,18 +317,17 @@ export class GameScene extends Phaser.Scene implements Middleware {
       globalEventSystem.dispatchEvent("level", data.player.level);
       this.updateLevel(data.player);
     };
+    const cleanup = () => {
+      this.serverEventSystem.removeEventListener("level", levelCallback);
+      this.serverEventSystem.removeEventListener("spell", spellCallBack);
+      this.serverEventSystem.removeEventListener("damage", damageCallback);
+      this.scene.stop("UI");
+    };
     this.serverEventSystem.addEventListener("level", levelCallback);
-    this.events.on("destroy", () => {
-      this.serverEventSystem.removeEventListener("level", levelCallback);
-      this.serverEventSystem.removeEventListener("spell", spellCallBack);
-      this.serverEventSystem.removeEventListener("damage", damageCallback);
-    });
-    this.events.on("shutdown", () => {
-      this.serverEventSystem.removeEventListener("level", levelCallback);
-      this.serverEventSystem.removeEventListener("spell", spellCallBack);
-      this.serverEventSystem.removeEventListener("damage", damageCallback);
-    });
+    this.events.on("destroy", cleanup);
+    this.events.on("shutdown", cleanup);
     this.sound.add("hit");
+    this.launchUi();
   }
 
   update() {
@@ -438,6 +456,7 @@ export default class PhaserMiddleware implements GameFrontend {
     if (this.currentScene instanceof GameScene) {
       this.currentScene.data.set("gameState", gameState);
     }
+    this.phaserInstance.scene.getScene("UI").data.set("gameState", gameState);
     /*
     if (this.phaserInstance) {
       if (this.phaserInstance.scene.isActive("Game")) {
