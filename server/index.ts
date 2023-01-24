@@ -8,8 +8,11 @@ import parser from "socket.io-msgpack-parser";
 import EventSystem from "../common/EventSystem";
 import { initGameEventSystem, ServerEventSystems } from "./eventSystems";
 import { ServerScene } from "./ServerScene";
+import helmet from "helmet";
 
 const app = express();
+
+app.use(helmet());
 
 const httpServer = createServer(app);
 
