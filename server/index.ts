@@ -12,7 +12,16 @@ import helmet from "helmet";
 
 const app = express();
 
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        imgSrc: ["'self'", "data:", "blob:"],
+      },
+    },
+  })
+);
 
 const httpServer = createServer(app);
 
