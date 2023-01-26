@@ -259,6 +259,9 @@ describe("Server", () => {
     expect(server.connectionStateMachine.stateMachine.state).toBeInstanceOf(
       LobbyState
     );
+    expect(server.gameStateMachine.stateMachine.state).toBeInstanceOf(
+      PreMatchState
+    );
   });
   it("Game should start in PreMatch", async () => {
     expect(server.gameStateMachine.stateMachine.state).toBeInstanceOf(
