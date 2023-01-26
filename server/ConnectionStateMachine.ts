@@ -4,6 +4,7 @@ import EventSystem from "../common/EventSystem";
 import { sanitizeName } from "../common/shared";
 import { MoveUpdate } from "../common/types";
 import { createMoveUpdate } from "./game-logic";
+import logger from "./logger";
 
 interface ConnectionData {
   scene: ServerScene;
@@ -148,6 +149,8 @@ export default class ConnectionStateMachine {
   };
   lobby: string[] = [];
   connectionCallback = (id: string, connection: EventSystem) => {
+    const connectionLogger = logger.child({ connectionId: id });
+    connectionLogger.info("connection established");
     this.lobby.push(id);
     this.data.scene.eventSystems.connectionSystems[id] = connection;
     this.data.scene.events[id] = [];
@@ -159,6 +162,7 @@ export default class ConnectionStateMachine {
       delete this.data.scene.events[id];
       delete this.data.scene.eventSystems.connectionSystems[id];
       this.data.scene.updates.playersToRemove.push(id);
+      connectionLogger.info("connection closed");
     };
     this.callbacks.join[id] = (screenName: string) => {
       const sanitizedName = sanitizeName(screenName);
@@ -168,6 +172,7 @@ export default class ConnectionStateMachine {
         name: "joined",
         data: this.data.scene.createGameStateMessage(id),
       });
+      connectionLogger.info("player joined");
     };
     connection.addEventListener("disconnect", this.callbacks.disconnect[id]);
     connection.addEventListener("join", this.callbacks.join[id]);

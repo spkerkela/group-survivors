@@ -15,6 +15,8 @@ import { generateId } from "./id-generator";
 import Spawner from "./Spawner";
 import { ServerScene } from "./ServerScene";
 import { chooseRandom } from "../common/random";
+import { Logger } from "winston";
+import logger from "./logger";
 
 export class PreMatchState implements State<StateMachineData> {
   update(dt: number, { scene, playersRequired }: StateMachineData) {
@@ -28,6 +30,10 @@ export class PreMatchState implements State<StateMachineData> {
 export class MatchState implements State<StateMachineData> {
   spawner: Spawner;
   spawnTicker: number;
+  matchLogger: Logger;
+  constructor() {
+    this.matchLogger = logger.child({ matchId: generateId("match") });
+  }
   update(dt: number, { levelData, scene }: StateMachineData) {
     scene.updates.newPlayers.forEach((player) => {
       if (!scene.gameState.players.find((p) => p.id === player.id)) {
@@ -184,6 +190,7 @@ export class MatchState implements State<StateMachineData> {
     scene.loadLevel(levelData);
     this.spawnTicker = 0;
     scene.updateQuadTree();
+    this.matchLogger.info("Match started");
   }
   exit({ scene }: StateMachineData): void {
     this.spawner = null;
@@ -191,6 +198,7 @@ export class MatchState implements State<StateMachineData> {
       scene.lobby.push(p.id);
     });
     scene.connectionIds().forEach((id) => scene.pushEvent("endMatch", id, {}));
+    this.matchLogger.info("Match ended");
   }
 }
 

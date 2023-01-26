@@ -9,6 +9,7 @@ import EventSystem from "../common/EventSystem";
 import { initGameEventSystem, ServerEventSystems } from "./eventSystems";
 import { ServerScene } from "./ServerScene";
 import helmet from "helmet";
+import logger from "./logger";
 
 const app = express();
 
@@ -31,7 +32,7 @@ const host = process.env.HOST || "localhost";
 const port = process.env.PORT || 3000;
 
 httpServer.listen(port, () => {
-  console.log(`Server listening on http://${host}:${port}`);
+  logger.info(`Server listening on http://${host}:${port}`);
 });
 
 const io = new Server(httpServer, {
