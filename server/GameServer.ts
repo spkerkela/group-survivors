@@ -4,6 +4,7 @@ import { playersRequired, serverTimeScale } from "./config";
 import ConnectionStateMachine from "./ConnectionStateMachine";
 import GameSessionStateMachine from "./GameSessionStateMachine";
 import { ServerScene } from "./ServerScene";
+import logger from "./logger";
 
 export interface LevelData {
   name: string;
@@ -20,6 +21,7 @@ export class GameServer {
   deltaTime: number;
   gameStateMachine: GameSessionStateMachine;
   connectionStateMachine: ConnectionStateMachine;
+  running: boolean;
 
   constructor(serverScene: ServerScene, levelData: LevelData) {
     this.scene = serverScene;
@@ -35,6 +37,7 @@ export class GameServer {
       serverScene,
       playersRequired
     );
+    this.running = false;
   }
 
   update(deltaTime: number) {
@@ -42,11 +45,19 @@ export class GameServer {
     this.connectionStateMachine.update(deltaTime);
   }
 
+  stop() {
+    this.running = false;
+  }
   start() {
-    this.scene.start(this.levelData);
+    this.running = true;
     let previousTime = Date.now();
     let deltaTime = 0;
-    setInterval(() => {
+    const interval = setInterval(() => {
+      if (!this.running) {
+        clearInterval(interval);
+        logger.info("Game server stopped");
+        return;
+      }
       const currentTime = Date.now();
       const elapsedTime = currentTime - previousTime;
       previousTime = currentTime;

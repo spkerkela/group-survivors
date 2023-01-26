@@ -123,7 +123,6 @@ export class ServerScene {
   private getPlayer(id: string) {
     return this.gameState.players.find((p) => p.id === id);
   }
-  start(levelData: LevelData) {}
 
   connectionIds(): string[] {
     return Object.keys(this.eventSystems.connectionSystems);
