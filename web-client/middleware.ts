@@ -1,7 +1,6 @@
 import { SERVER_UPDATE_RATE } from "../common/constants";
 import { spellDB } from "../common/data";
 import EventSystem from "../common/EventSystem";
-import { randomBetweenExclusive } from "../common/random";
 import {
   Enemy,
   ClientGameState,
@@ -12,6 +11,7 @@ import {
   StaticObject,
 } from "../common/types";
 import Bar from "./Bar";
+
 function setupSpellEmitters(
   p: Player,
   instantiated: Phaser.GameObjects.GameObject
@@ -37,6 +37,7 @@ function setupSpellEmitters(
     }
   });
 }
+
 export function instantiatePlayer(
   scene: Phaser.Scene,
   player: Player
@@ -338,27 +339,45 @@ export function updateMiddleWare(gameState: ClientGameState, mw: Middleware) {
 }
 
 export type FrontendGameScene = "lobby" | "game" | "gameOver";
+
 export interface GameFrontend {
   init(initialGameState: ClientGameState, serverEventSystem: EventSystem): void;
+
   update(gameState: ClientGameState): void;
+
   setScene(scene: FrontendGameScene): void;
 }
 
 export interface Middleware {
   flashWhite(id: string): void;
+
   showDamage(amount: number, position: Position, color: string): void;
+
   showDamageToTarget(targetId: string, amount: number, color: string): void;
+
   instantiatePlayer(player: Player): void;
+
   updatePlayer(player: Player): void;
+
   updatePlayerLevel(player: Player): void;
+
   destroyPlayer(playerId: string): void;
+
   instantiateEnemy(enemy: Enemy): void;
+
   updateEnemy(enemy: Enemy): void;
+
   instantiatePickUp(pickUp: PickUp): void;
+
   updatePickUp(pickUp: PickUp): void;
+
   instantiateProjectile(projectile: Projectile): void;
+
   updateProjectile(projectile: Projectile): void;
+
   instantiateStaticObject(staticObject: StaticObject): void;
+
   updateStaticObject(staticObject: StaticObject): void;
+
   removeInvalidGameObjects(type: string, validIds: string[]): void;
 }

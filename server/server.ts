@@ -15,17 +15,21 @@ export interface ServerConfig {
   port: number;
   host: string;
 }
+
 export default function ({ port, host }: ServerConfig) {
   return function start() {
     const app = express();
     app.use(
       helmet({
         contentSecurityPolicy: {
+          useDefaults: false,
           directives: {
             defaultSrc: ["'self'"],
             imgSrc: ["'self'", "data:", "blob:"],
+            upgradeInsecureRequests: null,
           },
         },
+        hsts: false,
       })
     );
 

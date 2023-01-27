@@ -1,13 +1,13 @@
 import ClientStateMachine, {
   ConnectedState,
   DisconnectedState,
-  GameLoopState
+  GameLoopState,
 } from "../../web-client/ClientStateMachine";
 import { GameFrontend } from "../../web-client/middleware";
 import EventSystem from "../../common/EventSystem";
 
 describe("Client State Machine", () => {
-  const testId = "test"
+  const testId = "test";
   let sm: ClientStateMachine = null;
   let frontend: GameFrontend = null;
   let serverEvents: EventSystem = null;
@@ -15,10 +15,10 @@ describe("Client State Machine", () => {
     frontend = {
       init: jest.fn(),
       setScene: jest.fn(),
-      update: jest.fn()
+      update: jest.fn(),
     };
     serverEvents = new EventSystem();
-    sm = new ClientStateMachine(serverEvents,frontend);
+    sm = new ClientStateMachine(serverEvents, frontend);
   });
   it("should transition from DisconnectedState to ConnectedState", () => {
     sm.update(0);
@@ -43,4 +43,4 @@ describe("Client State Machine", () => {
     sm.update(0);
     expect(sm.stateMachine.state).toBeInstanceOf(GameLoopState);
   });
-})
+});

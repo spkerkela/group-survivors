@@ -52,7 +52,7 @@ export class ConnectedState implements State<ClientState> {
   }
   updateCallback: (data: ClientGameState) => void = (data) => {
     this.receivedUpdate = true;
-  }
+  };
   beginMatchCallback = () => {
     this.receivedMatchBegin = true;
   };
