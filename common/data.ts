@@ -51,6 +51,7 @@ export interface SpellData {
   lifetime: number;
   speed: number;
   maxPierceCount: number;
+  multiCastCooldown: number;
 }
 
 export type SpellDB = { [key: string]: SpellData };
@@ -72,6 +73,7 @@ export const spellDB: SpellDB = {
     lifetime: 0,
     speed: 0,
     maxPierceCount: 0,
+    multiCastCooldown: 0.1,
   },
   missile: {
     id: "missile",
@@ -89,6 +91,7 @@ export const spellDB: SpellDB = {
     lifetime: 3,
     speed: 150,
     maxPierceCount: 1,
+    multiCastCooldown: 0.1,
   },
 };
 
@@ -104,7 +107,7 @@ export const pickUpDB: PickUpDB = {
   exp: {
     name: "Experience",
     type: "exp",
-    value: 25,
+    value: 100,
     visual: "diamond",
   },
   hp: {

@@ -20,10 +20,11 @@ import {
 import { generateId } from "./id-generator";
 import { LevelData } from "./GameServer";
 import { randomBetweenExclusive } from "../common/random";
+import { ServerGameState } from "./types";
 
 export class ServerScene {
   gameObjectQuadTree: QuadTree<GameObject>;
-  gameState: GameState;
+  gameState: ServerGameState;
   updates: {
     moves: { [key: string]: PlayerUpdate };
     newPlayers: { id: string; screenName: string }[];
@@ -51,13 +52,12 @@ export class ServerScene {
     this.readyToJoin = [];
   }
 
-  newGameState(): ClientGameState {
+  newGameState(): ServerGameState {
     return {
       players: [],
       enemies: [],
       pickUps: [],
       projectiles: [],
-      id: "",
       staticObjects: [],
     };
   }

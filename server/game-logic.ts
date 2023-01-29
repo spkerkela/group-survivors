@@ -8,7 +8,7 @@ import {
   SCREEN_WIDTH,
 } from "../common/constants";
 import { normalize } from "../common/math";
-import { randomBetweenExclusive } from "../common/random";
+import { chooseRandom, randomBetweenExclusive } from "../common/random";
 import { experienceRequiredForLevel } from "../common/shared";
 import {
   Enemy,
@@ -18,9 +18,13 @@ import {
   Player,
   Position,
   Projectile,
+  PowerUp,
+  PowerUpType,
 } from "../common/types";
 import { pickUpDB, SpellData, spellDB } from "../common/data";
 import QuadTree from "../common/QuadTree";
+import { ServerPlayer } from "./types";
+import SpellStateMachine from "./SpellStateMachine";
 
 export interface PlayerUpdate {
   x: number;
@@ -211,14 +215,22 @@ function shootAtNearestEnemy(
   const { enemy, distance } = nearestEnemy;
 
   if (enemy && enemy.alive) {
+    const powerUps = player.powerUps[spellData.id] || [];
+    const additionalSpellDamage = powerUps
+      .filter((powerUp) => powerUp.type === "damage")
+      .map((powerUp) => powerUp.value)
+      .reduce((a, b) => a + b, 0);
+
     const x = enemy.x - player.x;
     const y = enemy.y - player.y;
     const { x: nx, y: ny } = normalize(x, y);
     const direction = { x: nx, y: ny };
+
     const critical = Math.random() < spellData.critChance + 0.01 * player.level;
+    const baseDamage = spellData.baseDamage * (1 + additionalSpellDamage);
     const damage = critical
-      ? spellData.baseDamage * spellData.critMultiplier
-      : spellData.baseDamage;
+      ? baseDamage * spellData.critMultiplier
+      : baseDamage;
     return {
       fromId: player.id,
       position: { x: player.x, y: player.y },
@@ -235,7 +247,7 @@ function shootAtNearestEnemy(
   return null;
 }
 
-interface SpellCastEvent {
+export interface SpellCastEvent {
   damageEvents: SpellDamageEvent[];
   projectileEvents: SpellProjectileEvent[];
 }
@@ -243,7 +255,8 @@ interface SpellCastEvent {
 export function castSpell(
   spell: string,
   player: Player,
-  enemies: Enemy[]
+  enemies: Enemy[],
+  powerUps: PowerUp[] = []
 ): SpellCastEvent {
   const spellData = spellDB[spell];
   let result = {
@@ -273,7 +286,7 @@ export function castSpell(
 }
 
 export function updateSpells(
-  players: Player[],
+  players: ServerPlayer[],
   gameObjectQuadTree: QuadTree<GameObject>,
   deltaTime: number
 ): SpellCastEvent {
@@ -296,29 +309,38 @@ export function updateSpells(
         );
 
       const spells = Object.keys(player.spells);
-      for (let j = 0; j < spells.length; j++) {
-        const spell = spells[j];
-        const spellData = player.spells[spell];
-        if (spellData.cooldown >= 0) {
-          spellData.cooldown -= deltaTime;
-        } else {
-          spellData.cooldown = Math.max(
-            spellDB[spell].cooldown *
-              (spellDB[spell].cooldownMultiplier - player.level * 0.01),
-            0.01
-          );
-          const newEvents = castSpell(spell, player, enemies);
-          events.damageEvents = events.damageEvents.concat(
-            newEvents.damageEvents
-          );
-          events.projectileEvents = events.projectileEvents.concat(
-            newEvents.projectileEvents
+      spells.forEach((spell) => {
+        const spellData = spellDB[spell];
+        if (player.spellSMs[spell] == null) {
+          player.spellSMs[spell] = new SpellStateMachine(
+            spellData,
+            player,
+            enemies
           );
         }
-      }
+
+        player.spellSMs[spell].update(deltaTime, {
+          events: events,
+          spellData: spellData,
+          player: player,
+          enemies: enemies,
+        });
+      });
     }
   }
   return events;
+}
+
+function randomPowerUp(): PowerUp {
+  const type: PowerUpType = chooseRandom(["damage", "additionalCast"]);
+  if (type === "damage") {
+    const value = Math.random() * 0.2;
+    return { type, value };
+  }
+  return {
+    type,
+    value: randomBetweenExclusive(1, 4),
+  };
 }
 
 export function removeDeadEnemies(enemies: Enemy[]) {
@@ -332,6 +354,12 @@ function checkPlayerExperience(player: Player): boolean {
     player.level = nextLevel;
     player.hp = newHp;
     player.maxHp = newHp;
+    const spellId = chooseRandom(Object.keys(player.spells));
+    const powerUp = randomPowerUp();
+    if (player.powerUps[spellId] == null) {
+      player.powerUps[spellId] = [];
+    }
+    player.powerUps[spellId].push(powerUp);
     return true;
   }
   return false;
@@ -481,7 +509,7 @@ export function createPlayer(
   id: string,
   name: string,
   { x, y }: Position
-): Player {
+): ServerPlayer {
   return {
     id: id,
     objectType: "player",
@@ -506,6 +534,9 @@ export function createPlayer(
       },
     },
     gold: 0,
+    spellSMs: {},
+    powerUps: {},
+    globalPowerUps: [],
   };
 }
 

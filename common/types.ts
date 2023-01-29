@@ -6,7 +6,6 @@ import {
 } from "../server/game-logic";
 
 export interface GameState {
-  players: Player[];
   enemies: Enemy[];
   pickUps: PickUp[];
   projectiles: Projectile[];
@@ -14,12 +13,19 @@ export interface GameState {
 }
 export interface ClientGameState extends GameState {
   id: string;
+  players: Player[];
   debug?: DebugInformation;
 }
 
 export interface Position {
   x: number;
   y: number;
+}
+
+export type PowerUpType = "additionalCast" | "damage" | "range" | "cooldown";
+export interface PowerUp {
+  type: PowerUpType;
+  value: number;
 }
 
 export interface Circle extends Position {
@@ -68,6 +74,8 @@ export interface Player extends GameObject {
   alive: boolean;
   spells: { [key: string]: { cooldown: number; level: number } };
   gold: number;
+  powerUps: { [key: string]: PowerUp[] };
+  globalPowerUps: PowerUp[];
 }
 
 export interface MoveUpdate {
