@@ -364,7 +364,7 @@ export class GameScene extends Phaser.Scene implements Middleware {
     }
   }
   showDamage(amount: number, position: Position, color: string = "red") {
-    const amountWithScale = amount * NUMBER_SCALE;
+    const amountWithScale = Math.round(amount * NUMBER_SCALE);
     const text = this.add.text(
       position.x,
       position.y,

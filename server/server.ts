@@ -54,7 +54,7 @@ export default function ({ port, host }: ServerConfig) {
 
     const gameServer = new GameServer(new ServerScene(events), {
       name: "Level 1",
-      bots: 0,
+      bots: 6,
       playerStartPosition: { x: GAME_WIDTH / 2, y: GAME_HEIGHT / 2 },
       enemyTable: {
         zombie: 1500,
@@ -62,7 +62,7 @@ export default function ({ port, host }: ServerConfig) {
         bat: 3000,
       },
       staticObjects: [],
-      spawnRate: 1,
+      spawnRate: 0.5,
     });
 
     gameServer.start();
