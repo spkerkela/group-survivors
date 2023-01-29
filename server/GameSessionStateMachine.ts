@@ -9,6 +9,7 @@ import {
   SpellProjectileEvent,
   updatePickUps,
   createPlayer,
+  addSpellToPlayer,
 } from "./game-logic";
 import { LevelData } from "./GameServer";
 import { generateId } from "./id-generator";
@@ -17,6 +18,7 @@ import { ServerScene } from "./ServerScene";
 import { chooseRandom } from "../common/random";
 import { Logger } from "winston";
 import logger from "./logger";
+import { spellDB } from "../common/data";
 
 export class PreMatchState implements State<StateMachineData> {
   update(dt: number, { scene, playersRequired }: StateMachineData) {
@@ -37,13 +39,14 @@ export class MatchState implements State<StateMachineData> {
   update(dt: number, { levelData, scene }: StateMachineData) {
     scene.updates.newPlayers.forEach((player) => {
       if (!scene.gameState.players.find((p) => p.id === player.id)) {
-        scene.gameState.players.push(
-          createPlayer(
-            player.id,
-            player.screenName,
-            levelData.playerStartPosition
-          )
+        const playerToAdd = createPlayer(
+          player.id,
+          player.screenName,
+          levelData.playerStartPosition
         );
+        const spellToAdd = chooseRandom(Object.keys(spellDB));
+        addSpellToPlayer(spellToAdd, playerToAdd);
+        scene.gameState.players.push(playerToAdd);
       }
     });
     scene.updates.newPlayers = [];

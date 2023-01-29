@@ -9,7 +9,7 @@ import {
   isStaticObject,
   GameState,
 } from "../common/types";
-import { createPlayer, PlayerUpdate } from "./game-logic";
+import { addSpellToPlayer, createPlayer, PlayerUpdate } from "./game-logic";
 import { ServerEventSystems } from "./eventSystems";
 import {
   GAME_HEIGHT,
@@ -19,8 +19,9 @@ import {
 } from "../common/constants";
 import { generateId } from "./id-generator";
 import { LevelData } from "./GameServer";
-import { randomBetweenExclusive } from "../common/random";
+import { chooseRandom, randomBetweenExclusive } from "../common/random";
 import { ServerGameState } from "./types";
+import { spellDB } from "../common/data";
 
 export class ServerScene {
   gameObjectQuadTree: QuadTree<GameObject>;
@@ -86,12 +87,13 @@ export class ServerScene {
   loadLevel(levelData: LevelData) {
     this.loadedLevel = levelData;
     for (let i = 0; i < levelData.bots; i++) {
-      this.gameState.players.push(
-        createPlayer(generateId("bot"), `Mr Bot ${i + 1}`, {
-          x: Math.random() * GAME_WIDTH,
-          y: Math.random() * GAME_HEIGHT,
-        })
-      );
+      const bot = createPlayer(generateId("bot"), `Mr Bot ${i + 1}`, {
+        x: Math.random() * GAME_WIDTH,
+        y: Math.random() * GAME_HEIGHT,
+      });
+      const randomSpellToGiveToBot = chooseRandom(Object.keys(spellDB));
+      addSpellToPlayer(randomSpellToGiveToBot, bot);
+      this.gameState.players.push(bot);
     }
   }
 

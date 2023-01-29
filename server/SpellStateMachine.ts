@@ -2,7 +2,6 @@ import { SpellData } from "../common/data";
 import StateMachine, { State } from "../common/StateMachine";
 import { Enemy, Player, PowerUp } from "../common/types";
 import { castSpell, SpellCastEvent } from "./game-logic";
-import logger from "./logger";
 
 interface SpellStateData {
   spellData: SpellData;

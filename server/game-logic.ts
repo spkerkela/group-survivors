@@ -308,8 +308,7 @@ export function updateSpells(
           (gameObject): gameObject is Enemy => gameObject.objectType === "enemy"
         );
 
-      const spells = Object.keys(player.spells);
-      spells.forEach((spell) => {
+      player.spells.forEach((spell) => {
         const spellData = spellDB[spell];
         if (player.spellSMs[spell] == null) {
           player.spellSMs[spell] = new SpellStateMachine(
@@ -523,16 +522,7 @@ export function createPlayer(
     level: 1,
     experience: 0,
     invulnerabilityFrames: 0,
-    spells: {
-      damageAura: {
-        cooldown: 0,
-        level: 1,
-      },
-      missile: {
-        cooldown: 0,
-        level: 1,
-      },
-    },
+    spells: [],
     gold: 0,
     spellSMs: {},
     powerUps: {},
@@ -554,4 +544,22 @@ export function createPickUp(
     lifetime: 15,
     visual: pickUpDB[type].visual,
   };
+}
+
+export function addSpellToPlayer(
+  spellId: string,
+  player: ServerPlayer
+): boolean {
+  if (player.spells.includes(spellId)) {
+    return false;
+  }
+  if (player.spellSMs[spellId] == null) {
+    const spellData = spellDB[spellId];
+    if (spellData == null) {
+      return false;
+    }
+    player.spellSMs[spellId] = new SpellStateMachine(spellData, player);
+  }
+  player.spells.push(spellId);
+  return true;
 }
