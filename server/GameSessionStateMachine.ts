@@ -23,7 +23,7 @@ import { spellDB } from "../common/data";
 export class PreMatchState implements State<StateMachineData> {
   update(_dt: number, { scene, playersRequired }: StateMachineData) {
     if (scene.gameCanStart(playersRequired)) {
-      return new MatchState();
+      return new MatchState(0);
     }
     return this;
   }
@@ -33,10 +33,18 @@ export class MatchState implements State<StateMachineData> {
   spawner: Spawner;
   spawnTicker: number;
   matchLogger: Logger;
-  constructor() {
+  wave: number;
+  timer: number;
+  constructor(wave: number) {
+    this.wave = wave;
+    this.timer = 0;
     this.matchLogger = logger.child({ matchId: generateId("match") });
   }
   update(dt: number, { levelData, scene }: StateMachineData) {
+    this.timer += dt;
+    if (this.timer > levelData.waveLength) {
+      return new UpgradeState(this.wave);
+    }
     scene.updates.newPlayers.forEach((player) => {
       if (!scene.gameState.players.find((p) => p.id === player.id)) {
         const playerToAdd = createPlayer(
@@ -203,6 +211,22 @@ export class MatchState implements State<StateMachineData> {
     scene.connectionIds().forEach((id) => scene.pushEvent("endMatch", id, {}));
     this.matchLogger.info("Match ended");
   }
+}
+
+export class UpgradeState implements State<StateMachineData> {
+  wave: number;
+  constructor(wave: number) {
+    this.wave = wave;
+  }
+  update(_dt: number, { levelData }: StateMachineData) {
+    if (this.wave + 1 >= levelData.waves) {
+      return new EndMatchState();
+    } else {
+      return new MatchState(this.wave + 1);
+    }
+  }
+  enter() {}
+  exit() {}
 }
 
 export class EndMatchState implements State<StateMachineData> {

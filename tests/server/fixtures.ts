@@ -11,4 +11,6 @@ export const levelData: LevelData = {
   },
   staticObjects: [],
   spawnRate: 1,
+  waveLength: 60,
+  waves: 1,
 };

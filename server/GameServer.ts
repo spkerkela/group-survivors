@@ -13,6 +13,8 @@ export interface LevelData {
   enemyTable: { [key: string]: number };
   spawnRate: number;
   staticObjects: StaticObject[];
+  waveLength: number;
+  waves: number;
 }
 
 export class GameServer {
