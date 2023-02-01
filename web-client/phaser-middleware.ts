@@ -458,20 +458,6 @@ export default class PhaserMiddleware implements GameFrontend {
       this.currentScene.data.set("gameState", gameState);
     }
     this.phaserInstance.scene.getScene("UI").data.set("gameState", gameState);
-    /*
-    if (this.phaserInstance) {
-      if (this.phaserInstance.scene.isActive("Game")) {
-        this.phaserInstance.scene
-          .getScene("Game")
-          .data.set("gameState", gameState);
-      }
-      if (this.phaserInstance.scene.isActive("UI")) {
-        this.phaserInstance.scene
-          .getScene("UI")
-          .data.set("gameState", gameState);
-      }
-    }
-     */
   }
 
   init(gameState: ClientGameState): void {
