@@ -21,7 +21,7 @@ import logger from "./logger";
 import { spellDB } from "../common/data";
 
 export class PreMatchState implements State<StateMachineData> {
-  update(dt: number, { scene, playersRequired }: StateMachineData) {
+  update(_dt: number, { scene, playersRequired }: StateMachineData) {
     if (scene.gameCanStart(playersRequired)) {
       return new MatchState();
     }
