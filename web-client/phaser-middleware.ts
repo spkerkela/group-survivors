@@ -68,6 +68,18 @@ class LobbyScene extends Phaser.Scene {
   update() {}
 }
 
+class UpgradeScene extends Phaser.Scene {
+  constructor() {
+    super({ key: "Upgrade", active: false });
+  }
+
+  create() {
+    this.add.text(10, 10, "Upgrade");
+  }
+
+  update() {}
+}
+
 class GameOverScene extends Phaser.Scene {
   constructor() {
     super({ key: "GameOver", active: false });
