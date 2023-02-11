@@ -16,23 +16,26 @@ function setupSpellEmitters(
   p: Player,
   instantiated: Phaser.GameObjects.GameObject
 ) {
-  const spellIds = Object.keys(p.spells);
-  spellIds.forEach((spellId) => {
+  const emitter = instantiated.getData(
+    "auraEmitter"
+  ) as Phaser.GameObjects.Particles.ParticleEmitter;
+
+  if (emitter) {
+    emitter.stop();
+  }
+  p.spells.forEach((spellId) => {
     if (spellId === "damageAura") {
       const spelldata = spellDB[spellId];
-      const spell = p.spells[spellId];
-      if (spell.level > 0) {
-        const emitter = instantiated.getData(
-          "auraEmitter"
-        ) as Phaser.GameObjects.Particles.ParticleEmitter;
-        if (emitter) {
-          emitter.setEmitZone({
-            source: new Phaser.Geom.Circle(0, 0, spelldata.range),
-            type: "edge",
-            quantity: 48,
-          });
-          emitter.start();
-        }
+      const emitter = instantiated.getData(
+        "auraEmitter"
+      ) as Phaser.GameObjects.Particles.ParticleEmitter;
+      if (emitter) {
+        emitter.setEmitZone({
+          source: new Phaser.Geom.Circle(0, 0, spelldata.range),
+          type: "edge",
+          quantity: 48,
+        });
+        emitter.start();
       }
     }
   });
