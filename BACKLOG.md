@@ -4,7 +4,6 @@
   - levels should not be gained immediately
   - they are stored until upgrade mode
   - each level gives you a stat choice
-  - leveling mid match should not full-heal
 - Persist player state between matches
   - store player stats and choices separately from game-state runtime model
   - when a new match starts, apply the stored upgrades etc to the created player

@@ -6,7 +6,7 @@ import {
 } from "../../../common/constants";
 import { normalize } from "../../../common/math";
 import { randomBetweenExclusive } from "../../../common/random";
-import { Enemy, GameObject, Player } from "../../../common/types";
+import { DamageEvent, Enemy, GameObject, Player } from "../../../common/types";
 import QuadTree from "../../../common/QuadTree";
 
 export function updateEnemies(
