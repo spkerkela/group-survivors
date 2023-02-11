@@ -63,7 +63,7 @@ export default function ({ port, host }: ServerConfig) {
       },
       staticObjects: [],
       spawnRate: 0.5,
-      waveLength: 10,
+      waveLength: 60 * 5,
       waves: 20,
     });
 

@@ -28,9 +28,8 @@ function randomPowerUp(): PowerUp {
 export function checkPlayerExperience(player: Player): boolean {
   const nextLevel = player.level + 1;
   if (player.experience >= experienceRequiredForLevel(nextLevel)) {
-    const newHp = 200 + nextLevel * 10;
+    const newHp = player.maxHp + 10;
     player.level = nextLevel;
-    player.hp = newHp;
     player.maxHp = newHp;
     const spellId = chooseRandom(Object.keys(player.spells));
     const powerUp = randomPowerUp();
