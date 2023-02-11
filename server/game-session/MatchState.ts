@@ -1,4 +1,4 @@
-import StateMachine, { State } from "../common/StateMachine";
+import { State } from "../../common/StateMachine";
 import {
   createPickUp,
   removeDeadEnemies,
@@ -10,24 +10,16 @@ import {
   updatePickUps,
   createPlayer,
   addSpellToPlayer,
-} from "./game-logic";
-import { LevelData } from "./GameServer";
-import { generateId } from "./id-generator";
-import Spawner from "./Spawner";
-import { ServerScene } from "./ServerScene";
-import { chooseRandom } from "../common/random";
+} from "../game-logic";
+import { generateId } from "../id-generator";
+import Spawner from "../Spawner";
+import { chooseRandom } from "../../common/random";
 import { Logger } from "winston";
-import logger from "./logger";
-import { spellDB } from "../common/data";
-
-export class PreMatchState implements State<StateMachineData> {
-  update(_dt: number, { scene, playersRequired }: StateMachineData) {
-    if (scene.gameCanStart(playersRequired)) {
-      return new MatchState(0);
-    }
-    return this;
-  }
-}
+import logger from "../logger";
+import { spellDB } from "../../common/data";
+import { StateMachineData } from "./GameSessionStateMachine";
+import { UpgradeState } from "./UpgradeState";
+import { EndMatchState } from "./EndMatchState";
 
 export class MatchState implements State<StateMachineData> {
   spawner: Spawner;
@@ -210,64 +202,5 @@ export class MatchState implements State<StateMachineData> {
     });
     scene.connectionIds().forEach((id) => scene.pushEvent("endMatch", id, {}));
     this.matchLogger.info("Match ended");
-  }
-}
-
-export class UpgradeState implements State<StateMachineData> {
-  wave: number;
-  constructor(wave: number) {
-    this.wave = wave;
-  }
-  update(_dt: number, { levelData }: StateMachineData) {
-    if (this.wave + 1 >= levelData.waves) {
-      return new EndMatchState();
-    } else {
-      return new MatchState(this.wave + 1);
-    }
-  }
-  enter() {}
-  exit() {}
-}
-
-export class EndMatchState implements State<StateMachineData> {
-  timeRemaining: number;
-  constructor(seconds: number = 10) {
-    this.timeRemaining = seconds;
-  }
-  update(dt: number, { scene }: StateMachineData) {
-    this.timeRemaining -= dt;
-    if (this.timeRemaining <= 0) {
-      return new PreMatchState();
-    }
-    if (scene.connectionIds().length === 0) {
-      return new PreMatchState();
-    }
-    return this;
-  }
-}
-
-interface StateMachineData {
-  scene: ServerScene;
-  levelData: LevelData;
-  playersRequired: number;
-}
-
-export default class GameSessionStateMachine {
-  stateMachine: StateMachine<StateMachineData>;
-  data: StateMachineData;
-  constructor(
-    scene: ServerScene,
-    levelData: LevelData,
-    playersRequired: number = 2
-  ) {
-    this.data = {
-      scene: scene,
-      levelData,
-      playersRequired,
-    };
-    this.stateMachine = new StateMachine(new PreMatchState(), this.data);
-  }
-  update(dt: number) {
-    this.stateMachine.update(dt, this.data);
   }
 }

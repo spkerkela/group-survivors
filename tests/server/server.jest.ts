@@ -8,11 +8,9 @@ import {
   LobbyState,
 } from "../../server/ConnectionStateMachine";
 import { createTestConnection } from "./connectionUtils";
-import {
-  EndMatchState,
-  MatchState,
-  PreMatchState,
-} from "../../server/GameSessionStateMachine";
+import { EndMatchState } from "../../server/game-session/EndMatchState";
+import { PreMatchState } from "../../server/game-session/PreMatchState";
+import { MatchState } from "../../server/game-session/MatchState";
 import { createPlayer } from "../../server/game-logic";
 
 describe("Server", () => {

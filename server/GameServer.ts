@@ -2,7 +2,7 @@ import { SERVER_UPDATE_RATE } from "../common/constants";
 import { StaticObject } from "../common/types";
 import { playersRequired, serverTimeScale } from "./config";
 import ConnectionStateMachine from "./ConnectionStateMachine";
-import GameSessionStateMachine from "./GameSessionStateMachine";
+import GameSessionStateMachine from "./game-session/GameSessionStateMachine";
 import { ServerScene } from "./ServerScene";
 import logger from "./logger";
 
