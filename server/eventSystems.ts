@@ -12,7 +12,7 @@ import {
   LevelEvent,
   SpellDamageEvent,
   SpellProjectileEvent,
-} from "./game-logic";
+} from "./game-connection/game-logic/game-logic";
 
 export interface ServerEventSystems {
   gameEventSystem: EventSystem;

@@ -18,12 +18,10 @@ import {
   Position,
   Projectile,
   StaticObject,
-} from "../common/types";
-import {
   DamageEvent,
   LevelEvent,
   SpellDamageEvent,
-} from "../server/game-logic";
+} from "../common/types";
 import { assets, sounds, spriteSheets } from "./assets";
 import Bar from "./Bar";
 import { globalEventSystem } from "./eventSystems";

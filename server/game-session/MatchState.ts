@@ -1,16 +1,19 @@
 import { State } from "../../common/StateMachine";
+import { updateProjectiles } from "../game-connection/game-logic/projectiles";
+import { updatePickUps } from "../game-connection/game-logic/pickUps";
+import {
+  addSpellToPlayer,
+  updateSpells,
+} from "../game-connection/game-logic/spells";
+import {
+  updateEnemies,
+  removeDeadEnemies,
+} from "../game-connection/game-logic/enemies";
 import {
   createPickUp,
-  removeDeadEnemies,
-  updatePlayers,
-  updateSpells,
-  updateProjectiles,
-  updateEnemies,
-  SpellProjectileEvent,
-  updatePickUps,
   createPlayer,
-  addSpellToPlayer,
-} from "../game-logic";
+  updatePlayers,
+} from "../game-connection/game-logic/player";
 import { generateId } from "../id-generator";
 import Spawner from "../Spawner";
 import { chooseRandom } from "../../common/random";
@@ -20,6 +23,7 @@ import { spellDB } from "../../common/data";
 import { StateMachineData } from "./GameSessionStateMachine";
 import { UpgradeState } from "./UpgradeState";
 import { EndMatchState } from "./EndMatchState";
+import { SpellProjectileEvent } from "../../common/types";
 
 export class MatchState implements State<StateMachineData> {
   spawner: Spawner;

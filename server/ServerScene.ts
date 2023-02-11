@@ -8,8 +8,8 @@ import {
   isProjectile,
   isStaticObject,
   GameState,
+  PlayerUpdate,
 } from "../common/types";
-import { addSpellToPlayer, createPlayer, PlayerUpdate } from "./game-logic";
 import { ServerEventSystems } from "./eventSystems";
 import {
   GAME_HEIGHT,
@@ -23,6 +23,8 @@ import { chooseRandom, randomBetweenExclusive } from "../common/random";
 import { ServerGameState } from "./types";
 import { spellDB } from "../common/data";
 import logger from "./logger";
+import { addSpellToPlayer } from "./game-connection/game-logic/spells";
+import { createPlayer } from "./game-connection/game-logic/player";
 
 export class ServerScene {
   gameObjectQuadTree: QuadTree<GameObject>;

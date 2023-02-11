@@ -2,10 +2,17 @@ import { State } from "../../common/StateMachine";
 import { ServerScene } from "../ServerScene";
 import EventSystem from "../../common/EventSystem";
 import { sanitizeName } from "../../common/shared";
-import { MoveUpdate } from "../../common/types";
-import { createMoveUpdate } from "../game-logic";
+import { InputState, MoveUpdate, Position } from "../../common/types";
 import { ConnectionData } from "./ConnectionStateMachine";
 import { GameRetrospectiveState } from "./GameRetrospectiveState";
+import { normalize } from "../../common/math";
+
+export function createMoveUpdate(inputState: InputState): Position {
+  const { up, down, left, right } = inputState;
+  const x = (right ? 1 : 0) - (left ? 1 : 0);
+  const y = (down ? 1 : 0) - (up ? 1 : 0);
+  return normalize(x, y);
+}
 
 export class GameUpdateState implements State<ConnectionData> {
   update(dt: number, { scene }: ConnectionData): State<ConnectionData> {

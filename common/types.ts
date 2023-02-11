@@ -1,10 +1,3 @@
-import {
-  DamageEvent,
-  LevelEvent,
-  SpellDamageEvent,
-  SpellProjectileEvent,
-} from "../server/game-logic";
-
 export interface GameState {
   wave: number;
   enemies: Enemy[];
@@ -158,4 +151,54 @@ export function isProjectile(object: GameObject): object is Projectile {
 
 export function isStaticObject(object: GameObject): object is StaticObject {
   return object.objectType === "staticObject";
+}
+
+export interface PlayerUpdate {
+  x: number;
+  y: number;
+}
+
+export type Updates = { moves: { [key: string]: PlayerUpdate } };
+
+export interface SpellDamageEvent {
+  fromId: string;
+  targetId: string;
+  damage: number;
+  damageType: string;
+  critical: boolean;
+  spellId: string;
+}
+
+export interface SpellProjectileEvent {
+  fromId: string;
+  position: Position;
+  targetDirection: Position;
+  spellId: string;
+  damage: number;
+  damageType: string;
+  critical: boolean;
+  lifetime: number;
+  maxPierceCount: number;
+  speed: number;
+}
+
+export interface SpellCastEvent {
+  damageEvents: SpellDamageEvent[];
+  projectileEvents: SpellProjectileEvent[];
+}
+
+export interface DamageEvent {
+  playerId: string;
+  damageType: string;
+  amount: number;
+}
+
+export interface PickUpEvent {
+  playerId: string;
+  pickUpId: string;
+}
+
+export interface LevelEvent {
+  playerId: string;
+  player: Player;
 }

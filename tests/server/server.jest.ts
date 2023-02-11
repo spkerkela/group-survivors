@@ -9,7 +9,7 @@ import { createTestConnection } from "./connectionUtils";
 import { EndMatchState } from "../../server/game-session/EndMatchState";
 import { PreMatchState } from "../../server/game-session/PreMatchState";
 import { MatchState } from "../../server/game-session/MatchState";
-import { createPlayer } from "../../server/game-logic";
+import { createPlayer } from "../../server/game-connection/game-logic/game-logic";
 
 describe("Server", () => {
   let server: GameServer = null;
