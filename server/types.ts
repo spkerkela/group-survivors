@@ -1,5 +1,5 @@
 import { GameState, Player } from "../common/types";
-import SpellStateMachine from "./SpellStateMachine";
+import SpellStateMachine from "./state-machines/SpellStateMachine";
 
 export interface ServerGameState extends GameState {
   players: ServerPlayer[];

@@ -12,7 +12,7 @@ import {
 import { SpellData, spellDB } from "../../../common/data";
 import QuadTree from "../../../common/QuadTree";
 import { ServerPlayer } from "../../types";
-import SpellStateMachine from "../../SpellStateMachine";
+import SpellStateMachine from "../../state-machines/SpellStateMachine";
 
 import { normalize } from "../../../common/math";
 
