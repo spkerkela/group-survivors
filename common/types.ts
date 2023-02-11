@@ -67,7 +67,8 @@ export interface Player extends GameObject {
   hp: number;
   invulnerabilityFrames: number;
   alive: boolean;
-  spells: string[];
+  spells: { [key: string]: number };
+  passives: { [key: string]: number };
   gold: number;
   powerUps: { [key: string]: PowerUp[] };
   globalPowerUps: PowerUp[];

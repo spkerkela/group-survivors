@@ -10,4 +10,7 @@ export class PreMatchState implements State<StateMachineData> {
     }
     return this;
   }
+  exit({ scene }: StateMachineData): void {
+    scene.clearMatchState();
+  }
 }

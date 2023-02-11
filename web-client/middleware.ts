@@ -23,7 +23,7 @@ function setupSpellEmitters(
   if (emitter) {
     emitter.stop();
   }
-  p.spells.forEach((spellId) => {
+  Object.keys(p.spells).forEach((spellId) => {
     if (spellId === "damageAura") {
       const spelldata = spellDB[spellId];
       const emitter = instantiated.getData(

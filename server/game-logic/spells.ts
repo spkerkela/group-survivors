@@ -39,7 +39,7 @@ export function updateSpells(
           (gameObject): gameObject is Enemy => gameObject.objectType === "enemy"
         );
 
-      player.spells.forEach((spell) => {
+      Object.keys(player.spells).forEach((spell) => {
         const spellData = spellDB[spell];
         if (player.spellSMs[spell] == null) {
           player.spellSMs[spell] = new SpellStateMachine(
@@ -98,7 +98,7 @@ export function addSpellToPlayer(
   spellId: string,
   player: ServerPlayer
 ): boolean {
-  if (player.spells.includes(spellId)) {
+  if (player.spells[spellId] != null) {
     return false;
   }
   if (player.spellSMs[spellId] == null) {
@@ -108,7 +108,7 @@ export function addSpellToPlayer(
     }
     player.spellSMs[spellId] = new SpellStateMachine(spellData, player);
   }
-  player.spells.push(spellId);
+  player.spells[spellId] = 0;
   return true;
 }
 export function shootAtNearestEnemy(

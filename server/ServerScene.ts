@@ -7,8 +7,8 @@ import {
   isPlayer,
   isProjectile,
   isStaticObject,
-  GameState,
   PlayerUpdate,
+  Player,
 } from "../common/types";
 import { ServerEventSystems } from "./eventSystems";
 import {
@@ -20,7 +20,7 @@ import {
 import { generateId } from "./id-generator";
 import { LevelData } from "./GameServer";
 import { chooseRandom, randomBetweenExclusive } from "../common/random";
-import { ServerGameState } from "./types";
+import { PlayerMatchState, ServerGameState, ServerPlayer } from "./types";
 import { spellDB } from "../common/data";
 import logger from "./logger";
 import { addSpellToPlayer } from "./game-logic/spells";
@@ -37,6 +37,7 @@ export class ServerScene {
   private events: {
     [key: string]: { name: string; data: any }[];
   };
+  private playerMatchStates: { [key: string]: PlayerMatchState };
   eventSystems: ServerEventSystems;
   lobby: string[];
   readyToJoin: { id: string; screenName: string }[];
@@ -54,6 +55,55 @@ export class ServerScene {
     this.lobby = [];
     this.eventSystems = eventSystems;
     this.readyToJoin = [];
+    this.playerMatchStates = {};
+  }
+
+  clearMatchState() {
+    this.playerMatchStates = {};
+  }
+
+  saveMatchState(player: Player) {
+    if (!this.playerMatchStates[player.id]) {
+      this.playerMatchStates[player.id] = {
+        gold: player.gold,
+        experience: player.experience,
+        level: player.level,
+        spells: player.spells,
+        passives: player.passives,
+        maxHp: player.maxHp,
+        powerUps: player.powerUps,
+        globalPowerUps: player.globalPowerUps,
+      };
+    } else {
+      const matchState = this.playerMatchStates[player.id];
+      matchState.gold = player.gold;
+      matchState.experience = player.experience;
+      matchState.level = player.level;
+      matchState.spells = player.spells;
+      matchState.passives = player.passives;
+      matchState.maxHp = player.maxHp;
+      matchState.powerUps = player.powerUps;
+      matchState.globalPowerUps = player.globalPowerUps;
+    }
+  }
+
+  loadMatchState(player: ServerPlayer) {
+    const matchState = this.playerMatchStates[player.id];
+    if (matchState) {
+      player.gold = matchState.gold;
+      player.experience = matchState.experience;
+      player.level = matchState.level;
+      player.passives = matchState.passives;
+      player.maxHp = matchState.maxHp;
+      player.hp = matchState.maxHp;
+
+      Object.keys(matchState.spells).forEach((spellId) => {
+        logger.info(
+          `Adding spell ${spellId} to player ${player.id} from match state`
+        );
+        addSpellToPlayer(spellId, player);
+      });
+    }
   }
 
   newGameState(): ServerGameState {

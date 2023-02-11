@@ -59,13 +59,22 @@ export class MatchState implements State<StateMachineData> {
           player.screenName,
           levelData.playerStartPosition
         );
-        const spellToAdd = chooseRandom(Object.keys(spellDB));
-        addSpellToPlayer(spellToAdd, playerToAdd);
+        scene.loadMatchState(playerToAdd);
+        if (Object.keys(playerToAdd.spells).length === 0) {
+          const spellToAdd = chooseRandom(Object.keys(spellDB));
+          addSpellToPlayer(spellToAdd, playerToAdd);
+        }
         scene.gameState.players.push(playerToAdd);
       }
     });
     scene.updates.newPlayers = [];
     scene.updates.playersToRemove.forEach((playerId) => {
+      const playerToRemove = scene.gameState.players.find(
+        (p) => p.id === playerId
+      );
+      if (playerToRemove) {
+        scene.saveMatchState(playerToRemove);
+      }
       scene.gameState.players = scene.gameState.players.filter(
         (p) => p.id !== playerId
       );
@@ -172,6 +181,7 @@ export class MatchState implements State<StateMachineData> {
     });
     scene.gameState.players.forEach((p) => {
       if (!p.alive) {
+        scene.saveMatchState(p);
         scene.gameState.staticObjects.push({
           id: generateId("grave"),
           objectType: "staticObject",
@@ -251,8 +261,8 @@ export class MatchState implements State<StateMachineData> {
     this.spawner = null;
     scene.gameState.players.forEach((p) => {
       scene.lobby.push(p.id);
+      scene.saveMatchState(p);
     });
-    scene.connectionIds().forEach((id) => scene.pushEvent("endMatch", id, {}));
     this.matchLogger.info("Match ended");
   }
   callbacks: {
