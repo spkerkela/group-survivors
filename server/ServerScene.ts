@@ -96,6 +96,8 @@ export class ServerScene {
       player.passives = matchState.passives;
       player.maxHp = matchState.maxHp;
       player.hp = matchState.maxHp;
+      player.powerUps = matchState.powerUps;
+      player.globalPowerUps = matchState.globalPowerUps;
 
       Object.keys(matchState.spells).forEach((spellId) => {
         logger.info(

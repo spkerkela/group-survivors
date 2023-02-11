@@ -1,4 +1,3 @@
-import { SERVER_UPDATE_RATE } from "../common/constants";
 import { ClientGameState } from "../common/types";
 import { GameFrontend } from "./middleware";
 import EventSystem from "../common/EventSystem";
@@ -22,6 +21,8 @@ export default class Game {
       projectiles: [],
       id: "",
       staticObjects: [],
+      wave: 0,
+      waveSecondsRemaining: 0,
     };
 
     frontend.init(this.gameState, serverEventSystem);
@@ -44,6 +45,8 @@ export default class Game {
         pickUps: [],
         projectiles: [],
         staticObjects: [],
+        wave: 0,
+        waveSecondsRemaining: 0,
       };
     });
 
