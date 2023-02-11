@@ -6,6 +6,7 @@ import {
 } from "../server/game-logic";
 
 export interface GameState {
+  wave: number;
   enemies: Enemy[];
   pickUps: PickUp[];
   projectiles: Projectile[];

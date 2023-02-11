@@ -22,6 +22,7 @@ import { LevelData } from "./GameServer";
 import { chooseRandom, randomBetweenExclusive } from "../common/random";
 import { ServerGameState } from "./types";
 import { spellDB } from "../common/data";
+import logger from "./logger";
 
 export class ServerScene {
   gameObjectQuadTree: QuadTree<GameObject>;
@@ -55,6 +56,7 @@ export class ServerScene {
 
   newGameState(): ServerGameState {
     return {
+      wave: 0,
       players: [],
       enemies: [],
       pickUps: [],
@@ -157,6 +159,7 @@ export class ServerScene {
     const playerVisibleObjects =
       this.gameObjectQuadTree.retrieve(visibleRectangle);
     let gameState: ClientGameState = {
+      wave: this.gameState.wave,
       players: [],
       enemies: [],
       pickUps: [],
@@ -186,8 +189,10 @@ export class ServerScene {
     return gameState;
   }
 
-  initializeState() {
+  initializeState(wave: number) {
+    logger.info(`Initializing game state for wave ${wave}`);
     this.gameState = {
+      wave,
       players: [],
       enemies: [],
       pickUps: [],

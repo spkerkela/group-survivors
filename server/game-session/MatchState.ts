@@ -189,7 +189,7 @@ export class MatchState implements State<StateMachineData> {
   }
   enter({ levelData, scene }: StateMachineData): void {
     this.spawner = new Spawner(levelData.enemyTable);
-    scene.initializeState();
+    scene.initializeState(this.wave);
     scene.loadLevel(levelData);
     this.spawnTicker = 0;
     scene.updateQuadTree();
