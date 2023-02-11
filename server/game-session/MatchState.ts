@@ -38,6 +38,7 @@ export class MatchState implements State<StateMachineData> {
   }
   update(dt: number, { levelData, scene }: StateMachineData) {
     this.timer += dt;
+    scene.gameState.waveSecondsRemaining = levelData.waveLength - this.timer;
     if (this.timer > levelData.waveLength) {
       return new UpgradeState(this.wave);
     }
@@ -193,8 +194,8 @@ export class MatchState implements State<StateMachineData> {
   }
   enter({ levelData, scene }: StateMachineData): void {
     this.spawner = new Spawner(levelData.enemyTable);
-    scene.initializeState(this.wave);
     scene.loadLevel(levelData);
+    scene.initializeState(this.wave);
     this.spawnTicker = 0;
     scene.updateQuadTree();
     this.matchLogger.info("Match started");

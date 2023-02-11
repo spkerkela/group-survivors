@@ -136,10 +136,24 @@ export class UiScene extends Phaser.Scene {
         fontStyle: "bold",
       })
       .setName("gold");
+    this.add
+      .text(10, SCREEN_HEIGHT - 41, "Wave: 1", {
+        fontSize: "20px",
+        color: "lightblue",
+        fontStyle: "bold",
+      })
+      .setName("wave");
+    this.add
+      .text(10, SCREEN_HEIGHT - 61, "Seconds left: 60", {
+        fontSize: "20px",
+        color: "lightblue",
+        fontStyle: "bold",
+      })
+      .setName("secondsLeft");
   }
 
   update() {
-    const gameState = this.data.get("gameState");
+    const gameState = this.data.get("gameState") as ClientGameState;
     gameState.players.forEach((p) => {
       if (p.id === gameState.id) {
         const text = this.children.getByName("gold") as Phaser.GameObjects.Text;
@@ -149,6 +163,18 @@ export class UiScene extends Phaser.Scene {
         );
       }
     });
+    const waveText = this.children.getByName("wave") as Phaser.GameObjects.Text;
+    const secondsText = this.children.getByName(
+      "secondsLeft"
+    ) as Phaser.GameObjects.Text;
+    if (waveText) {
+      waveText.setText(`Wave: ${gameState.wave + 1}`);
+    }
+    if (secondsText) {
+      secondsText.setText(
+        `Seconds left: ${Math.floor(gameState.waveSecondsRemaining)}`
+      );
+    }
   }
 }
 

@@ -59,6 +59,7 @@ export class ServerScene {
   newGameState(): ServerGameState {
     return {
       wave: 0,
+      waveSecondsRemaining: 0,
       players: [],
       enemies: [],
       pickUps: [],
@@ -170,6 +171,7 @@ export class ServerScene {
       this.gameObjectQuadTree.retrieve(visibleRectangle);
     let gameState: ClientGameState = {
       wave: this.gameState.wave,
+      waveSecondsRemaining: this.gameState.waveSecondsRemaining,
       players: [],
       enemies: [],
       pickUps: [],
@@ -203,6 +205,7 @@ export class ServerScene {
     logger.info(`Initializing game state for wave ${wave}`);
     this.gameState = {
       wave,
+      waveSecondsRemaining: this.loadedLevel.waveLength,
       players: [],
       enemies: [],
       pickUps: [],

@@ -1,5 +1,6 @@
 export interface GameState {
   wave: number;
+  waveSecondsRemaining: number;
   enemies: Enemy[];
   pickUps: PickUp[];
   projectiles: Projectile[];
