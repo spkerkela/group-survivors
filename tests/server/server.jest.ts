@@ -2,11 +2,9 @@ import { GameServer } from "../../server/GameServer";
 import { ServerScene } from "../../server/ServerScene";
 import EventSystem from "../../common/EventSystem";
 import { levelData } from "./fixtures";
-import {
-  GameRetrospectiveState,
-  GameUpdateState,
-  LobbyState,
-} from "../../server/ConnectionStateMachine";
+import { GameRetrospectiveState } from "../../server/game-connection/GameRetrospectiveState";
+import { GameUpdateState } from "../../server/game-connection/GameUpdateState";
+import { LobbyState } from "../../server/game-connection/LobbyState";
 import { createTestConnection } from "./connectionUtils";
 import { EndMatchState } from "../../server/game-session/EndMatchState";
 import { PreMatchState } from "../../server/game-session/PreMatchState";
