@@ -1,4 +1,4 @@
-import { Player } from "../../../common/types";
+import { Player } from "../../common/types";
 
 export function updateBots(players: Player[], deltaTime: number) {
   players.forEach((player) => {

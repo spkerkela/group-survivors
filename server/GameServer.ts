@@ -1,7 +1,6 @@
 import { SERVER_UPDATE_RATE } from "../common/constants";
 import { StaticObject } from "../common/types";
 import { playersRequired, serverTimeScale } from "./config";
-import ConnectionStateMachine from "./game-connection/ConnectionStateMachine";
 import GameSessionStateMachine from "./game-session/GameSessionStateMachine";
 import { ServerScene } from "./ServerScene";
 import logger from "./logger";
@@ -22,7 +21,6 @@ export class GameServer {
   levelData: LevelData;
   deltaTime: number;
   gameStateMachine: GameSessionStateMachine;
-  connectionStateMachine: ConnectionStateMachine;
   running: boolean;
 
   constructor(serverScene: ServerScene, levelData: LevelData) {
@@ -35,16 +33,12 @@ export class GameServer {
       levelData,
       playersRequired
     );
-    this.connectionStateMachine = new ConnectionStateMachine(
-      serverScene,
-      playersRequired
-    );
+
     this.running = false;
   }
 
   update(deltaTime: number) {
     this.gameStateMachine.update(deltaTime);
-    this.connectionStateMachine.update(deltaTime);
   }
 
   stop() {

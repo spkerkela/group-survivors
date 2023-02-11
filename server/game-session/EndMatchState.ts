@@ -8,6 +8,7 @@ export class EndMatchState implements State<StateMachineData> {
     this.timeRemaining = seconds;
   }
   update(dt: number, { scene }: StateMachineData) {
+    scene.sendEvents();
     this.timeRemaining -= dt;
     if (this.timeRemaining <= 0) {
       return new PreMatchState();
@@ -16,5 +17,12 @@ export class EndMatchState implements State<StateMachineData> {
       return new PreMatchState();
     }
     return this;
+  }
+  enter({ scene }) {
+    scene.connectionIds().forEach((id) => {
+      scene.pushEvent("gameOver", id, {
+        monstersKilled: 2,
+      });
+    });
   }
 }

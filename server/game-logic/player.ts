@@ -1,7 +1,7 @@
-import { GAME_HEIGHT, GAME_WIDTH } from "../../../common/constants";
-import { pickUpDB } from "../../../common/data";
-import { PickUp, Player, Position, Updates } from "../../../common/types";
-import { ServerPlayer } from "../../types";
+import { GAME_HEIGHT, GAME_WIDTH } from "../../common/constants";
+import { pickUpDB } from "../../common/data";
+import { PickUp, Player, Position, Updates } from "../../common/types";
+import { ServerPlayer } from "../types";
 import { updateBots } from "./bots";
 
 export function updatePlayers(

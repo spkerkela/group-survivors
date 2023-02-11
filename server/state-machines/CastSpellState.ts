@@ -1,6 +1,6 @@
 import { State } from "../../common/StateMachine";
 import { PowerUp } from "../../common/types";
-import { castSpell } from "../game-connection/game-logic/spells";
+import { castSpell } from "../game-logic/spells";
 import { SpellStateData } from "./SpellStateMachine";
 import { SpellCooldownState } from "./SpellCooldownState";
 

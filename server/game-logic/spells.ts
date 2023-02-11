@@ -1,4 +1,4 @@
-import { SCREEN_HEIGHT, SCREEN_WIDTH } from "../../../common/constants";
+import { SCREEN_HEIGHT, SCREEN_WIDTH } from "../../common/constants";
 import {
   Enemy,
   GameObject,
@@ -8,13 +8,13 @@ import {
   SpellCastEvent,
   SpellDamageEvent,
   SpellProjectileEvent,
-} from "../../../common/types";
-import { SpellData, spellDB } from "../../../common/data";
-import QuadTree from "../../../common/QuadTree";
-import { ServerPlayer } from "../../types";
-import SpellStateMachine from "../../state-machines/SpellStateMachine";
+} from "../../common/types";
+import { SpellData, spellDB } from "../../common/data";
+import QuadTree from "../../common/QuadTree";
+import { ServerPlayer } from "../types";
+import SpellStateMachine from "../state-machines/SpellStateMachine";
 
-import { normalize } from "../../../common/math";
+import { normalize } from "../../common/math";
 
 export function updateSpells(
   players: ServerPlayer[],

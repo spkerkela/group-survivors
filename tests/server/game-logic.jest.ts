@@ -1,5 +1,5 @@
-import { createPlayer } from "../../server/game-connection/game-logic/player";
-import { addSpellToPlayer } from "../../server/game-connection/game-logic/spells";
+import { createPlayer } from "../../server/game-logic/player";
+import { addSpellToPlayer } from "../../server/game-logic/spells";
 
 const testSpellId = "damageAura";
 describe("Spells", () => {

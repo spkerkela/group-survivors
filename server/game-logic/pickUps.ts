@@ -1,4 +1,4 @@
-import { PLAYER_SIZE } from "../../../common/constants";
+import { PLAYER_SIZE } from "../../common/constants";
 import {
   GameObject,
   LevelEvent,
@@ -7,11 +7,11 @@ import {
   Player,
   PowerUp,
   PowerUpType,
-} from "../../../common/types";
-import { pickUpDB } from "../../../common/data";
-import QuadTree from "../../../common/QuadTree";
-import { chooseRandom, randomBetweenExclusive } from "../../../common/random";
-import { experienceRequiredForLevel } from "../../../common/shared";
+} from "../../common/types";
+import { pickUpDB } from "../../common/data";
+import QuadTree from "../../common/QuadTree";
+import { chooseRandom, randomBetweenExclusive } from "../../common/random";
+import { experienceRequiredForLevel } from "../../common/shared";
 
 function randomPowerUp(): PowerUp {
   const type: PowerUpType = chooseRandom(["damage", "additionalCast"]);

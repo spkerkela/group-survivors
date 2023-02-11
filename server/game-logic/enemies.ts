@@ -3,11 +3,11 @@ import {
   PLAYER_SIZE,
   SCREEN_HEIGHT,
   SCREEN_WIDTH,
-} from "../../../common/constants";
-import { normalize } from "../../../common/math";
-import { randomBetweenExclusive } from "../../../common/random";
-import { DamageEvent, Enemy, GameObject, Player } from "../../../common/types";
-import QuadTree from "../../../common/QuadTree";
+} from "../../common/constants";
+import { normalize } from "../../common/math";
+import { randomBetweenExclusive } from "../../common/random";
+import { DamageEvent, Enemy, GameObject, Player } from "../../common/types";
+import QuadTree from "../../common/QuadTree";
 
 export function updateEnemies(
   enemies: Enemy[],

@@ -1,11 +1,11 @@
-import { ENEMY_SIZE } from "../../../common/constants";
+import { ENEMY_SIZE } from "../../common/constants";
 import {
   Enemy,
   GameObject,
   Projectile,
   SpellDamageEvent,
-} from "../../../common/types";
-import QuadTree from "../../../common/QuadTree";
+} from "../../common/types";
+import QuadTree from "../../common/QuadTree";
 
 export function updateProjectiles(
   projectiles: Projectile[],

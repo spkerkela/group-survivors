@@ -2,14 +2,11 @@ import { GameServer } from "../../server/GameServer";
 import { ServerScene } from "../../server/ServerScene";
 import EventSystem from "../../common/EventSystem";
 import { levelData } from "./fixtures";
-import { GameRetrospectiveState } from "../../server/game-connection/GameRetrospectiveState";
-import { GameUpdateState } from "../../server/game-connection/GameUpdateState";
-import { LobbyState } from "../../server/game-connection/LobbyState";
 import { createTestConnection } from "./connectionUtils";
 import { EndMatchState } from "../../server/game-session/EndMatchState";
 import { PreMatchState } from "../../server/game-session/PreMatchState";
 import { MatchState } from "../../server/game-session/MatchState";
-import { createPlayer } from "../../server/game-connection/game-logic/player";
+import { createPlayer } from "../../server/game-logic/player";
 
 describe("Server", () => {
   let server: GameServer = null;
@@ -28,34 +25,29 @@ describe("Server", () => {
     }
     server.update(0);
   }
-  it("should start in the lobby state", () => {
-    server.update(0);
-    expect(server.connectionStateMachine.stateMachine.state).toBeInstanceOf(
-      LobbyState
-    );
-  });
-  it("should remain in the lobby state when someone connects", () => {
+
+  it("should remain in the pre-match state when someone connects", () => {
     createTestConnection(serverScene, "test-id");
     server.update(0);
-    expect(server.connectionStateMachine.stateMachine.state).toBeInstanceOf(
-      LobbyState
+    expect(server.gameStateMachine.stateMachine.state).toBeInstanceOf(
+      PreMatchState
     );
   });
-  it("should remain in lobby even if enough players join but they have not sent a join evenet", () => {
+  it("should remain in pre-match even if enough players join but they have not sent a join evenet", () => {
     createTestConnection(serverScene, "test-id");
     createTestConnection(serverScene, "test-id-2");
     server.update(0);
-    expect(server.connectionStateMachine.stateMachine.state).toBeInstanceOf(
-      LobbyState
+    expect(server.gameStateMachine.stateMachine.state).toBeInstanceOf(
+      PreMatchState
     );
   });
-  it("should remain in lobby if only some players join", () => {
+  it("should remain in pre-match if only some players join", () => {
     const p1Conn = createTestConnection(serverScene, "test-id");
     createTestConnection(serverScene, "test-id-2");
     p1Conn.dispatchEvent("join", "Random Name");
     server.update(0);
-    expect(server.connectionStateMachine.stateMachine.state).toBeInstanceOf(
-      LobbyState
+    expect(server.gameStateMachine.stateMachine.state).toBeInstanceOf(
+      PreMatchState
     );
   });
   it("should send 'joined' event to player in response to 'join' event", () => {
@@ -73,9 +65,7 @@ describe("Server", () => {
     p2Conn.dispatchEvent("join", "Random Name 2");
     server.update(0);
     server.update(0);
-    expect(server.connectionStateMachine.stateMachine.state).toBeInstanceOf(
-      GameUpdateState
-    );
+
     expect(server.gameStateMachine.stateMachine.state).toBeInstanceOf(
       MatchState
     );
@@ -161,9 +151,7 @@ describe("Server", () => {
       conn.dispatchEvent("disconnect");
     });
     server.update(0);
-    expect(server.connectionStateMachine.stateMachine.state).toBeInstanceOf(
-      GameRetrospectiveState
-    );
+
     expect(server.gameStateMachine.stateMachine.state).toBeInstanceOf(
       EndMatchState
     );
@@ -177,9 +165,7 @@ describe("Server", () => {
     server.update(0);
     const p3Conn = createTestConnection(serverScene, "test-id-3");
     p3Conn.dispatchEvent("join", "Random Name 3");
-    expect(server.connectionStateMachine.stateMachine.state).toBeInstanceOf(
-      GameUpdateState
-    );
+
     expect(serverScene.updates.newPlayers).toStrictEqual([
       {
         id: "test-id-3",
@@ -222,18 +208,14 @@ describe("Server", () => {
       player.alive = false;
     });
     server.update(0);
-    expect(server.connectionStateMachine.stateMachine.state).toBeInstanceOf(
-      GameRetrospectiveState
-    );
+
     server.update(2);
 
-    expect(server.connectionStateMachine.stateMachine.state).toBeInstanceOf(
-      GameRetrospectiveState
+    expect(server.gameStateMachine.stateMachine.state).toBeInstanceOf(
+      EndMatchState
     );
     server.update(10);
-    expect(server.connectionStateMachine.stateMachine.state).toBeInstanceOf(
-      LobbyState
-    );
+
     expect(server.gameStateMachine.stateMachine.state).toBeInstanceOf(
       PreMatchState
     );
@@ -245,16 +227,14 @@ describe("Server", () => {
     p2Conn.dispatchEvent("join", "Random Name 2");
     server.update(0);
     server.update(0);
-    expect(server.connectionStateMachine.stateMachine.state).toBeInstanceOf(
-      GameUpdateState
+    expect(server.gameStateMachine.stateMachine.state).toBeInstanceOf(
+      MatchState
     );
     p1Conn.dispatchEvent("disconnect");
     p2Conn.dispatchEvent("disconnect");
     server.update(0);
     server.update(0);
-    expect(server.connectionStateMachine.stateMachine.state).toBeInstanceOf(
-      LobbyState
-    );
+
     expect(server.gameStateMachine.stateMachine.state).toBeInstanceOf(
       PreMatchState
     );

@@ -23,8 +23,8 @@ import { chooseRandom, randomBetweenExclusive } from "../common/random";
 import { ServerGameState } from "./types";
 import { spellDB } from "../common/data";
 import logger from "./logger";
-import { addSpellToPlayer } from "./game-connection/game-logic/spells";
-import { createPlayer } from "./game-connection/game-logic/player";
+import { addSpellToPlayer } from "./game-logic/spells";
+import { createPlayer } from "./game-logic/player";
 
 export class ServerScene {
   gameObjectQuadTree: QuadTree<GameObject>;

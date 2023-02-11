@@ -1,19 +1,13 @@
 import { State } from "../../common/StateMachine";
-import { updateProjectiles } from "../game-connection/game-logic/projectiles";
-import { updatePickUps } from "../game-connection/game-logic/pickUps";
-import {
-  addSpellToPlayer,
-  updateSpells,
-} from "../game-connection/game-logic/spells";
-import {
-  updateEnemies,
-  removeDeadEnemies,
-} from "../game-connection/game-logic/enemies";
+import { updateProjectiles } from "../game-logic/projectiles";
+import { updatePickUps } from "../game-logic/pickUps";
+import { addSpellToPlayer, updateSpells } from "../game-logic/spells";
+import { updateEnemies, removeDeadEnemies } from "../game-logic/enemies";
 import {
   createPickUp,
   createPlayer,
   updatePlayers,
-} from "../game-connection/game-logic/player";
+} from "../game-logic/player";
 import { generateId } from "../id-generator";
 import Spawner from "../Spawner";
 import { chooseRandom } from "../../common/random";
@@ -23,7 +17,23 @@ import { spellDB } from "../../common/data";
 import { StateMachineData } from "./GameSessionStateMachine";
 import { UpgradeState } from "./UpgradeState";
 import { EndMatchState } from "./EndMatchState";
-import { SpellProjectileEvent } from "../../common/types";
+import {
+  InputState,
+  MoveUpdate,
+  Position,
+  SpellProjectileEvent,
+} from "../../common/types";
+import { normalize } from "../../common/math";
+import EventSystem from "../../common/EventSystem";
+import { sanitizeName } from "../../common/shared";
+import { ServerScene } from "../ServerScene";
+
+export function createMoveUpdate(inputState: InputState): Position {
+  const { up, down, left, right } = inputState;
+  const x = (right ? 1 : 0) - (left ? 1 : 0);
+  const y = (down ? 1 : 0) - (up ? 1 : 0);
+  return normalize(x, y);
+}
 
 export class MatchState implements State<StateMachineData> {
   spawner: Spawner;
@@ -187,12 +197,39 @@ export class MatchState implements State<StateMachineData> {
       const gameState = scene.createGameStateMessage(id);
       scene.pushEvent("update", id, gameState);
     });
+    scene.sendEvents();
     if (scene.gameState.players.length === 0) {
       return new EndMatchState();
     }
     return this;
   }
   enter({ levelData, scene }: StateMachineData): void {
+    scene.eventSystems.gameEventSystem.addEventListener(
+      "connection",
+      (id: string, connection: EventSystem) => {
+        this.callbacks.join[id] = (screenName: string) => {
+          const sanitizedScreenName = sanitizeName(screenName);
+          scene.pushEvent("joined", id, scene.createGameStateMessage(id));
+
+          scene.updates.newPlayers.push({
+            id,
+            screenName: sanitizedScreenName,
+          });
+
+          scene.pushEvent("beginMatch", id, scene.createGameStateMessage(id));
+        };
+        connection.addEventListener("join", this.callbacks.join[id]);
+        this.setupMoveListener(id, connection, scene);
+      }
+    );
+    scene.readyToJoin.forEach(({ id, screenName }) => {
+      scene.pushEvent("beginMatch", id, {
+        gameState: scene.createGameStateMessage(id),
+      });
+      Object.entries(scene.eventSystems.connectionSystems).forEach(
+        ([id, connection]) => this.setupMoveListener(id, connection, scene)
+      );
+    });
     this.spawner = new Spawner(levelData.enemyTable);
     scene.loadLevel(levelData);
     scene.initializeState(this.wave);
@@ -201,11 +238,40 @@ export class MatchState implements State<StateMachineData> {
     this.matchLogger.info("Match started");
   }
   exit({ scene }: StateMachineData): void {
+    scene.connectionIds().forEach((id) => {
+      scene.pushEvent("endMatch", id, {});
+    });
+    Object.entries(scene.eventSystems.connectionSystems).forEach(
+      ([id, connection]) => {
+        connection.removeEventListener("join", this.callbacks.join[id]);
+        connection.removeEventListener("move", this.callbacks.move[id]);
+      }
+    );
+
     this.spawner = null;
     scene.gameState.players.forEach((p) => {
       scene.lobby.push(p.id);
     });
     scene.connectionIds().forEach((id) => scene.pushEvent("endMatch", id, {}));
     this.matchLogger.info("Match ended");
+  }
+  callbacks: {
+    join: { [id: string]: (screenName: string) => void };
+    move: { [id: string]: (moveUpdate: MoveUpdate) => void };
+  } = {
+    join: {},
+    move: {},
+  };
+  setupMoveListener(id: string, connection: EventSystem, scene: ServerScene) {
+    this.callbacks.move[id] = (data: MoveUpdate) => {
+      const { up, down, left, right } = data;
+      scene.updates.moves[id] = createMoveUpdate({
+        up,
+        down,
+        left,
+        right,
+      });
+    };
+    connection.addEventListener("move", this.callbacks.move[id]);
   }
 }
