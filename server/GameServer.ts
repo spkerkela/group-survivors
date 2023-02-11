@@ -54,9 +54,8 @@ export class GameServer {
     this.running = true;
     let previousTime = Date.now();
     let deltaTime = 0;
-    const interval = setInterval(() => {
+    const updateFn = () => {
       if (!this.running) {
-        clearInterval(interval);
         logger.info("Game server stopped");
         return;
       }
@@ -65,6 +64,8 @@ export class GameServer {
       previousTime = currentTime;
       deltaTime = (elapsedTime / 1000) * serverTimeScale;
       this.update(deltaTime);
-    }, SERVER_UPDATE_RATE);
+      setTimeout(updateFn, SERVER_UPDATE_RATE);
+    };
+    updateFn();
   }
 }
