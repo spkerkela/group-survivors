@@ -29,13 +29,13 @@ export default class ConnectionStateMachine {
     connectionLogger.info("connection established");
     this.lobby.push(id);
     this.data.scene.eventSystems.connectionSystems[id] = connection;
-    this.data.scene.events[id] = [];
+    this.data.scene.initializeEvents(id);
     this.callbacks.disconnect[id] = () => {
       this.lobby = this.lobby.filter((x) => x !== id);
       this.data.scene.readyToJoin = this.data.scene.readyToJoin.filter(
         (p) => p.id !== id
       );
-      delete this.data.scene.events[id];
+      this.data.scene.clearEvents(id);
       delete this.data.scene.eventSystems.connectionSystems[id];
       this.data.scene.updates.playersToRemove.push(id);
       connectionLogger.info("connection closed");
@@ -44,10 +44,11 @@ export default class ConnectionStateMachine {
       const sanitizedName = sanitizeName(screenName);
       this.lobby = this.lobby.filter((x) => x !== id);
       this.data.scene.readyToJoin.push({ id, screenName: sanitizedName });
-      this.data.scene.events[id].push({
-        name: "joined",
-        data: this.data.scene.createGameStateMessage(id),
-      });
+      this.data.scene.pushEvent(
+        "joined",
+        id,
+        this.data.scene.createGameStateMessage(id)
+      );
       connectionLogger.info("player joined");
     };
     connection.addEventListener("disconnect", this.callbacks.disconnect[id]);

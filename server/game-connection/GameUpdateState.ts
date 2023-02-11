@@ -43,18 +43,14 @@ export class GameUpdateState implements State<ConnectionData> {
       (id: string, connection: EventSystem) => {
         this.callbacks.join[id] = (screenName: string) => {
           const sanitizedScreenName = sanitizeName(screenName);
-          scene.events[id].push({
-            name: "joined",
-            data: scene.createGameStateMessage(id),
-          });
+          scene.pushEvent("joined", id, scene.createGameStateMessage(id));
+
           scene.updates.newPlayers.push({
             id,
             screenName: sanitizedScreenName,
           });
-          scene.events[id].push({
-            name: "beginMatch",
-            data: scene.createGameStateMessage(id),
-          });
+
+          scene.pushEvent("beginMatch", id, scene.createGameStateMessage(id));
         };
         connection.addEventListener("join", this.callbacks.join[id]);
         this.setupMoveListener(id, connection, scene);

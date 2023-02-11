@@ -32,7 +32,7 @@ export class ServerScene {
     newPlayers: { id: string; screenName: string }[];
     playersToRemove: string[];
   };
-  events: {
+  private events: {
     [key: string]: { name: string; data: any }[];
   };
   eventSystems: ServerEventSystems;
@@ -122,6 +122,14 @@ export class ServerScene {
   pushEvent(name: string, playerId: string, data: any) {
     if (!this.events[playerId]) return;
     this.events[playerId].push({ name, data });
+  }
+
+  initializeEvents(playerId: string) {
+    this.events[playerId] = [];
+  }
+
+  clearEvents(playerId: string) {
+    delete this.events[playerId];
   }
 
   private getPlayer(id: string) {
