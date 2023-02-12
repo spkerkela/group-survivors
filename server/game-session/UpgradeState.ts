@@ -8,7 +8,10 @@ export class UpgradeState implements State<StateMachineData> {
   constructor(wave: number) {
     this.wave = wave;
   }
-  update(_dt: number, { levelData, scene }: StateMachineData) {
+  update(
+    _dt: number,
+    { levelData, scene }: StateMachineData
+  ): State<StateMachineData> {
     scene.sendEvents();
     if (this.wave + 1 >= levelData.waves) {
       return new EndMatchState();

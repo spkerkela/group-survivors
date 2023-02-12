@@ -36,8 +36,8 @@ export function createMoveUpdate(inputState: InputState): Position {
 }
 
 export class MatchState implements State<StateMachineData> {
-  spawner: Spawner;
-  spawnTicker: number;
+  spawner: Spawner | null = null;
+  spawnTicker: number = 0;
   matchLogger: Logger;
   wave: number;
   timer: number;
@@ -46,7 +46,10 @@ export class MatchState implements State<StateMachineData> {
     this.timer = 0;
     this.matchLogger = logger.child({ matchId: generateId("match") });
   }
-  update(dt: number, { levelData, scene }: StateMachineData) {
+  update(
+    dt: number,
+    { levelData, scene }: StateMachineData
+  ): State<StateMachineData> {
     this.timer += dt;
     scene.gameState.waveSecondsRemaining = levelData.waveLength - this.timer;
     if (this.timer > levelData.waveLength) {
@@ -199,7 +202,7 @@ export class MatchState implements State<StateMachineData> {
     this.spawnTicker += dt;
     if (this.spawnTicker > levelData.spawnRate) {
       this.spawnTicker = 0;
-      this.spawner.spawnEnemy(scene.gameState);
+      this.spawner?.spawnEnemy(scene.gameState);
     }
 
     scene.updateQuadTree();

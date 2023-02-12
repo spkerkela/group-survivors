@@ -6,7 +6,7 @@ import {
 } from "../common/types";
 
 export function sendMoveMessage(
-  socket: { emit: (name: string, update: MoveUpdate) => void },
+  socket: Socket<FromServerEventMap, ToServerEventMap>,
   moveMessage: MoveUpdate
 ) {
   socket.emit("move", moveMessage);

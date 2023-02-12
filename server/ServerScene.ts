@@ -41,7 +41,7 @@ export class ServerScene {
   eventSystems: ServerEventSystems;
   lobby: string[];
   readyToJoin: { id: string; screenName: string }[];
-  loadedLevel: LevelData;
+  loadedLevel: LevelData | null = null;
 
   constructor(eventSystems: ServerEventSystems) {
     this.gameObjectQuadTree = new QuadTree(
@@ -187,8 +187,8 @@ export class ServerScene {
     delete this.events[playerId];
   }
 
-  private getPlayer(id: string) {
-    return this.gameState.players.find((p) => p.id === id);
+  private getPlayer(id: string): ServerPlayer | null {
+    return this.gameState.players.find((p) => p.id === id) || null;
   }
 
   connectionIds(): string[] {
@@ -230,6 +230,7 @@ export class ServerScene {
       projectiles: [],
       staticObjects: [],
       id: id,
+      player: player,
     };
     playerVisibleObjects.forEach((o) => {
       if (isPlayer(o)) {
@@ -257,7 +258,7 @@ export class ServerScene {
     logger.info(`Initializing game state for wave ${wave}`);
     this.gameState = {
       wave,
-      waveSecondsRemaining: this.loadedLevel.waveLength,
+      waveSecondsRemaining: this.loadedLevel ? this.loadedLevel.waveLength : 0,
       players: [],
       enemies: [],
       pickUps: [],

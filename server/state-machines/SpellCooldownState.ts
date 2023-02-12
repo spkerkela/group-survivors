@@ -3,7 +3,7 @@ import { CastSpellState } from "./CastSpellState";
 import { SpellStateData } from "./SpellStateMachine";
 
 export class SpellCooldownState implements State<SpellStateData> {
-  cooldown: number;
+  cooldown: number = 0;
   update(dt: number, data: SpellStateData) {
     this.cooldown -= dt;
     if (this.cooldown <= 0) {

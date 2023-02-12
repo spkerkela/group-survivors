@@ -2,7 +2,7 @@ import { ClientGameState } from "../common/types";
 import { GameFrontend } from "./middleware";
 import EventSystem from "../common/EventSystem";
 import { globalEventSystem } from "./eventSystems";
-let pressedKeys = {};
+let pressedKeys: { [key: string]: boolean } = {};
 window.onkeyup = function (e: { keyCode: string | number }) {
   pressedKeys[e.keyCode] = false;
 };
@@ -23,6 +23,7 @@ export default class Game {
       staticObjects: [],
       wave: 0,
       waveSecondsRemaining: 0,
+      player: null,
     };
 
     frontend.init(this.gameState, serverEventSystem);
@@ -47,6 +48,7 @@ export default class Game {
         staticObjects: [],
         wave: 0,
         waveSecondsRemaining: 0,
+        player: null,
       };
     });
 

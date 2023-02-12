@@ -4,7 +4,6 @@ import EventSystem from "../common/EventSystem";
 import { ClientGameState } from "../common/types";
 import { GameScene } from "./GameScene";
 import { GameFrontend, FrontendGameScene } from "./middleware";
-import { UiScene } from "./UiScene";
 
 export const colorFromDamageType = (damageType: string) => {
   switch (damageType) {
@@ -55,8 +54,8 @@ class GameOverScene extends Phaser.Scene {
 
 export default class PhaserMiddleware implements GameFrontend {
   phaserInstance: Phaser.Game;
-  currentScene: Phaser.Scene;
-  private gameState: ClientGameState;
+  currentScene: Phaser.Scene | null = null;
+  private gameState: ClientGameState | null = null;
   canvas: HTMLCanvasElement;
   constructor(canvas: HTMLCanvasElement, serverEventSystem: EventSystem) {
     this.canvas = canvas;
@@ -70,7 +69,6 @@ export default class PhaserMiddleware implements GameFrontend {
       scene: [
         new LobbyScene(),
         new GameScene(serverEventSystem),
-        new UiScene(serverEventSystem),
         new GameOverScene(),
       ],
       backgroundColor: "#170332",
@@ -84,7 +82,6 @@ export default class PhaserMiddleware implements GameFrontend {
     if (this.currentScene instanceof GameScene) {
       this.currentScene.data.set("gameState", gameState);
     }
-    this.phaserInstance.scene.getScene("UI").data.set("gameState", gameState);
   }
 
   init(gameState: ClientGameState): void {
@@ -95,15 +92,15 @@ export default class PhaserMiddleware implements GameFrontend {
   setScene(scene: FrontendGameScene, data?: ClientGameState): void {
     switch (scene) {
       case "lobby":
-        this.currentScene.scene.start("Lobby");
+        this.currentScene?.scene.start("Lobby");
         this.currentScene = this.phaserInstance.scene.getScene("Lobby");
         break;
       case "game":
-        this.currentScene.scene.start("Game", { gameState: this.gameState });
+        this.currentScene?.scene.start("Game", { gameState: this.gameState });
         this.currentScene = this.phaserInstance.scene.getScene("Game");
         break;
       case "gameOver":
-        this.currentScene.scene.start("GameOver");
+        this.currentScene?.scene.start("GameOver");
         this.currentScene = this.phaserInstance.scene.getScene("GameOver");
         break;
       default:

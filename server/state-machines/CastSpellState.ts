@@ -5,10 +5,13 @@ import { SpellStateData } from "./SpellStateMachine";
 import { SpellCooldownState } from "./SpellCooldownState";
 
 export class CastSpellState implements State<SpellStateData> {
-  cooldown: number;
-  castCount: number;
-  castsDone: number;
-  update(dt: number, { spellData, player, enemies, events }: SpellStateData) {
+  cooldown: number = 0;
+  castCount: number = 0;
+  castsDone: number = 0;
+  update(
+    dt: number,
+    { spellData, player, enemies, events }: SpellStateData
+  ): State<SpellStateData> {
     this.cooldown -= dt;
     if (this.castsDone < this.castCount) {
       if (this.cooldown <= 0) {

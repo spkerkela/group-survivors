@@ -8,6 +8,7 @@ export interface GameState {
 }
 export interface ClientGameState extends GameState {
   id: string;
+  player: Player | null;
   players: Player[];
   debug?: DebugInformation;
 }
@@ -127,7 +128,7 @@ export type FromServerEventMap = {
 };
 
 export type ToServerEventMap = {
-  connection: (any) => void;
+  connection: (arg0: any) => void;
   join: (name: string) => void;
   move: (moveUpdate: MoveUpdate) => void;
 };

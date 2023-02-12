@@ -6,13 +6,11 @@ import {
   ClientGameState,
   MoveUpdate,
   ToServerEventMap,
-} from "../common/types";
-import {
   DamageEvent,
   LevelEvent,
   SpellDamageEvent,
   SpellProjectileEvent,
-} from "./game-logic/game-logic";
+} from "../common/types";
 
 export interface ServerEventSystems {
   gameEventSystem: EventSystem;

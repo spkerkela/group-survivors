@@ -10,7 +10,6 @@ import {
   Projectile,
   StaticObject,
 } from "../common/types";
-import Bar from "./Bar";
 
 function setupSpellEmitters(
   p: Player,
@@ -81,25 +80,7 @@ export function instantiatePlayer(
   });
   emitter.stop();
   playerContainer.setData("auraEmitter", emitter);
-  const barInstance = new Bar(scene, {
-    value: player.hp,
-    maxValue: player.hp,
-    width: 32,
-    height: 4,
-    position: { x: 0, y: 0 + 16 },
-    offset: { x: -16, y: 0 },
-    colorHex: 0xff0000,
-  });
 
-  playerContainer.setData("bar", barInstance);
-  playerContainer.add(barInstance.bar);
-
-  playerContainer.on(
-    "changedata-health",
-    (p: Phaser.GameObjects.GameObject, newHp: number, oldHp: number) => {
-      p.getData("bar").setValue(newHp);
-    }
-  );
   playerContainer.on("destroy", () => {
     emitter.stop();
   });
@@ -120,8 +101,6 @@ export function updatePlayer(
     duration: SERVER_UPDATE_RATE,
     ease: "Power1",
   });
-
-  player.setData("health", serverPlayer.hp);
 }
 
 export function destroyPlayer(player: Phaser.GameObjects.GameObject) {
@@ -283,7 +262,7 @@ export function updateGameObject<T extends Position>(
     gameObject: Phaser.GameObjects.GameObject,
     obj: T
   ) => void = simpleUpdate
-): Phaser.GameObjects.GameObject {
+): Phaser.GameObjects.GameObject | null {
   const gameObject = scene.children.getByName(id);
   if (gameObject instanceof Phaser.GameObjects.GameObject) {
     updateFn(gameObject, obj);
@@ -291,6 +270,7 @@ export function updateGameObject<T extends Position>(
   } else if (gameObject == null) {
     return instantiateFn(scene, obj);
   }
+  return null;
 }
 
 export function removeInvalidGameObjects(

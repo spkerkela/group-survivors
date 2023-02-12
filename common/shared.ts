@@ -4,8 +4,8 @@ export function experienceRequiredForLevel(level: number) {
 }
 
 export function sanitizeName(name: string): string {
-  // if name is only numbers, return empty string
-  if (/^\d+$/.test(name)) {
+  // if name is only numbers and whitespace, return empty string
+  if (/^\d+$/.test(name.replace(/ /g, ""))) {
     return "";
   }
   return name

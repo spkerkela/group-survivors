@@ -15,7 +15,7 @@ class QuadTreeNode<T extends Position> {
   }
 
   public insert(obj: T): boolean {
-    if (!rectangleContains(this.bounds, obj)) return;
+    if (!rectangleContains(this.bounds, obj)) return false;
     if (this.children.length < this.maxChildren) {
       this.children.push(obj);
       return true;

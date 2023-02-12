@@ -115,13 +115,6 @@ export class GameScene extends Phaser.Scene implements Middleware {
       this.load.audio(id, url);
     });
   }
-  launchUi() {
-    if (!this.scene.isActive("UI")) {
-      this.scene.launch("UI", {
-        gameState: this.data.get("gameState") as ClientGameState,
-      });
-    }
-  }
 
   setupCamera() {
     if (this.data.get("cameraSet")) {
@@ -218,13 +211,11 @@ export class GameScene extends Phaser.Scene implements Middleware {
       this.serverEventSystem.removeEventListener("level", levelCallback);
       this.serverEventSystem.removeEventListener("spell", spellCallBack);
       this.serverEventSystem.removeEventListener("damage", damageCallback);
-      this.scene.stop("UI");
     };
     this.serverEventSystem.addEventListener("level", levelCallback);
     this.events.on("destroy", cleanup);
     this.events.on("shutdown", cleanup);
     this.sound.add("hit");
-    this.launchUi();
   }
 
   update() {
@@ -311,13 +302,9 @@ export class GameScene extends Phaser.Scene implements Middleware {
     }
   }
 
-  private getActivePlayer(): Phaser.GameObjects.GameObject {
+  private getActivePlayer(): Phaser.GameObjects.GameObject | null {
     return this.children.getByName(this.data.get("gameState").id);
   }
 
-  updateLevel(serverPlayer: Player) {
-    const player = this.getActivePlayer();
-    player.getData("bar").setUpperBound(serverPlayer.maxHp);
-    player.getData("bar").setValue(serverPlayer.hp);
-  }
+  updateLevel(serverPlayer: Player) {}
 }

@@ -64,7 +64,7 @@ export default function ({ port, host }: ServerConfig) {
       staticObjects: [],
       spawnRate: 0.5,
       waveLength: 60,
-      waves: 20,
+      waves: 5,
     });
 
     gameServer.start();

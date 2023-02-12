@@ -10,7 +10,7 @@ export default class StateMachine<T> {
     this.state = firstState;
     this.state.enter?.(data);
   }
-  update(dt: number, data: T) {
+  update(dt: number, data: T): void {
     const newState = this.state.update(dt, data);
     if (newState !== this.state) {
       this.state.exit?.(data);
