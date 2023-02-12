@@ -61,24 +61,37 @@ function MatchStatus() {
   );
 }
 
+function Bar({
+  current,
+  max,
+  color,
+}: {
+  current: number;
+  max: number;
+  color: string;
+}) {
+  const percent = Math.round((current / max) * 100);
+  return (
+    <div className="bar-outer">
+      <div className="bar-container-text">
+        <div className="bar-container-text-align-center">
+          {Math.floor(current)}/{Math.ceil(max)}
+        </div>
+      </div>
+      <div
+        className="bar-inner"
+        style={{ width: `${percent}%`, backgroundColor: color }}
+      />
+    </div>
+  );
+}
+
 function HealthBar() {
   const { health } = useAppSelector((state) => ({
     health: state.health,
   }));
   const { currentHealth, maxHealth } = health;
-  const percentHealth = Math.round((currentHealth / maxHealth) * 100);
-  return (
-    <>
-      <div className="hp-bar-outer">
-        <div
-          className="hp-bar-inner"
-          style={{
-            width: `${percentHealth}%`,
-          }}
-        />
-      </div>
-    </>
-  );
+  return <Bar current={currentHealth} max={maxHealth} color="#ff0000" />;
 }
 
 function ExperienceBar() {
@@ -87,19 +100,12 @@ function ExperienceBar() {
   }));
 
   const { experienceToNextLevel, currentExperience } = experience;
-  const percentToNextLevel =
-    Math.round(currentExperience * 100) / experienceToNextLevel;
   return (
-    <>
-      <div className="xp-bar-outer">
-        <div
-          className="xp-bar-inner"
-          style={{
-            width: `${percentToNextLevel}%`,
-          }}
-        />
-      </div>
-    </>
+    <Bar
+      current={currentExperience}
+      max={experienceToNextLevel}
+      color="#0000ff"
+    />
   );
 }
 

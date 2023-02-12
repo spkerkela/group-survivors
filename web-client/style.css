@@ -56,7 +56,8 @@ h1 {
   width: 25%;
 }
 
-.xp-bar-outer {
+.bar-outer {
+  position: relative;
   background-color: rgba(0, 0, 0, 0.5);
   border: 1px solid #ffffff;
   height: 20px;
@@ -64,25 +65,24 @@ h1 {
   width: 100%;
 }
 
-.hp-bar-outer {
-  background-color: rgba(0, 0, 0, 0.5);
-  border: 1px solid #ffffff;
-  height: 20px;
-  margin: auto;
-  width: 100%;
+.bar-inner {
+  transition: width 0.25s ease-in-out;
+  height: 100%;
+  width: 0%;
 }
 
-.hp-bar-inner {
-  background-color: #ff0000;
-  transition: width 0.25s ease-in-out;
+.bar-container-text {
+  position: absolute;
+  left: 0;
+  right: 0;
   height: 100%;
-  width: 0%;
 }
-.xp-bar-inner {
-  background-color: #0000ff;
-  transition: width 0.25s ease-in-out;
+
+#bar-container-text-align-center {
+  display: flex;
   height: 100%;
-  width: 0%;
+  justify-content: center;
+  align-items: center;
 }
 
 #gold {
