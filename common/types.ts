@@ -122,9 +122,11 @@ export type FromServerEventMap = {
   move: (moveMessage: MoveUpdate) => void;
   projectile: (projectile: SpellProjectileEvent) => void;
   joined: (gameState: ClientGameState) => void;
+  preMatch: () => void;
   beginMatch: (gameState: ClientGameState) => void;
   endMatch: () => void;
   gameOver: (data: GameOverData) => void;
+  upgrade: () => void;
 };
 
 export type ToServerEventMap = {

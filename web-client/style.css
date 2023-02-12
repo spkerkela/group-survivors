@@ -54,6 +54,9 @@ h1 {
   flex-direction: column;
   justify-content: space-between;
   width: 25%;
+  margin-top: 10px;
+  margin-left: 10px;
+  gap: 3px;
 }
 
 .bar-outer {
@@ -102,6 +105,15 @@ h1 {
   margin-bottom: 10px;
   background-color: rgba(0, 0, 0, 0.5);
   width: 20%;
+  padding: 6px;
+  border-radius: 10px;
+  border: 1px solid #ffffff;
+}
+
+.join-game-container {
+  margin: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+  width: 40%;
   padding: 6px;
   border-radius: 10px;
   border: 1px solid #ffffff;

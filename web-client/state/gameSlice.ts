@@ -1,18 +1,17 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
+export type UiState = "lobby" | "match" | "upgrade" | "gameOver";
+
 export const gameSlice = createSlice({
   name: "game",
   initialState: {
-    running: false,
+    state: "lobby" as UiState,
     timeLeft: 0,
     wave: 0,
   },
   reducers: {
-    start: (state) => {
-      state.running = true;
-    },
-    stop: (state) => {
-      state.running = false;
+    setState: (state, action: PayloadAction<UiState>) => {
+      state.state = action.payload;
     },
     setTimeLeft: (state, action: PayloadAction<number>) => {
       state.timeLeft = action.payload;
@@ -23,5 +22,5 @@ export const gameSlice = createSlice({
   },
 });
 
-export const { start, stop, setTimeLeft, setWave } = gameSlice.actions;
+export const { setState, setTimeLeft, setWave } = gameSlice.actions;
 export default gameSlice.reducer;

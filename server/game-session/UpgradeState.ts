@@ -2,23 +2,37 @@ import { State } from "../../common/StateMachine";
 import { EndMatchState } from "./EndMatchState";
 import { MatchState } from "./MatchState";
 import { StateMachineData } from "./GameSessionStateMachine";
+import logger from "../logger";
 
 export class UpgradeState implements State<StateMachineData> {
   wave: number;
+  countdown = 30;
   constructor(wave: number) {
     this.wave = wave;
   }
   update(
-    _dt: number,
+    dt: number,
     { levelData, scene }: StateMachineData
   ): State<StateMachineData> {
     scene.sendEvents();
     if (this.wave + 1 >= levelData.waves) {
       return new EndMatchState();
     } else {
+      if (this.countdown > 0) {
+        this.countdown -= dt;
+        return this;
+      }
+      logger.info("upgrade state finished");
+
       return new MatchState(this.wave + 1);
     }
   }
-  enter() {}
+  enter({ scene }: StateMachineData) {
+    logger.info("upgrade state entered");
+    scene.connectionIds().forEach((id) => {
+      scene.pushEvent("upgrade", id, {});
+    });
+  }
+
   exit() {}
 }

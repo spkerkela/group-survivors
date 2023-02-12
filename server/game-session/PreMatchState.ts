@@ -10,6 +10,11 @@ export class PreMatchState implements State<StateMachineData> {
     }
     return this;
   }
+  enter({ scene }: StateMachineData) {
+    scene.connectionIds().forEach((id) => {
+      scene.pushEvent("preMatch", id, {});
+    });
+  }
   exit({ scene }: StateMachineData): void {
     scene.clearMatchState();
   }

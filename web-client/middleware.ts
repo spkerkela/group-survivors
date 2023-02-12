@@ -321,7 +321,7 @@ export function updateMiddleWare(gameState: ClientGameState, mw: Middleware) {
   mw.removeInvalidGameObjects("staticObject", staticObjectIds);
 }
 
-export type FrontendGameScene = "lobby" | "game" | "gameOver";
+export type FrontendGameScene = "lobby" | "match" | "upgrade" | "gameOver";
 
 export interface GameFrontend {
   init(initialGameState: ClientGameState, serverEventSystem: EventSystem): void;

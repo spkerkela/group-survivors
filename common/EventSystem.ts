@@ -9,12 +9,12 @@ export default class EventSystem {
     if (!this._eventMap.has(event)) {
       this._eventMap.set(event, []);
     }
-    this._eventMap.get(event).push(callback);
+    this._eventMap.get(event)!.push(callback);
   }
 
   public removeEventListener(event: string, callback: Function) {
     if (this._eventMap.has(event)) {
-      const callbacks = this._eventMap.get(event);
+      const callbacks = this._eventMap.get(event) || [];
       const index = callbacks.indexOf(callback);
       if (index > -1) {
         callbacks.splice(index, 1);
@@ -24,11 +24,12 @@ export default class EventSystem {
 
   public dispatchEvent(event: string, ...args: any[]) {
     if (this._eventMap.has(event)) {
-      const callbacks = this._eventMap.get(event);
+      const callbacks = this._eventMap.get(event) || [];
       callbacks.forEach((callback) => {
         callback(...args);
       });
     } else {
+      console.warn(`Event ${event} not found`);
     }
   }
 }

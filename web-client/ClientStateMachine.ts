@@ -17,7 +17,7 @@ export class DisconnectedState implements State<ClientState> {
     }
     return this;
   }
-  setId: (state: ClientGameState) => void;
+  setId!: (state: ClientGameState) => void;
 
   enter({ serverEvents, frontend }: ClientState): void {
     this.setId = (state) => {
@@ -73,13 +73,17 @@ export class ConnectedState implements State<ClientState> {
 
 export class GameLoopState implements State<ClientState> {
   id: string;
-  gameState: ClientGameState;
+  gameState: ClientGameState | null = null;
   endMatchCalled: boolean = false;
+  upgradeCalled: boolean = false;
   constructor(id: string) {
     this.id = id;
   }
 
   update(dt: number, data: ClientState): State<ClientState> {
+    if (this.upgradeCalled) {
+      return new UpgradeState(this.id);
+    }
     if (this.endMatchCalled) {
       return new ConnectedState(this.id);
     }
@@ -92,19 +96,61 @@ export class GameLoopState implements State<ClientState> {
   updateCallback: (data: ClientGameState) => void = (data) => {
     this.gameState = data;
   };
-  endMatchCallback: () => void;
+  endMatchCallback!: () => void;
+  upgradeCallback!: () => void;
   enter({ frontend, serverEvents }: ClientState) {
+    this.upgradeCallback = () => {
+      this.upgradeCalled = true;
+    };
     this.endMatchCallback = () => {
       this.endMatchCalled = true;
       frontend.setScene("gameOver");
     };
+
     serverEvents.addEventListener("update", this.updateCallback);
-    serverEvents.addEventListener("endMatch", this.endMatchCallback);
-    frontend.setScene("game");
+    serverEvents.addEventListener("upgrade", this.upgradeCallback);
+    frontend.setScene("match");
   }
   exit({ serverEvents }: ClientState) {
     serverEvents.removeEventListener("update", this.updateCallback);
-    serverEvents.removeEventListener("endMatch", this.endMatchCallback);
+    serverEvents.removeEventListener("upgrade", this.upgradeCallback);
+  }
+}
+
+export class UpgradeState implements State<ClientState> {
+  beginMatchCalled: boolean = false;
+  gameOverCalled: boolean = false;
+  gameOverCallback!: () => void;
+  beginMatchCallback!: () => void;
+  id: string;
+  constructor(id: string) {
+    this.id = id;
+  }
+  update(dt: number, { frontend }: ClientState): State<ClientState> {
+    if (this.beginMatchCalled) {
+      return new GameLoopState(this.id);
+    }
+    if (this.gameOverCalled) {
+      return new ConnectedState(this.id);
+    }
+    return this;
+  }
+  enter({ frontend, serverEvents }: ClientState) {
+    frontend.setScene("upgrade");
+    this.beginMatchCallback = () => {
+      this.beginMatchCalled = true;
+    };
+    this.gameOverCallback = () => {
+      this.gameOverCalled = true;
+      frontend.setScene("gameOver");
+    };
+    serverEvents.addEventListener("beginMatch", this.beginMatchCallback);
+    serverEvents.addEventListener("gameOver", this.gameOverCallback);
+  }
+
+  exit({ frontend, serverEvents }: ClientState) {
+    serverEvents.removeEventListener("beginMatch", this.gameOverCallback);
+    serverEvents.addEventListener("gameOver", this.gameOverCallback);
   }
 }
 

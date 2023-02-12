@@ -9,7 +9,7 @@ import { initServerEventSystem, globalEventSystem } from "./eventSystems";
 import { useAppDispatch } from "./hooks";
 import PhaserMiddleware from "./phaser-middleware";
 import { setExperience } from "./state/experienceSlice";
-import { start, setTimeLeft, setWave, stop } from "./state/gameSlice";
+import { setState, setTimeLeft, setWave } from "./state/gameSlice";
 import { setGold } from "./state/goldSlice";
 import { setHealth } from "./state/healthSlice";
 import { set } from "./state/levelSlice";
@@ -64,11 +64,17 @@ export default function GameContainer() {
         }
       }
     );
-    serverEventSystem.addEventListener("beginMatch", () => {
-      dispatch(start());
+    serverEventSystem.addEventListener("preMatch", () => {
+      dispatch(setState("lobby"));
     });
-    serverEventSystem.addEventListener("endMatch", () => {
-      dispatch(stop());
+    serverEventSystem.addEventListener("beginMatch", () => {
+      dispatch(setState("match"));
+    });
+    serverEventSystem.addEventListener("upgrade", () => {
+      dispatch(setState("upgrade"));
+    });
+    serverEventSystem.addEventListener("gameOver", () => {
+      dispatch(setState("gameOver"));
     });
     const sm = new ClientStateMachine(
       serverEventSystem,

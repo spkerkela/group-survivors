@@ -73,5 +73,11 @@ export function initConnectedClientEventSystem(
   eventSystem.addEventListener("gameOver", (data: GameOverData) => {
     socket.emit("gameOver", data);
   });
+  eventSystem.addEventListener("preMatch", () => {
+    socket.emit("preMatch");
+  });
+  eventSystem.addEventListener("upgrade", () => {
+    socket.emit("upgrade");
+  });
   return eventSystem;
 }

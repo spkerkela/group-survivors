@@ -2,42 +2,67 @@ import { useAppSelector, useAppDispatch } from "./hooks";
 import { set } from "./state/userNameSlice";
 
 export default function UI() {
-  const { userName, game } = useAppSelector((state) => ({
-    userName: state.userName,
+  const { game } = useAppSelector((state) => ({
     game: state.game,
+  }));
+  const ui = (function () {
+    switch (game.state) {
+      case "lobby":
+        return <JoinGame />;
+      case "match":
+        return <MatchUI />;
+      case "upgrade":
+        return <Upgrade />;
+      case "gameOver":
+        return <GameOver />;
+      default:
+        return <JoinGame />;
+    }
+  })();
+  return <div id="ui">{ui}</div>;
+}
+
+function GameOver() {
+  return <div className="gameOver">Game Over</div>;
+}
+
+function Upgrade() {
+  return <div className="upgrade">Upgrade</div>;
+}
+
+function JoinGame() {
+  const { userName } = useAppSelector((state) => ({
+    userName: state.userName,
   }));
   const dispatch = useAppDispatch();
   return (
-    <div id="ui">
-      {game.running ? (
-        <div className="matchUi">
-          <div className="bars">
-            <HealthBar />
-            <ExperienceBar />
-          </div>
-          <MatchStatus />
-        </div>
-      ) : (
-        <>
-          <input
-            id="name"
-            data-testid="name"
-            type="text"
-            placeholder="Name"
-            onChange={(e) => dispatch(set(e.target.value))}
-          />
-          <div id="error" data-testid="error">
-            {userName.error}
-          </div>
-          <button
-            id="start"
-            data-testid="start"
-            disabled={userName.error !== ""}
-          >
-            Start
-          </button>
-        </>
-      )}
+    <div className="join-game-container">
+      <input
+        autoComplete="off"
+        id="name"
+        data-testid="name"
+        type="text"
+        placeholder="Name"
+        onChange={(e) => dispatch(set(e.target.value))}
+      />
+      <div id="error" data-testid="error">
+        {userName.error}
+      </div>
+      <button id="start" data-testid="start" disabled={userName.error !== ""}>
+        Start
+      </button>
+    </div>
+  );
+}
+
+function MatchUI() {
+  return (
+    <div className="matchUi">
+      <div className="bars">
+        <HealthBar />
+        <ExperienceBar />
+      </div>
+      <MatchStatus />
     </div>
   );
 }

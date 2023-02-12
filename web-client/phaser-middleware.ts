@@ -69,6 +69,7 @@ export default class PhaserMiddleware implements GameFrontend {
       scene: [
         new LobbyScene(),
         new GameScene(serverEventSystem),
+        new UpgradeScene(),
         new GameOverScene(),
       ],
       backgroundColor: "#170332",
@@ -95,9 +96,13 @@ export default class PhaserMiddleware implements GameFrontend {
         this.currentScene?.scene.start("Lobby");
         this.currentScene = this.phaserInstance.scene.getScene("Lobby");
         break;
-      case "game":
+      case "match":
         this.currentScene?.scene.start("Game", { gameState: this.gameState });
         this.currentScene = this.phaserInstance.scene.getScene("Game");
+        break;
+      case "upgrade":
+        this.currentScene?.scene.start("Upgrade");
+        this.currentScene = this.phaserInstance.scene.getScene("Upgrade");
         break;
       case "gameOver":
         this.currentScene?.scene.start("GameOver");

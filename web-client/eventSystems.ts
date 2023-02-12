@@ -3,6 +3,7 @@ import EventSystem from "../common/EventSystem";
 import {
   ClientGameState,
   FromServerEventMap,
+  GameOverData,
   MoveUpdate,
   ToServerEventMap,
 } from "../common/types";
@@ -52,6 +53,18 @@ export function initServerEventSystem(
 
   io.on("endMatch", () => {
     serverEventSystem.dispatchEvent("endMatch");
+  });
+
+  io.on("gameOver", (data: GameOverData) => {
+    serverEventSystem.dispatchEvent("gameOver", data);
+  });
+
+  io.on("preMatch", () => {
+    serverEventSystem.dispatchEvent("preMatch");
+  });
+
+  io.on("upgrade", () => {
+    serverEventSystem.dispatchEvent("upgrade");
   });
 
   return serverEventSystem;
