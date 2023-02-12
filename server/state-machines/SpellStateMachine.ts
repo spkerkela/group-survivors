@@ -12,7 +12,7 @@ export interface SpellStateData {
 
 export default class SpellStateMachine {
   private sm: StateMachine<SpellStateData>;
-  constructor(spellData: SpellData, player: Player, enemies = []) {
+  constructor(spellData: SpellData, player: Player, enemies: Enemy[] = []) {
     this.sm = new StateMachine(new CastSpellState(), {
       spellData,
       player,

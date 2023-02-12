@@ -68,7 +68,7 @@ export function castSpell(
   powerUps: PowerUp[] = []
 ): SpellCastEvent {
   const spellData = spellDB[spell];
-  let result = {
+  let result: SpellCastEvent = {
     damageEvents: [],
     projectileEvents: [],
   };
@@ -117,7 +117,7 @@ export function shootAtNearestEnemy(
   enemies: Enemy[]
 ): SpellProjectileEvent | null {
   const nearestEnemy = enemies.reduce(
-    (nearest, enemy) => {
+    (nearest: { distance: number; enemy: Enemy | null }, enemy: Enemy) => {
       const distance = Math.sqrt(
         Math.pow(enemy.x - player.x, 2) + Math.pow(enemy.y - player.y, 2)
       );

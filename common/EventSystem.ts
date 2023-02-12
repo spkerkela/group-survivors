@@ -28,8 +28,6 @@ export default class EventSystem {
       callbacks.forEach((callback) => {
         callback(...args);
       });
-    } else {
-      console.warn(`Event ${event} not found`);
     }
   }
 }

@@ -29,7 +29,10 @@ export function updateEnemies(
       );
 
     const nearestPlayer = players.reduce(
-      (nearest, player) => {
+      (
+        nearest: { player: Player | null; distance: number },
+        player: Player
+      ) => {
         const distance = Math.sqrt(
           Math.pow(player.x - enemy.x, 2) + Math.pow(player.y - enemy.y, 2)
         );
