@@ -8,21 +8,15 @@ import {
 } from "../../common/types";
 import { pickUpDB } from "../../common/data";
 import QuadTree from "../../common/QuadTree";
-import { chooseRandom, randomPowerUp } from "../../common/random";
 import { experienceRequiredForLevel } from "../../common/shared";
 
 export function checkPlayerExperience(player: Player): boolean {
   const nextLevel = player.level + 1;
   if (player.experience >= experienceRequiredForLevel(nextLevel)) {
     const newHp = player.maxHp + 10;
+    player.hp += 10;
     player.level = nextLevel;
     player.maxHp = newHp;
-    const spellId = chooseRandom(Object.keys(player.spells));
-    const powerUp = randomPowerUp();
-    if (player.powerUps[spellId] == null) {
-      player.powerUps[spellId] = [];
-    }
-    player.powerUps[spellId].push(powerUp);
     return true;
   }
   return false;

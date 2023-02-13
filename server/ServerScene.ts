@@ -9,6 +9,8 @@ import {
   isStaticObject,
   PlayerUpdate,
   Player,
+  PowerUp,
+  UpgradeChoice,
 } from "../common/types";
 import { ServerEventSystems } from "./eventSystems";
 import {
@@ -19,7 +21,11 @@ import {
 } from "../common/constants";
 import { generateId } from "./id-generator";
 import { LevelData } from "./GameServer";
-import { chooseRandom, randomBetweenExclusive } from "../common/random";
+import {
+  chooseRandom,
+  randomBetweenExclusive,
+  randomPowerUp,
+} from "../common/random";
 import { PlayerMatchState, ServerGameState, ServerPlayer } from "./types";
 import { spellDB } from "../common/data";
 import logger from "./logger";
@@ -38,6 +44,7 @@ export class ServerScene {
     [key: string]: { name: string; data: any }[];
   };
   private playerMatchStates: { [key: string]: PlayerMatchState };
+  private playerUpgradeChoices: { [key: string]: UpgradeChoice[][] };
   eventSystems: ServerEventSystems;
   lobby: string[];
   readyToJoin: { id: string; screenName: string }[];
@@ -56,10 +63,12 @@ export class ServerScene {
     this.eventSystems = eventSystems;
     this.readyToJoin = [];
     this.playerMatchStates = {};
+    this.playerUpgradeChoices = {};
   }
 
   clearMatchState() {
     this.playerMatchStates = {};
+    this.playerUpgradeChoices = {};
   }
 
   saveMatchState(player: Player) {
@@ -106,6 +115,32 @@ export class ServerScene {
         addSpellToPlayer(spellId, player);
       });
     }
+  }
+
+  generateUpgradeChoices(playerId: string) {
+    const choiceCount = 4;
+    const choices: UpgradeChoice[] = [];
+    for (let i = 0; i < choiceCount; i++) {
+      const spellId = chooseRandom(Object.keys(spellDB));
+      const powerUp = randomPowerUp();
+      const id = generateId("upgrade");
+      choices.push({
+        id: id,
+        powerUp,
+        spellId,
+      });
+    }
+    if (!this.playerUpgradeChoices[playerId]) {
+      this.playerUpgradeChoices[playerId] = [];
+    }
+    this.playerUpgradeChoices[playerId].push(choices);
+  }
+
+  getUpgradeChoices(playerId: string) {
+    if (!this.playerUpgradeChoices[playerId]) {
+      return [];
+    }
+    return this.playerUpgradeChoices[playerId];
   }
 
   newGameState(): ServerGameState {

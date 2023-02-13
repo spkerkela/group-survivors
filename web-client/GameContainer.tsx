@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 import parser from "socket.io-msgpack-parser";
 import EventSystem from "../common/EventSystem";
 import { experienceRequiredForLevel, sanitizeName } from "../common/shared";
-import { ClientGameState } from "../common/types";
+import { ClientGameState, UpgradeEvent } from "../common/types";
 import ClientStateMachine from "./ClientStateMachine";
 import { initServerEventSystem, globalEventSystem } from "./eventSystems";
 import { useAppDispatch } from "./hooks";
@@ -13,6 +13,7 @@ import { setState, setTimeLeft, setWave } from "./state/gameSlice";
 import { setGold } from "./state/goldSlice";
 import { setHealth } from "./state/healthSlice";
 import { set } from "./state/levelSlice";
+import { setUpgradeChoices } from "./state/upgradeChoicesSlice";
 
 export default function GameContainer() {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -70,8 +71,9 @@ export default function GameContainer() {
     serverEventSystem.addEventListener("beginMatch", () => {
       dispatch(setState("match"));
     });
-    serverEventSystem.addEventListener("upgrade", () => {
+    serverEventSystem.addEventListener("upgrade", (data: UpgradeEvent) => {
       dispatch(setState("upgrade"));
+      dispatch(setUpgradeChoices(data.choices));
     });
     serverEventSystem.addEventListener("gameOver", () => {
       dispatch(setState("gameOver"));

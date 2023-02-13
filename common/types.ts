@@ -19,6 +19,13 @@ export interface Position {
 }
 
 export type PowerUpType = "additionalCast" | "damage" | "range" | "cooldown";
+
+export interface UpgradeChoice {
+  id: string;
+  spellId: string;
+  powerUp: PowerUp;
+}
+
 export interface PowerUp {
   type: PowerUpType;
   value: number;
@@ -126,7 +133,7 @@ export type FromServerEventMap = {
   beginMatch: (gameState: ClientGameState) => void;
   endMatch: () => void;
   gameOver: (data: GameOverData) => void;
-  upgrade: () => void;
+  upgrade: (data: UpgradeEvent) => void;
 };
 
 export type ToServerEventMap = {
@@ -206,4 +213,8 @@ export interface PickUpEvent {
 export interface LevelEvent {
   playerId: string;
   player: Player;
+}
+
+export interface UpgradeEvent {
+  choices: UpgradeChoice[][];
 }

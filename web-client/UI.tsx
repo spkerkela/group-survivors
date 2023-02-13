@@ -31,11 +31,12 @@ function GameOver() {
 
 function SpellPowerUp({
   powerUp,
-  spell,
+  spellId,
 }: {
   powerUp: PowerUp;
-  spell: SpellData;
+  spellId: string;
 }) {
+  const spell = spellDB[spellId];
   const powerUpTitle = (function () {
     switch (powerUp.type) {
       case "damage":
@@ -74,18 +75,11 @@ function SpellPowerUp({
 }
 
 function Upgrade() {
-  const spellIds = Object.keys(spellDB);
-  let powerUps: { spell: SpellData; powerUp: PowerUp }[] = [];
-  for (let i = 0; i < 4; i++) {
-    const powerUp = randomPowerUp();
-    const spell = spellDB[chooseRandom(spellIds)];
-    powerUps.push({
-      spell,
-      powerUp,
-    });
-  }
-  const powerUpList = powerUps.map((data, i) => (
-    <SpellPowerUp key={i} powerUp={data.powerUp} spell={data.spell} />
+  const { choices } = useAppSelector((state) => state.upgradeChoices);
+  const powerUpChoices = choices[0] || [];
+
+  const powerUpList = powerUpChoices.map((data) => (
+    <SpellPowerUp key={data.id} powerUp={data.powerUp} spellId={data.spellId} />
   ));
   return <div className="upgrade-ui">{powerUpList}</div>;
 }

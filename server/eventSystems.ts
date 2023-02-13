@@ -10,6 +10,7 @@ import {
   LevelEvent,
   SpellDamageEvent,
   SpellProjectileEvent,
+  UpgradeEvent,
 } from "../common/types";
 
 export interface ServerEventSystems {
@@ -76,8 +77,8 @@ export function initConnectedClientEventSystem(
   eventSystem.addEventListener("preMatch", () => {
     socket.emit("preMatch");
   });
-  eventSystem.addEventListener("upgrade", () => {
-    socket.emit("upgrade");
+  eventSystem.addEventListener("upgrade", (choiceData: UpgradeEvent) => {
+    socket.emit("upgrade", choiceData);
   });
   return eventSystem;
 }

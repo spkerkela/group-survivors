@@ -5,6 +5,7 @@ import gameReducer from "../state/gameSlice";
 import experienceReducer from "../state/experienceSlice";
 import goldReducer from "../state/goldSlice";
 import healthReducer from "../state/healthSlice";
+import upgradeChoiceReducer from "../state/upgradeChoicesSlice";
 
 const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ const store = configureStore({
     experience: experienceReducer,
     health: healthReducer,
     gold: goldReducer,
+    upgradeChoices: upgradeChoiceReducer,
   },
 });
 

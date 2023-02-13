@@ -181,6 +181,7 @@ export class MatchState implements State<StateMachineData> {
     );
     levelEvents.forEach((e) => {
       scene.pushEvent("level", e.playerId, e);
+      scene.generateUpgradeChoices(e.playerId);
     });
     scene.gameState.players.forEach((p) => {
       if (!p.alive) {

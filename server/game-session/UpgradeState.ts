@@ -30,7 +30,11 @@ export class UpgradeState implements State<StateMachineData> {
   enter({ scene }: StateMachineData) {
     logger.info("upgrade state entered");
     scene.connectionIds().forEach((id) => {
-      scene.pushEvent("upgrade", id, {});
+      const playerUpgradeChoices = scene.getUpgradeChoices(id);
+      logger.info("upgrade choices", playerUpgradeChoices);
+      scene.pushEvent("upgrade", id, {
+        choices: playerUpgradeChoices,
+      });
     });
   }
 

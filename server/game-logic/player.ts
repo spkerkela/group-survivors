@@ -1,6 +1,6 @@
 import { GAME_HEIGHT, GAME_WIDTH } from "../../common/constants";
 import { pickUpDB } from "../../common/data";
-import { PickUp, Player, Position, Updates } from "../../common/types";
+import { PickUp, Player, Position, PowerUp, Updates } from "../../common/types";
 import { ServerPlayer } from "../types";
 import { updateBots } from "./bots";
 
@@ -65,4 +65,14 @@ export function createPickUp(
     lifetime: 15,
     visual: pickUpDB[type].visual,
   };
+}
+export function applyPowerUp(
+  player: Player,
+  spellId: string,
+  powerUp: PowerUp
+) {
+  if (player.powerUps[spellId] == null) {
+    player.powerUps[spellId] = [];
+  }
+  player.powerUps[spellId].push(powerUp);
 }

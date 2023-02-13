@@ -6,6 +6,7 @@ import {
   GameOverData,
   MoveUpdate,
   ToServerEventMap,
+  UpgradeEvent,
 } from "../common/types";
 import { sendJoinMessage, sendMoveMessage } from "./messages";
 
@@ -63,8 +64,8 @@ export function initServerEventSystem(
     serverEventSystem.dispatchEvent("preMatch");
   });
 
-  io.on("upgrade", () => {
-    serverEventSystem.dispatchEvent("upgrade");
+  io.on("upgrade", (data: UpgradeEvent) => {
+    serverEventSystem.dispatchEvent("upgrade", data);
   });
 
   return serverEventSystem;
