@@ -5,25 +5,11 @@ import {
   PickUp,
   PickUpEvent,
   Player,
-  PowerUp,
-  PowerUpType,
 } from "../../common/types";
 import { pickUpDB } from "../../common/data";
 import QuadTree from "../../common/QuadTree";
-import { chooseRandom, randomBetweenExclusive } from "../../common/random";
+import { chooseRandom, randomPowerUp } from "../../common/random";
 import { experienceRequiredForLevel } from "../../common/shared";
-
-function randomPowerUp(): PowerUp {
-  const type: PowerUpType = chooseRandom(["damage", "additionalCast"]);
-  if (type === "damage") {
-    const value = Math.random() * 0.2;
-    return { type, value };
-  }
-  return {
-    type,
-    value: randomBetweenExclusive(1, 4),
-  };
-}
 
 export function checkPlayerExperience(player: Player): boolean {
   const nextLevel = player.level + 1;

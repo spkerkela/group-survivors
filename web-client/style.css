@@ -92,13 +92,13 @@ h1 {
   color: #ffff00;
 }
 
-.matchUi {
+.match-ui {
   display: flex;
   flex-direction: column;
   height: 600px;
 }
 
-.matchStatus {
+.match-status {
   margin-top: auto;
   text-align: left;
   margin-left: 10px;
@@ -117,4 +117,34 @@ h1 {
   padding: 6px;
   border-radius: 10px;
   border: 1px solid #ffffff;
+}
+
+.power-up-card {
+  cursor: pointer;
+  padding: 10px;
+  display: flex;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 10px;
+  border: 1px solid #ffffff;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 25%;
+  height: 30%;
+  margin-top: 10px;
+  margin-left: 10px;
+  gap: 3px;
+}
+
+.power-up-card-title {
+  text-align: center;
+  color: #ffff00;
+  font-weight: bold;
+}
+
+.upgrade-ui {
+  display: flex;
+  flex-direction: row;
+  height: 600px;
+  justify-content: space-around;
+  align-items: center;
 }

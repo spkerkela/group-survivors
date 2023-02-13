@@ -1,3 +1,6 @@
+import { SpellData, spellDB } from "../common/data";
+import { chooseRandom, randomPowerUp } from "../common/random";
+import { PowerUp } from "../common/types";
 import { useAppSelector, useAppDispatch } from "./hooks";
 import { set } from "./state/userNameSlice";
 
@@ -26,8 +29,65 @@ function GameOver() {
   return <div className="gameOver">Game Over</div>;
 }
 
+function SpellPowerUp({
+  powerUp,
+  spell,
+}: {
+  powerUp: PowerUp;
+  spell: SpellData;
+}) {
+  const powerUpTitle = (function () {
+    switch (powerUp.type) {
+      case "damage":
+        return "Damage";
+      case "cooldown":
+        return "Cooldown";
+      case "range":
+        return "Range";
+      case "additionalCast":
+        return "Additional Cast";
+    }
+  })();
+
+  const valueAsPercentage = (powerUp.value * 100).toFixed(2);
+  const description = (function (spellName: string) {
+    switch (powerUp.type) {
+      case "damage":
+        return `Increases ${spellName} damage by ${valueAsPercentage}%`;
+      case "cooldown":
+        return `Reduces the cooldown of ${spellName} by ${valueAsPercentage}%`;
+      case "range":
+        return `Increases the range of ${spellName} by ${valueAsPercentage}%`;
+      case "additionalCast":
+        return `Increases the number of ${spellName} casts by ${powerUp.value}`;
+    }
+  })(spell.name);
+
+  return (
+    <div className="power-up-card">
+      <div className="power-up-card-title">
+        {spell.name}-{powerUpTitle}
+      </div>
+      <div className="power-up-card-description">{description}</div>
+    </div>
+  );
+}
+
 function Upgrade() {
-  return <div className="upgrade">Upgrade</div>;
+  const spellIds = Object.keys(spellDB);
+  let powerUps: { spell: SpellData; powerUp: PowerUp }[] = [];
+  for (let i = 0; i < 4; i++) {
+    const powerUp = randomPowerUp();
+    const spell = spellDB[chooseRandom(spellIds)];
+    powerUps.push({
+      spell,
+      powerUp,
+    });
+  }
+  const powerUpList = powerUps.map((data, i) => (
+    <SpellPowerUp key={i} powerUp={data.powerUp} spell={data.spell} />
+  ));
+  return <div className="upgrade-ui">{powerUpList}</div>;
 }
 
 function JoinGame() {
@@ -57,7 +117,7 @@ function JoinGame() {
 
 function MatchUI() {
   return (
-    <div className="matchUi">
+    <div className="match-ui">
       <div className="bars">
         <HealthBar />
         <ExperienceBar />
@@ -73,7 +133,7 @@ function MatchStatus() {
     level: state.level,
   }));
   return (
-    <div className="matchStatus">
+    <div className="match-status">
       {game.wave > 0 && (
         <>
           <div id="wave">Wave: {game.wave}</div>

@@ -59,7 +59,7 @@ export type SpellDB = { [key: string]: SpellData };
 export const spellDB: SpellDB = {
   damageAura: {
     id: "damageAura",
-    name: "Damage Aura",
+    name: "Fiery Aura",
     description: "Deals damage to enemies in a radius around you",
     damageType: "fire",
     baseDamage: 3,
@@ -77,8 +77,8 @@ export const spellDB: SpellDB = {
   },
   missile: {
     id: "missile",
-    name: "Missile",
-    description: "Deals damage to a single target",
+    name: "Seeking Missile",
+    description: "Deals damage to a single target, aims at nearest enemy",
     damageType: "cold",
     baseDamage: 20,
     critMultiplier: 2.0,
