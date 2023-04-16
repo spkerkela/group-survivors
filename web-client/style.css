@@ -148,3 +148,43 @@ h1 {
   justify-content: space-around;
   align-items: center;
 }
+
+.button {
+  background-color: #a70000;
+  border: none;
+  border-radius: 0;
+  color: #fff;
+  font-size: 24px;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  text-shadow: 1px 1px 0px #000;
+  box-shadow: inset 0px 1px 0px #e83434, inset 0px -1px 0px #6b0000,
+    inset 1px 0px 0px #e83434, inset -1px 0px 0px #6b0000,
+    0px 2px 5px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.button:after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  bottom: 2px;
+  left: 2px;
+  border: 1px solid #870000;
+  border-radius: 0;
+  z-index: -1;
+}
+
+.button:hover {
+  background-color: #d62929;
+  box-shadow: inset 0px 1px 0px #ff7777, inset 0px -1px 0px #6b0000,
+    inset 1px 0px 0px #ff7777, inset -1px 0px 0px #6b0000,
+    0px 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.button:hover:after {
+  border: 1px solid #870000;
+}

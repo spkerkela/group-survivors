@@ -102,7 +102,12 @@ function JoinGame() {
       <div id="error" data-testid="error">
         {userName.error}
       </div>
-      <button id="start" data-testid="start" disabled={userName.error !== ""}>
+      <button
+        className={"button"}
+        id="start"
+        data-testid="start"
+        disabled={userName.error !== ""}
+      >
         Start
       </button>
     </div>
