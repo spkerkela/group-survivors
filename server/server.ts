@@ -30,7 +30,7 @@ export default function ({ port, host }: ServerConfig) {
           },
         },
         hsts: false,
-      })
+      }),
     );
 
     const httpServer = createServer(app);
