@@ -1,13 +1,10 @@
-import { SpellData, spellDB } from "../common/data";
-import { chooseRandom, randomPowerUp } from "../common/random";
+import { spellDB } from "../common/data";
 import { PowerUp } from "../common/types";
 import { useAppSelector, useAppDispatch } from "./hooks";
 import { set } from "./state/userNameSlice";
 
 export default function UI() {
-  const { game } = useAppSelector((state) => ({
-    game: state.game,
-  }));
+  const game = useAppSelector((state) => state.game);
   const ui = (function () {
     switch (game.state) {
       case "lobby":
@@ -85,9 +82,7 @@ function Upgrade() {
 }
 
 function JoinGame() {
-  const { userName } = useAppSelector((state) => ({
-    userName: state.userName,
-  }));
+  const userName = useAppSelector((state) => state.userName);
   const dispatch = useAppDispatch();
   return (
     <div className="join-game-container">
@@ -127,10 +122,7 @@ function MatchUI() {
 }
 
 function MatchStatus() {
-  const { game, level } = useAppSelector((state) => ({
-    game: state.game,
-    level: state.level,
-  }));
+  const game = useAppSelector((state) => state.game);
   return (
     <div className="match-status">
       {game.wave > 0 && (
@@ -171,19 +163,14 @@ function Bar({
 }
 
 function HealthBar() {
-  const { health } = useAppSelector((state) => ({
-    health: state.health,
-  }));
-  const { currentHealth, maxHealth } = health;
+  const { currentHealth, maxHealth } = useAppSelector((state) => state.health);
   return <Bar current={currentHealth} max={maxHealth} color="#ff0000" />;
 }
 
 function ExperienceBar() {
-  const { experience } = useAppSelector((state) => ({
-    experience: state.experience,
-  }));
-
-  const { experienceToNextLevel, currentExperience } = experience;
+  const { experienceToNextLevel, currentExperience } = useAppSelector(
+    (state) => state.experience,
+  );
   return (
     <Bar
       current={currentExperience}
@@ -194,14 +181,10 @@ function ExperienceBar() {
 }
 
 function PlayerLevel() {
-  const { level } = useAppSelector((state) => ({
-    level: state.level,
-  }));
-  return <div>Player Level: {level.level}</div>;
+  const { level } = useAppSelector((state) => state.level);
+  return <div>Player Level: {level}</div>;
 }
 function Gold() {
-  const { gold } = useAppSelector((state) => ({
-    gold: state.gold,
-  }));
+  const gold = useAppSelector((state) => state.gold);
   return <div id="gold">Gold: {gold.gold}</div>;
 }
