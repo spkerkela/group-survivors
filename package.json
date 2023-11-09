@@ -30,7 +30,7 @@
     "socket.io": "^4.5.4",
     "ts-jest": "^29.0.3",
     "tsc": "^2.0.4",
-    "tsx": "^3.12.1",
+    "tsx": "^4.0.0",
     "typescript": "^5.0.0"
   },
   "dependencies": {
