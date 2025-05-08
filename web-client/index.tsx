@@ -7,8 +7,8 @@ import GameContainer from "./GameContainer";
 const container = document.getElementById("app");
 const root = createRoot(container!);
 root.render(
-  <Provider store={store}>
-    <GameContainer />
-    <UI />
-  </Provider>
+	<Provider store={store}>
+		<GameContainer />
+		<UI />
+	</Provider>,
 );
