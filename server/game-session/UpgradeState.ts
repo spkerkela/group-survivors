@@ -1,7 +1,7 @@
-import { State } from "../../common/StateMachine";
+import type { State } from "../../common/StateMachine";
 import { EndMatchState } from "./EndMatchState";
 import { MatchState } from "./MatchState";
-import { StateMachineData } from "./GameSessionStateMachine";
+import type { StateMachineData } from "./GameSessionStateMachine";
 import logger from "../logger";
 
 export class UpgradeState implements State<StateMachineData> {

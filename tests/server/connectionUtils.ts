@@ -1,4 +1,4 @@
-import { ServerScene } from "../../server/ServerScene";
+import type { ServerScene } from "../../server/ServerScene";
 import EventSystem from "../../common/EventSystem";
 
 export function createTestConnection(

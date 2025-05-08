@@ -3,7 +3,7 @@ import ClientStateMachine, {
 	DisconnectedState,
 	GameLoopState,
 } from "../../web-client/ClientStateMachine";
-import { GameFrontend } from "../../web-client/middleware";
+import type { GameFrontend } from "../../web-client/middleware";
 import EventSystem from "../../common/EventSystem";
 
 describe("Client State Machine", () => {

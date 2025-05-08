@@ -1,9 +1,9 @@
-import { State } from "../../common/StateMachine";
+import type { State } from "../../common/StateMachine";
 import { CastSpellState } from "./CastSpellState";
-import { SpellStateData } from "./SpellStateMachine";
+import type { SpellStateData } from "./SpellStateMachine";
 
 export class SpellCooldownState implements State<SpellStateData> {
-	cooldown: number = 0;
+	cooldown = 0;
 	update(dt: number, data: SpellStateData) {
 		this.cooldown -= dt;
 		if (this.cooldown <= 0) {

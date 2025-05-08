@@ -1,4 +1,4 @@
-import { PowerUp, PowerUpType } from "./types";
+import type { PowerUp, PowerUpType } from "./types";
 
 export function randomBetweenExclusive(min: number, max: number) {
 	return Math.floor(Math.random() * (max - min) + min);

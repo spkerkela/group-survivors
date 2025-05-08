@@ -6,7 +6,7 @@ import { GAME_HEIGHT, GAME_WIDTH } from "../common/constants";
 import { GameServer } from "./GameServer";
 import parser from "socket.io-msgpack-parser";
 import EventSystem from "../common/EventSystem";
-import { initGameEventSystem, ServerEventSystems } from "./eventSystems";
+import { initGameEventSystem, type ServerEventSystems } from "./eventSystems";
 import { ServerScene } from "./ServerScene";
 import helmet from "helmet";
 import logger from "./logger";

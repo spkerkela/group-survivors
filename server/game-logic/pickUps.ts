@@ -1,5 +1,5 @@
 import { PLAYER_SIZE } from "../../common/constants";
-import {
+import type {
 	GameObject,
 	LevelEvent,
 	PickUp,
@@ -7,7 +7,7 @@ import {
 	Player,
 } from "../../common/types";
 import { pickUpDB } from "../../common/data";
-import QuadTree from "../../common/QuadTree";
+import type QuadTree from "../../common/QuadTree";
 import { experienceRequiredForLevel } from "../../common/shared";
 
 export function checkPlayerExperience(player: Player): boolean {
@@ -31,7 +31,7 @@ export function updatePickUps(
 	pickUpEvents: PickUpEvent[];
 	levelEvents: LevelEvent[];
 } {
-	let events: {
+	const events: {
 		expiredPickUps: string[];
 		pickUpEvents: PickUpEvent[];
 		levelEvents: LevelEvent[];

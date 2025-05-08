@@ -1,5 +1,5 @@
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from "../../common/constants";
-import {
+import type {
 	Enemy,
 	GameObject,
 	Player,
@@ -9,9 +9,9 @@ import {
 	SpellDamageEvent,
 	SpellProjectileEvent,
 } from "../../common/types";
-import { SpellData, spellDB } from "../../common/data";
-import QuadTree from "../../common/QuadTree";
-import { ServerPlayer } from "../types";
+import { type SpellData, spellDB } from "../../common/data";
+import type QuadTree from "../../common/QuadTree";
+import type { ServerPlayer } from "../types";
 import SpellStateMachine from "../state-machines/SpellStateMachine";
 
 import { normalize } from "../../common/math";
@@ -21,7 +21,7 @@ export function updateSpells(
 	gameObjectQuadTree: QuadTree<GameObject>,
 	deltaTime: number,
 ): SpellCastEvent {
-	let events: SpellCastEvent = {
+	const events: SpellCastEvent = {
 		damageEvents: [],
 		projectileEvents: [],
 	};
@@ -69,7 +69,7 @@ export function castSpell(
 	powerUps: PowerUp[] = [],
 ): SpellCastEvent {
 	const spellData = spellDB[spell];
-	let result: SpellCastEvent = {
+	const result: SpellCastEvent = {
 		damageEvents: [],
 		projectileEvents: [],
 	};
@@ -128,7 +128,7 @@ export function shootAtNearestEnemy(
 				return nearest;
 			}
 		},
-		{ distance: Infinity, enemy: null },
+		{ distance: Number.POSITIVE_INFINITY, enemy: null },
 	);
 	const { enemy, distance } = nearestEnemy;
 

@@ -1,10 +1,10 @@
-import { State } from "../../common/StateMachine";
+import type { State } from "../../common/StateMachine";
 import { PreMatchState } from "./PreMatchState";
-import { StateMachineData } from "./GameSessionStateMachine";
+import type { StateMachineData } from "./GameSessionStateMachine";
 
 export class EndMatchState implements State<StateMachineData> {
 	timeRemaining: number;
-	constructor(seconds: number = 10) {
+	constructor(seconds = 10) {
 		this.timeRemaining = seconds;
 	}
 	update(dt: number, { scene }: StateMachineData): State<StateMachineData> {

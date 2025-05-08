@@ -7,9 +7,9 @@ import {
 	INVULNERABILITY_SECONDS,
 	NUMBER_SCALE,
 } from "../common/constants";
-import EventSystem from "../common/EventSystem";
+import type EventSystem from "../common/EventSystem";
 import { chooseRandom, randomBetweenExclusive } from "../common/random";
-import {
+import type {
 	Enemy,
 	ClientGameState,
 	PickUp,
@@ -32,7 +32,7 @@ import {
 	instantiatePickUp,
 	instantiateProjectile,
 	instantiateStaticObject,
-	Middleware,
+	type Middleware,
 	updatePlayer,
 	updateMiddleWare,
 } from "./middleware";
@@ -243,14 +243,14 @@ export class GameScene extends Phaser.Scene implements Middleware {
 		if (spellId === "damageAura") {
 		}
 	}
-	showDamageToTarget(targetId: string, amount: number, color: string = "red") {
+	showDamageToTarget(targetId: string, amount: number, color = "red") {
 		const target = this.children.getByName(targetId);
 		if (target instanceof Phaser.GameObjects.Sprite) {
 			this.showDamage(amount, target, color);
 			target.emit("takeDamage", amount);
 		}
 	}
-	showDamage(amount: number, position: Position, color: string = "red") {
+	showDamage(amount: number, position: Position, color = "red") {
 		const amountWithScale = Math.round(amount * NUMBER_SCALE);
 		const text = this.add.text(
 			position.x,

@@ -1,9 +1,9 @@
 import Phaser from "phaser";
 import { SCREEN_WIDTH, SCREEN_HEIGHT } from "../common/constants";
-import EventSystem from "../common/EventSystem";
-import { ClientGameState } from "../common/types";
+import type EventSystem from "../common/EventSystem";
+import type { ClientGameState } from "../common/types";
 import { GameScene } from "./GameScene";
-import { GameFrontend, FrontendGameScene } from "./middleware";
+import type { GameFrontend, FrontendGameScene } from "./middleware";
 
 export const colorFromDamageType = (damageType: string) => {
 	switch (damageType) {

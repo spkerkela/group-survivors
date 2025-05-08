@@ -1,4 +1,4 @@
-import { LevelData } from "../../server/GameServer";
+import type { LevelData } from "../../server/GameServer";
 
 export const levelData: LevelData = {
 	name: "Level 1",

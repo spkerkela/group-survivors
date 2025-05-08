@@ -1,11 +1,11 @@
 import { spellDB } from "../common/data";
-import { PowerUp } from "../common/types";
+import type { PowerUp } from "../common/types";
 import { useAppSelector, useAppDispatch } from "./hooks";
 import { set } from "./state/userNameSlice";
 
 export default function UI() {
 	const game = useAppSelector((state) => state.game);
-	const ui = (function () {
+	const ui = (() => {
 		switch (game.state) {
 			case "lobby":
 				return <JoinGame />;
@@ -34,7 +34,7 @@ function SpellPowerUp({
 	spellId: string;
 }) {
 	const spell = spellDB[spellId];
-	const powerUpTitle = (function () {
+	const powerUpTitle = (() => {
 		switch (powerUp.type) {
 			case "damage":
 				return "Damage";
@@ -48,7 +48,7 @@ function SpellPowerUp({
 	})();
 
 	const valueAsPercentage = (powerUp.value * 100).toFixed(2);
-	const description = (function (spellName: string) {
+	const description = ((spellName: string) => {
 		switch (powerUp.type) {
 			case "damage":
 				return `Increases ${spellName} damage by ${valueAsPercentage}%`;

@@ -1,13 +1,13 @@
-import { State } from "../../common/StateMachine";
-import { PowerUp } from "../../common/types";
+import type { State } from "../../common/StateMachine";
+import type { PowerUp } from "../../common/types";
 import { castSpell } from "../game-logic/spells";
-import { SpellStateData } from "./SpellStateMachine";
+import type { SpellStateData } from "./SpellStateMachine";
 import { SpellCooldownState } from "./SpellCooldownState";
 
 export class CastSpellState implements State<SpellStateData> {
-	cooldown: number = 0;
-	castCount: number = 0;
-	castsDone: number = 0;
+	cooldown = 0;
+	castCount = 0;
+	castsDone = 0;
 	update(
 		dt: number,
 		{ spellData, player, enemies, events }: SpellStateData,

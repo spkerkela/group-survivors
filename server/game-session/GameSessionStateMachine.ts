@@ -1,10 +1,10 @@
-import EventSystem from "../../common/EventSystem";
+import type EventSystem from "../../common/EventSystem";
 import { sanitizeName } from "../../common/shared";
 import StateMachine from "../../common/StateMachine";
-import { MoveUpdate } from "../../common/types";
-import { LevelData } from "../GameServer";
+import type { MoveUpdate } from "../../common/types";
+import type { LevelData } from "../GameServer";
 import logger from "../logger";
-import { ServerScene } from "../ServerScene";
+import type { ServerScene } from "../ServerScene";
 import { PreMatchState } from "./PreMatchState";
 
 export interface StateMachineData {
@@ -59,7 +59,7 @@ export default class GameSessionStateMachine {
 	constructor(
 		scene: ServerScene,
 		levelData: LevelData,
-		playersRequired: number = 2,
+		playersRequired = 2,
 	) {
 		this.data = {
 			scene: scene,

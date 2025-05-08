@@ -1,7 +1,7 @@
-import StateMachine, { State } from "../common/StateMachine";
-import EventSystem from "../common/EventSystem";
-import { ClientGameState } from "../common/types";
-import { GameFrontend } from "./middleware";
+import StateMachine, { type State } from "../common/StateMachine";
+import type EventSystem from "../common/EventSystem";
+import type { ClientGameState } from "../common/types";
+import type { GameFrontend } from "./middleware";
 
 interface ClientState {
 	id: string;
@@ -10,7 +10,7 @@ interface ClientState {
 }
 
 export class DisconnectedState implements State<ClientState> {
-	id: string = "";
+	id = "";
 	update(dt: number, _: ClientState): State<ClientState> {
 		if (this.id !== "") {
 			return new ConnectedState(this.id);
@@ -37,9 +37,9 @@ export class ConnectedState implements State<ClientState> {
 	constructor(id: string) {
 		this.id = id;
 	}
-	receivedMatchBegin: boolean = false;
-	receivedDisconnect: boolean = false;
-	receivedUpdate: boolean = false;
+	receivedMatchBegin = false;
+	receivedDisconnect = false;
+	receivedUpdate = false;
 	update(dt: number, { frontend }: ClientState): State<ClientState> {
 		if (this.receivedDisconnect) {
 			frontend.setScene("lobby");
@@ -74,8 +74,8 @@ export class ConnectedState implements State<ClientState> {
 export class GameLoopState implements State<ClientState> {
 	id: string;
 	gameState: ClientGameState | null = null;
-	endMatchCalled: boolean = false;
-	upgradeCalled: boolean = false;
+	endMatchCalled = false;
+	upgradeCalled = false;
 	constructor(id: string) {
 		this.id = id;
 	}
@@ -118,8 +118,8 @@ export class GameLoopState implements State<ClientState> {
 }
 
 export class UpgradeState implements State<ClientState> {
-	beginMatchCalled: boolean = false;
-	gameOverCalled: boolean = false;
+	beginMatchCalled = false;
+	gameOverCalled = false;
 	gameOverCallback!: () => void;
 	beginMatchCallback!: () => void;
 	id: string;

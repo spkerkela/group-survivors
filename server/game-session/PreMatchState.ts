@@ -1,6 +1,6 @@
-import { State } from "../../common/StateMachine";
+import type { State } from "../../common/StateMachine";
 import { MatchState } from "./MatchState";
-import { StateMachineData } from "./GameSessionStateMachine";
+import type { StateMachineData } from "./GameSessionStateMachine";
 
 export class PreMatchState implements State<StateMachineData> {
 	update(_dt: number, { scene, playersRequired }: StateMachineData) {

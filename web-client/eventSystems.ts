@@ -1,6 +1,6 @@
-import { Socket } from "socket.io-client";
+import type { Socket } from "socket.io-client";
 import EventSystem from "../common/EventSystem";
-import {
+import type {
 	ClientGameState,
 	FromServerEventMap,
 	GameOverData,

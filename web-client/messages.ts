@@ -1,5 +1,5 @@
-import { Socket } from "socket.io-client";
-import {
+import type { Socket } from "socket.io-client";
+import type {
 	FromServerEventMap,
 	MoveUpdate,
 	ToServerEventMap,

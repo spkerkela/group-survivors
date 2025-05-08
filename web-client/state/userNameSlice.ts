@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { sanitizeName } from "../../common/shared";
 
 export const userNameSlice = createSlice({

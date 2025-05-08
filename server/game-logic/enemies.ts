@@ -6,15 +6,15 @@ import {
 } from "../../common/constants";
 import { normalize } from "../../common/math";
 import { randomBetweenExclusive } from "../../common/random";
-import { DamageEvent, Enemy, GameObject, Player } from "../../common/types";
-import QuadTree from "../../common/QuadTree";
+import type { DamageEvent, Enemy, GameObject, Player } from "../../common/types";
+import type QuadTree from "../../common/QuadTree";
 
 export function updateEnemies(
 	enemies: Enemy[],
 	gameObjectQuadTree: QuadTree<GameObject>,
 	deltaTime: number,
 ): DamageEvent[] {
-	let events: DamageEvent[] = [];
+	const events: DamageEvent[] = [];
 	enemies.forEach((enemy) => {
 		if (!enemy.alive) return;
 		const players = gameObjectQuadTree
@@ -43,7 +43,7 @@ export function updateEnemies(
 					return nearest;
 				}
 			},
-			{ distance: Infinity, player: null },
+			{ distance: Number.POSITIVE_INFINITY, player: null },
 		);
 		const { player, distance } = nearestPlayer;
 

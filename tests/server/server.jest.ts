@@ -7,7 +7,7 @@ import { EndMatchState } from "../../server/game-session/EndMatchState";
 import { PreMatchState } from "../../server/game-session/PreMatchState";
 import { MatchState } from "../../server/game-session/MatchState";
 import { createPlayer } from "../../server/game-logic/player";
-import { ClientGameState, GameState } from "../../common/types";
+import { type ClientGameState, GameState } from "../../common/types";
 
 describe("Server", () => {
 	let server: GameServer | null = null;
@@ -19,7 +19,7 @@ describe("Server", () => {
 		});
 		server = new GameServer(serverScene, levelData);
 	});
-	function beginGame(playerCount: number = 1) {
+	function beginGame(playerCount = 1) {
 		for (let i = 0; i < playerCount; i++) {
 			const conn = createTestConnection(serverScene!, `test-id-${i}`);
 			conn.dispatchEvent("join", `Random Name ${i}`);

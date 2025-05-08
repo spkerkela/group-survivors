@@ -1,5 +1,5 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { PowerUp, UpgradeChoice } from "../../common/types";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { PowerUp, type UpgradeChoice } from "../../common/types";
 
 export type UiState = "lobby" | "match" | "upgrade" | "gameOver";
 

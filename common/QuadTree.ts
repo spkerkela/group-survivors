@@ -1,5 +1,5 @@
 import { rectangleContains, rectangleIntersects } from "./math";
-import { Position, Rectangle } from "./types";
+import type { Position, Rectangle } from "./types";
 
 class QuadTreeNode<T extends Position> {
 	private readonly bounds: Rectangle;

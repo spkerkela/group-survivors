@@ -1,7 +1,7 @@
 import { SERVER_UPDATE_RATE } from "../common/constants";
 import { spellDB } from "../common/data";
-import EventSystem from "../common/EventSystem";
-import {
+import type EventSystem from "../common/EventSystem";
+import type {
 	Enemy,
 	ClientGameState,
 	PickUp,

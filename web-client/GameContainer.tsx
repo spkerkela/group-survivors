@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 import parser from "socket.io-msgpack-parser";
 import EventSystem from "../common/EventSystem";
 import { experienceRequiredForLevel, sanitizeName } from "../common/shared";
-import { ClientGameState, UpgradeEvent } from "../common/types";
+import type { ClientGameState, UpgradeEvent } from "../common/types";
 import ClientStateMachine from "./ClientStateMachine";
 import { initServerEventSystem, globalEventSystem } from "./eventSystems";
 import { useAppDispatch } from "./hooks";

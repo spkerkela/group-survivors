@@ -1,4 +1,4 @@
-import { State } from "../../common/StateMachine";
+import type { State } from "../../common/StateMachine";
 import { updateProjectiles } from "../game-logic/projectiles";
 import { updatePickUps } from "../game-logic/pickUps";
 import { addSpellToPlayer, updateSpells } from "../game-logic/spells";
@@ -11,22 +11,22 @@ import {
 import { generateId } from "../id-generator";
 import Spawner from "../Spawner";
 import { chooseRandom } from "../../common/random";
-import { Logger } from "winston";
+import type { Logger } from "winston";
 import logger from "../logger";
 import { spellDB } from "../../common/data";
-import { StateMachineData } from "./GameSessionStateMachine";
+import type { StateMachineData } from "./GameSessionStateMachine";
 import { UpgradeState } from "./UpgradeState";
 import { EndMatchState } from "./EndMatchState";
-import {
+import type {
 	InputState,
 	MoveUpdate,
 	Position,
 	SpellProjectileEvent,
 } from "../../common/types";
 import { normalize } from "../../common/math";
-import EventSystem from "../../common/EventSystem";
+import type EventSystem from "../../common/EventSystem";
 import { sanitizeName } from "../../common/shared";
-import { ServerScene } from "../ServerScene";
+import type { ServerScene } from "../ServerScene";
 
 export function createMoveUpdate(inputState: InputState): Position {
 	const { up, down, left, right } = inputState;
@@ -37,7 +37,7 @@ export function createMoveUpdate(inputState: InputState): Position {
 
 export class MatchState implements State<StateMachineData> {
 	spawner: Spawner | null = null;
-	spawnTicker: number = 0;
+	spawnTicker = 0;
 	matchLogger: Logger;
 	wave: number;
 	timer: number;

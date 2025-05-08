@@ -1,4 +1,4 @@
-import StateMachine, { State } from "../../common/StateMachine";
+import StateMachine, { type State } from "../../common/StateMachine";
 
 class FirstState implements State<number> {
 	update(dt: number, data: number): State<number> {
@@ -12,8 +12,8 @@ class FirstState implements State<number> {
 }
 
 class SecondState implements State<number> {
-	calledEnter: boolean = false;
-	calledExit: boolean = false;
+	calledEnter = false;
+	calledExit = false;
 	update(dt: number, data: number): State<number> {
 		if (data > 10) {
 			return new FirstState();

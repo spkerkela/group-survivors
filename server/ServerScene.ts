@@ -1,18 +1,18 @@
 import QuadTree from "../common/QuadTree";
 import {
-	GameObject,
-	ClientGameState,
+	type GameObject,
+	type ClientGameState,
 	isEnemy,
 	isPickUp,
 	isPlayer,
 	isProjectile,
 	isStaticObject,
-	PlayerUpdate,
-	Player,
+	type PlayerUpdate,
+	type Player,
 	PowerUp,
-	UpgradeChoice,
+	type UpgradeChoice,
 } from "../common/types";
-import { ServerEventSystems } from "./eventSystems";
+import type { ServerEventSystems } from "./eventSystems";
 import {
 	GAME_HEIGHT,
 	GAME_WIDTH,
@@ -20,13 +20,13 @@ import {
 	SCREEN_WIDTH,
 } from "../common/constants";
 import { generateId } from "./id-generator";
-import { LevelData } from "./GameServer";
+import type { LevelData } from "./GameServer";
 import {
 	chooseRandom,
 	randomBetweenExclusive,
 	randomPowerUp,
 } from "../common/random";
-import { PlayerMatchState, ServerGameState, ServerPlayer } from "./types";
+import type { PlayerMatchState, ServerGameState, ServerPlayer } from "./types";
 import { spellDB } from "../common/data";
 import logger from "./logger";
 import { addSpellToPlayer } from "./game-logic/spells";
@@ -190,22 +190,21 @@ export class ServerScene {
 	}
 
 	updateQuadTree() {
-		const scene = this;
-		scene.gameObjectQuadTree.clear();
-		scene.gameState.players.forEach((player) => {
-			scene.gameObjectQuadTree.insert(player);
+		this.gameObjectQuadTree.clear();
+		this.gameState.players.forEach((player) => {
+			this.gameObjectQuadTree.insert(player);
 		});
-		scene.gameState.enemies.forEach((enemy) => {
-			scene.gameObjectQuadTree.insert(enemy);
+		this.gameState.enemies.forEach((enemy) => {
+			this.gameObjectQuadTree.insert(enemy);
 		});
-		scene.gameState.pickUps.forEach((gem) => {
-			scene.gameObjectQuadTree.insert(gem);
+		this.gameState.pickUps.forEach((gem) => {
+			this.gameObjectQuadTree.insert(gem);
 		});
-		scene.gameState.projectiles.forEach((projectile) => {
-			scene.gameObjectQuadTree.insert(projectile);
+		this.gameState.projectiles.forEach((projectile) => {
+			this.gameObjectQuadTree.insert(projectile);
 		});
-		scene.gameState.staticObjects.forEach((staticObject) => {
-			scene.gameObjectQuadTree.insert(staticObject);
+		this.gameState.staticObjects.forEach((staticObject) => {
+			this.gameObjectQuadTree.insert(staticObject);
 		});
 	}
 
@@ -256,7 +255,7 @@ export class ServerScene {
 		};
 		const playerVisibleObjects =
 			this.gameObjectQuadTree.retrieve(visibleRectangle);
-		let gameState: ClientGameState = {
+		const gameState: ClientGameState = {
 			wave: this.gameState.wave,
 			waveSecondsRemaining: this.gameState.waveSecondsRemaining,
 			players: [],

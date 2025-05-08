@@ -1,12 +1,12 @@
-import { ClientGameState } from "../common/types";
-import { GameFrontend } from "./middleware";
-import EventSystem from "../common/EventSystem";
+import type { ClientGameState } from "../common/types";
+import type { GameFrontend } from "./middleware";
+import type EventSystem from "../common/EventSystem";
 import { globalEventSystem } from "./eventSystems";
-let pressedKeys: { [key: string]: boolean } = {};
-window.onkeyup = function (e: { keyCode: string | number }) {
+const pressedKeys: { [key: string]: boolean } = {};
+window.onkeyup = (e: { keyCode: string | number }) => {
 	pressedKeys[e.keyCode] = false;
 };
-window.onkeydown = function (e: { keyCode: string | number }) {
+window.onkeydown = (e: { keyCode: string | number }) => {
 	pressedKeys[e.keyCode] = true;
 };
 
@@ -28,7 +28,7 @@ export default class Game {
 
 		frontend.init(this.gameState, serverEventSystem);
 
-		let inputInterval: NodeJS.Timeout | null = null;
+		const inputInterval: NodeJS.Timeout | null = null;
 
 		serverEventSystem.addEventListener(
 			"joined",
