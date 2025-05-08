@@ -3,6 +3,7 @@ dist/
 .parcel-cache/
 .DS_Store
 .idea
+test-results/
 playwright-report/
 coverage/
 
