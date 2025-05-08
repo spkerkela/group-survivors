@@ -1,6 +1,6 @@
 import { spellDB } from "../common/data";
 import type { PowerUp } from "../common/types";
-import { useAppSelector, useAppDispatch } from "./hooks";
+import { useAppDispatch, useAppSelector } from "./hooks";
 import { set } from "./state/userNameSlice";
 
 export default function UI() {

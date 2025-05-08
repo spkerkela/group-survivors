@@ -1,6 +1,6 @@
-import type { SpellData } from "../../common/data";
 import StateMachine from "../../common/StateMachine";
-import type { SpellCastEvent, Enemy, Player } from "../../common/types";
+import type { SpellData } from "../../common/data";
+import type { Enemy, Player, SpellCastEvent } from "../../common/types";
 import { CastSpellState } from "./CastSpellState";
 
 export interface SpellStateData {

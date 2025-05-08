@@ -1,5 +1,5 @@
-import StateMachine, { type State } from "../common/StateMachine";
 import type EventSystem from "../common/EventSystem";
+import StateMachine, { type State } from "../common/StateMachine";
 import type { ClientGameState } from "../common/types";
 import type { GameFrontend } from "./middleware";
 

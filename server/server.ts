@@ -1,14 +1,14 @@
-import express from "express";
 import { createServer } from "http";
-import { Server } from "socket.io";
 import path from "path";
-import { GAME_HEIGHT, GAME_WIDTH } from "../common/constants";
-import { GameServer } from "./GameServer";
+import express from "express";
+import helmet from "helmet";
+import { Server } from "socket.io";
 import parser from "socket.io-msgpack-parser";
 import EventSystem from "../common/EventSystem";
-import { initGameEventSystem, type ServerEventSystems } from "./eventSystems";
+import { GAME_HEIGHT, GAME_WIDTH } from "../common/constants";
+import { GameServer } from "./GameServer";
 import { ServerScene } from "./ServerScene";
-import helmet from "helmet";
+import { type ServerEventSystems, initGameEventSystem } from "./eventSystems";
 import logger from "./logger";
 
 export interface ServerConfig {

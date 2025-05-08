@@ -1,10 +1,10 @@
+import EventSystem from "../../common/EventSystem";
 import ClientStateMachine, {
 	ConnectedState,
 	DisconnectedState,
 	GameLoopState,
 } from "../../web-client/ClientStateMachine";
 import type { GameFrontend } from "../../web-client/middleware";
-import EventSystem from "../../common/EventSystem";
 
 describe("Client State Machine", () => {
 	const testId = "test";

@@ -1,8 +1,8 @@
 import type { State } from "../../common/StateMachine";
-import { EndMatchState } from "./EndMatchState";
-import { MatchState } from "./MatchState";
-import type { StateMachineData } from "./GameSessionStateMachine";
 import logger from "../logger";
+import { EndMatchState } from "./EndMatchState";
+import type { StateMachineData } from "./GameSessionStateMachine";
+import { MatchState } from "./MatchState";
 
 export class UpgradeState implements State<StateMachineData> {
 	wave: number;

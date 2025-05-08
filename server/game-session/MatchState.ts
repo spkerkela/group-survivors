@@ -1,32 +1,32 @@
-import type { State } from "../../common/StateMachine";
-import { updateProjectiles } from "../game-logic/projectiles";
-import { updatePickUps } from "../game-logic/pickUps";
-import { addSpellToPlayer, updateSpells } from "../game-logic/spells";
-import { updateEnemies, removeDeadEnemies } from "../game-logic/enemies";
-import {
-	createPickUp,
-	createPlayer,
-	updatePlayers,
-} from "../game-logic/player";
-import { generateId } from "../id-generator";
-import Spawner from "../Spawner";
-import { chooseRandom } from "../../common/random";
 import type { Logger } from "winston";
-import logger from "../logger";
+import type EventSystem from "../../common/EventSystem";
+import type { State } from "../../common/StateMachine";
 import { spellDB } from "../../common/data";
-import type { StateMachineData } from "./GameSessionStateMachine";
-import { UpgradeState } from "./UpgradeState";
-import { EndMatchState } from "./EndMatchState";
+import { normalize } from "../../common/math";
+import { chooseRandom } from "../../common/random";
+import { sanitizeName } from "../../common/shared";
 import type {
 	InputState,
 	MoveUpdate,
 	Position,
 	SpellProjectileEvent,
 } from "../../common/types";
-import { normalize } from "../../common/math";
-import type EventSystem from "../../common/EventSystem";
-import { sanitizeName } from "../../common/shared";
 import type { ServerScene } from "../ServerScene";
+import Spawner from "../Spawner";
+import { removeDeadEnemies, updateEnemies } from "../game-logic/enemies";
+import { updatePickUps } from "../game-logic/pickUps";
+import {
+	createPickUp,
+	createPlayer,
+	updatePlayers,
+} from "../game-logic/player";
+import { updateProjectiles } from "../game-logic/projectiles";
+import { addSpellToPlayer, updateSpells } from "../game-logic/spells";
+import { generateId } from "../id-generator";
+import logger from "../logger";
+import { EndMatchState } from "./EndMatchState";
+import type { StateMachineData } from "./GameSessionStateMachine";
+import { UpgradeState } from "./UpgradeState";
 
 export function createMoveUpdate(inputState: InputState): Position {
 	const { up, down, left, right } = inputState;

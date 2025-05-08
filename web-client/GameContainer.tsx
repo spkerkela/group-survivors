@@ -5,7 +5,7 @@ import EventSystem from "../common/EventSystem";
 import { experienceRequiredForLevel, sanitizeName } from "../common/shared";
 import type { ClientGameState, UpgradeEvent } from "../common/types";
 import ClientStateMachine from "./ClientStateMachine";
-import { initServerEventSystem, globalEventSystem } from "./eventSystems";
+import { globalEventSystem, initServerEventSystem } from "./eventSystems";
 import { useAppDispatch } from "./hooks";
 import PhaserMiddleware from "./phaser-middleware";
 import { setExperience } from "./state/experienceSlice";

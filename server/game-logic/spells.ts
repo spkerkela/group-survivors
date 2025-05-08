@@ -1,4 +1,6 @@
+import type QuadTree from "../../common/QuadTree";
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from "../../common/constants";
+import { type SpellData, spellDB } from "../../common/data";
 import type {
 	Enemy,
 	GameObject,
@@ -9,10 +11,8 @@ import type {
 	SpellDamageEvent,
 	SpellProjectileEvent,
 } from "../../common/types";
-import { type SpellData, spellDB } from "../../common/data";
-import type QuadTree from "../../common/QuadTree";
-import type { ServerPlayer } from "../types";
 import SpellStateMachine from "../state-machines/SpellStateMachine";
+import type { ServerPlayer } from "../types";
 
 import { normalize } from "../../common/math";
 

@@ -1,4 +1,4 @@
-import type { Rectangle, Position, Circle } from "./types";
+import type { Circle, Position, Rectangle } from "./types";
 
 export function normalize(x: number, y: number) {
 	if (x === 0 && y === 0) return { x: 0, y: 0 };

@@ -1,40 +1,40 @@
 import Phaser from "phaser";
+import type EventSystem from "../common/EventSystem";
 import {
-	GAME_WIDTH,
 	GAME_HEIGHT,
-	SCREEN_WIDTH,
-	SCREEN_HEIGHT,
+	GAME_WIDTH,
 	INVULNERABILITY_SECONDS,
 	NUMBER_SCALE,
+	SCREEN_HEIGHT,
+	SCREEN_WIDTH,
 } from "../common/constants";
-import type EventSystem from "../common/EventSystem";
 import { chooseRandom, randomBetweenExclusive } from "../common/random";
 import type {
-	Enemy,
 	ClientGameState,
+	DamageEvent,
+	Enemy,
+	LevelEvent,
 	PickUp,
 	Player,
 	Position,
 	Projectile,
-	StaticObject,
-	DamageEvent,
-	LevelEvent,
 	SpellDamageEvent,
+	StaticObject,
 } from "../common/types";
 import { assets, sounds, spriteSheets } from "./assets";
 import { globalEventSystem } from "./eventSystems";
 import {
-	instantiatePlayer,
-	removeInvalidGameObjects,
+	type Middleware,
 	destroyPlayer,
-	updateGameObject,
 	instantiateEnemy,
 	instantiatePickUp,
+	instantiatePlayer,
 	instantiateProjectile,
 	instantiateStaticObject,
-	type Middleware,
-	updatePlayer,
+	removeInvalidGameObjects,
+	updateGameObject,
 	updateMiddleWare,
+	updatePlayer,
 } from "./middleware";
 import { colorFromDamageType } from "./phaser-middleware";
 

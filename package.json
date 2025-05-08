@@ -4,6 +4,7 @@
 	"description": "",
 	"scripts": {
 		"server": "tsx --inspect --watch server/index",
+		"lint": "biome check",
 		"build-client": "parcel build web-client/index.html --dist-dir server/dist",
 		"web-client": "parcel web-client/index.html --dist-dir server/dist",
 		"test": "playwright test",
@@ -20,6 +21,7 @@
 	},
 	"homepage": "https://github.com/spkerkela/group-survivors#readme",
 	"devDependencies": {
+		"@biomejs/biome": "1.9.4",
 		"@playwright/test": "^1.29.1",
 		"@types/express": "^5.0.0",
 		"@types/react-dom": "^19.0.0",

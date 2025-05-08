@@ -1,6 +1,6 @@
 import type { State } from "../../common/StateMachine";
-import { PreMatchState } from "./PreMatchState";
 import type { StateMachineData } from "./GameSessionStateMachine";
+import { PreMatchState } from "./PreMatchState";
 
 export class EndMatchState implements State<StateMachineData> {
 	timeRemaining: number;

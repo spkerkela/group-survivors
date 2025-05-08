@@ -1,13 +1,13 @@
+import EventSystem from "../../common/EventSystem";
+import { type ClientGameState, GameState } from "../../common/types";
 import { GameServer } from "../../server/GameServer";
 import { ServerScene } from "../../server/ServerScene";
-import EventSystem from "../../common/EventSystem";
-import { levelData } from "./fixtures";
-import { createTestConnection } from "./connectionUtils";
-import { EndMatchState } from "../../server/game-session/EndMatchState";
-import { PreMatchState } from "../../server/game-session/PreMatchState";
-import { MatchState } from "../../server/game-session/MatchState";
 import { createPlayer } from "../../server/game-logic/player";
-import { type ClientGameState, GameState } from "../../common/types";
+import { EndMatchState } from "../../server/game-session/EndMatchState";
+import { MatchState } from "../../server/game-session/MatchState";
+import { PreMatchState } from "../../server/game-session/PreMatchState";
+import { createTestConnection } from "./connectionUtils";
+import { levelData } from "./fixtures";
 
 describe("Server", () => {
 	let server: GameServer | null = null;

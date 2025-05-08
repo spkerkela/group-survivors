@@ -1,3 +1,4 @@
+import type QuadTree from "../../common/QuadTree";
 import {
 	INVULNERABILITY_SECONDS,
 	PLAYER_SIZE,
@@ -6,8 +7,12 @@ import {
 } from "../../common/constants";
 import { normalize } from "../../common/math";
 import { randomBetweenExclusive } from "../../common/random";
-import type { DamageEvent, Enemy, GameObject, Player } from "../../common/types";
-import type QuadTree from "../../common/QuadTree";
+import type {
+	DamageEvent,
+	Enemy,
+	GameObject,
+	Player,
+} from "../../common/types";
 
 export function updateEnemies(
 	enemies: Enemy[],

@@ -1,4 +1,7 @@
+import type QuadTree from "../../common/QuadTree";
 import { PLAYER_SIZE } from "../../common/constants";
+import { pickUpDB } from "../../common/data";
+import { experienceRequiredForLevel } from "../../common/shared";
 import type {
 	GameObject,
 	LevelEvent,
@@ -6,9 +9,6 @@ import type {
 	PickUpEvent,
 	Player,
 } from "../../common/types";
-import { pickUpDB } from "../../common/data";
-import type QuadTree from "../../common/QuadTree";
-import { experienceRequiredForLevel } from "../../common/shared";
 
 export function checkPlayerExperience(player: Player): boolean {
 	const nextLevel = player.level + 1;

@@ -1,11 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
-import levelReducer from "../state/levelSlice";
-import userNameReducer from "../state/userNameSlice";
-import gameReducer from "../state/gameSlice";
 import experienceReducer from "../state/experienceSlice";
+import gameReducer from "../state/gameSlice";
 import goldReducer from "../state/goldSlice";
 import healthReducer from "../state/healthSlice";
+import levelReducer from "../state/levelSlice";
 import upgradeChoiceReducer from "../state/upgradeChoicesSlice";
+import userNameReducer from "../state/userNameSlice";
 
 const store = configureStore({
 	reducer: {

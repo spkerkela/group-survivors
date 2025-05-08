@@ -1,8 +1,8 @@
 import type { State } from "../../common/StateMachine";
 import type { PowerUp } from "../../common/types";
 import { castSpell } from "../game-logic/spells";
-import type { SpellStateData } from "./SpellStateMachine";
 import { SpellCooldownState } from "./SpellCooldownState";
+import type { SpellStateData } from "./SpellStateMachine";
 
 export class CastSpellState implements State<SpellStateData> {
 	cooldown = 0;

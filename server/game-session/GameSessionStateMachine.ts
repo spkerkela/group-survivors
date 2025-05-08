@@ -1,10 +1,10 @@
 import type EventSystem from "../../common/EventSystem";
-import { sanitizeName } from "../../common/shared";
 import StateMachine from "../../common/StateMachine";
+import { sanitizeName } from "../../common/shared";
 import type { MoveUpdate } from "../../common/types";
 import type { LevelData } from "../GameServer";
-import logger from "../logger";
 import type { ServerScene } from "../ServerScene";
+import logger from "../logger";
 import { PreMatchState } from "./PreMatchState";
 
 export interface StateMachineData {
@@ -56,11 +56,7 @@ export default class GameSessionStateMachine {
 		connection.addEventListener("disconnect", this.callbacks.disconnect[id]);
 		connection.addEventListener("join", this.callbacks.join[id]);
 	};
-	constructor(
-		scene: ServerScene,
-		levelData: LevelData,
-		playersRequired = 2,
-	) {
+	constructor(scene: ServerScene, levelData: LevelData, playersRequired = 2) {
 		this.data = {
 			scene: scene,
 			levelData,

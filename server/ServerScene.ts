@@ -1,36 +1,36 @@
 import QuadTree from "../common/QuadTree";
 import {
-	type GameObject,
-	type ClientGameState,
-	isEnemy,
-	isPickUp,
-	isPlayer,
-	isProjectile,
-	isStaticObject,
-	type PlayerUpdate,
-	type Player,
-	PowerUp,
-	type UpgradeChoice,
-} from "../common/types";
-import type { ServerEventSystems } from "./eventSystems";
-import {
 	GAME_HEIGHT,
 	GAME_WIDTH,
 	SCREEN_HEIGHT,
 	SCREEN_WIDTH,
 } from "../common/constants";
-import { generateId } from "./id-generator";
-import type { LevelData } from "./GameServer";
+import { spellDB } from "../common/data";
 import {
 	chooseRandom,
 	randomBetweenExclusive,
 	randomPowerUp,
 } from "../common/random";
-import type { PlayerMatchState, ServerGameState, ServerPlayer } from "./types";
-import { spellDB } from "../common/data";
-import logger from "./logger";
-import { addSpellToPlayer } from "./game-logic/spells";
+import {
+	type ClientGameState,
+	type GameObject,
+	type Player,
+	type PlayerUpdate,
+	PowerUp,
+	type UpgradeChoice,
+	isEnemy,
+	isPickUp,
+	isPlayer,
+	isProjectile,
+	isStaticObject,
+} from "../common/types";
+import type { LevelData } from "./GameServer";
+import type { ServerEventSystems } from "./eventSystems";
 import { createPlayer } from "./game-logic/player";
+import { addSpellToPlayer } from "./game-logic/spells";
+import { generateId } from "./id-generator";
+import logger from "./logger";
+import type { PlayerMatchState, ServerGameState, ServerPlayer } from "./types";
 
 export class ServerScene {
 	gameObjectQuadTree: QuadTree<GameObject>;

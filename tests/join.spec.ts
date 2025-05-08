@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test("attempting to join game with no name shows error", async ({ page }) => {
 	await page.goto("/");

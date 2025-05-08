@@ -1,15 +1,15 @@
 import type { Server, Socket } from "socket.io";
 import EventSystem from "../common/EventSystem";
 import type {
+	ClientGameState,
+	DamageEvent,
 	FromServerEventMap,
 	GameOverData,
-	ClientGameState,
-	MoveUpdate,
-	ToServerEventMap,
-	DamageEvent,
 	LevelEvent,
+	MoveUpdate,
 	SpellDamageEvent,
 	SpellProjectileEvent,
+	ToServerEventMap,
 	UpgradeEvent,
 } from "../common/types";
 

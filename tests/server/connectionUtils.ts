@@ -1,5 +1,5 @@
-import type { ServerScene } from "../../server/ServerScene";
 import EventSystem from "../../common/EventSystem";
+import type { ServerScene } from "../../server/ServerScene";
 
 export function createTestConnection(
 	serverScene: ServerScene,

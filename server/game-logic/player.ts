@@ -1,6 +1,12 @@
 import { GAME_HEIGHT, GAME_WIDTH } from "../../common/constants";
 import { pickUpDB } from "../../common/data";
-import type { PickUp, Player, Position, PowerUp, Updates } from "../../common/types";
+import type {
+	PickUp,
+	Player,
+	Position,
+	PowerUp,
+	Updates,
+} from "../../common/types";
 import type { ServerPlayer } from "../types";
 import { updateBots } from "./bots";
 
