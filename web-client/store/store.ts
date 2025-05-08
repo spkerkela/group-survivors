@@ -8,15 +8,15 @@ import upgradeChoiceReducer from "../state/upgradeChoicesSlice";
 import userNameReducer from "../state/userNameSlice";
 
 const store = configureStore({
-	reducer: {
-		level: levelReducer,
-		userName: userNameReducer,
-		game: gameReducer,
-		experience: experienceReducer,
-		health: healthReducer,
-		gold: goldReducer,
-		upgradeChoices: upgradeChoiceReducer,
-	},
+  reducer: {
+    level: levelReducer,
+    userName: userNameReducer,
+    game: gameReducer,
+    experience: experienceReducer,
+    health: healthReducer,
+    gold: goldReducer,
+    upgradeChoices: upgradeChoiceReducer,
+  },
 });
 
 export default store;

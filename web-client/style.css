@@ -1,192 +1,192 @@
 body {
-	background-color: #170332;
-	color: #ffffff;
-	font-family: "Courier New", Courier, monospace;
-	font-size: 14px;
-	line-height: 1.42857143;
-	margin: 0;
+  background-color: #170332;
+  color: #ffffff;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 14px;
+  line-height: 1.42857143;
+  margin: 0;
 }
 
 h1 {
-	text-align: center;
+  text-align: center;
 }
 
 #canvas,
 #ui {
-	margin-top: 100px;
-	margin-left: auto;
-	margin-right: auto;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	height: 600px;
-	width: 800px;
-	text-align: center;
-	position: absolute;
+  margin-top: 100px;
+  margin-left: auto;
+  margin-right: auto;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 600px;
+  width: 800px;
+  text-align: center;
+  position: absolute;
 }
 
 #name {
-	display: block;
-	margin: auto;
-	margin-top: 10px;
-	margin-bottom: 10px;
+  display: block;
+  margin: auto;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 #error {
-	display: block;
-	margin: auto;
-	margin-top: 10px;
-	margin-bottom: 10px;
-	color: #ff0000;
-	text-align: center;
+  display: block;
+  margin: auto;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  color: #ff0000;
+  text-align: center;
 }
 
 #start {
-	display: block;
-	margin: auto;
-	margin-top: 10px;
-	margin-bottom: 10px;
+  display: block;
+  margin: auto;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 .bars {
-	display: flex;
-	flex-direction: column;
-	justify-content: space-between;
-	width: 25%;
-	margin-top: 10px;
-	margin-left: 10px;
-	gap: 3px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 25%;
+  margin-top: 10px;
+  margin-left: 10px;
+  gap: 3px;
 }
 
 .bar-outer {
-	position: relative;
-	background-color: rgba(0, 0, 0, 0.5);
-	border: 1px solid #ffffff;
-	height: 20px;
-	margin: auto;
-	width: 100%;
+  position: relative;
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 1px solid #ffffff;
+  height: 20px;
+  margin: auto;
+  width: 100%;
 }
 
 .bar-inner {
-	transition: width 0.25s ease-in-out;
-	height: 100%;
-	width: 0%;
+  transition: width 0.25s ease-in-out;
+  height: 100%;
+  width: 0%;
 }
 
 .bar-container-text {
-	position: absolute;
-	left: 0;
-	right: 0;
-	height: 100%;
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 100%;
 }
 
 #bar-container-text-align-center {
-	display: flex;
-	height: 100%;
-	justify-content: center;
-	align-items: center;
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
 }
 
 #gold {
-	color: #ffff00;
+  color: #ffff00;
 }
 
 .match-ui {
-	display: flex;
-	flex-direction: column;
-	height: 600px;
+  display: flex;
+  flex-direction: column;
+  height: 600px;
 }
 
 .match-status {
-	margin-top: auto;
-	text-align: left;
-	margin-left: 10px;
-	margin-bottom: 10px;
-	background-color: rgba(0, 0, 0, 0.5);
-	width: 20%;
-	padding: 6px;
-	border-radius: 10px;
-	border: 1px solid #ffffff;
+  margin-top: auto;
+  text-align: left;
+  margin-left: 10px;
+  margin-bottom: 10px;
+  background-color: rgba(0, 0, 0, 0.5);
+  width: 20%;
+  padding: 6px;
+  border-radius: 10px;
+  border: 1px solid #ffffff;
 }
 
 .join-game-container {
-	margin: auto;
-	background-color: rgba(0, 0, 0, 0.5);
-	width: 40%;
-	padding: 6px;
-	border-radius: 10px;
-	border: 1px solid #ffffff;
+  margin: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+  width: 40%;
+  padding: 6px;
+  border-radius: 10px;
+  border: 1px solid #ffffff;
 }
 
 .power-up-card {
-	cursor: pointer;
-	padding: 10px;
-	display: flex;
-	background-color: rgba(0, 0, 0, 0.5);
-	border-radius: 10px;
-	border: 1px solid #ffffff;
-	flex-direction: column;
-	justify-content: space-between;
-	width: 25%;
-	height: 30%;
-	margin-top: 10px;
-	margin-left: 10px;
-	gap: 3px;
+  cursor: pointer;
+  padding: 10px;
+  display: flex;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 10px;
+  border: 1px solid #ffffff;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 25%;
+  height: 30%;
+  margin-top: 10px;
+  margin-left: 10px;
+  gap: 3px;
 }
 
 .power-up-card-title {
-	text-align: center;
-	color: #ffff00;
-	font-weight: bold;
+  text-align: center;
+  color: #ffff00;
+  font-weight: bold;
 }
 
 .upgrade-ui {
-	display: flex;
-	flex-direction: row;
-	height: 600px;
-	justify-content: space-around;
-	align-items: center;
+  display: flex;
+  flex-direction: row;
+  height: 600px;
+  justify-content: space-around;
+  align-items: center;
 }
 
 .button {
-	background-color: #a70000;
-	border: none;
-	border-radius: 0;
-	color: #fff;
-	font-size: 24px;
-	padding: 10px 20px;
-	text-align: center;
-	text-decoration: none;
-	text-shadow: 1px 1px 0px #000;
-	box-shadow:
-		inset 0px 1px 0px #e83434, inset 0px -1px 0px #6b0000,
-		inset 1px 0px 0px #e83434, inset -1px 0px 0px #6b0000,
-		0px 2px 5px rgba(0, 0, 0, 0.3);
-	transition: all 0.3s ease;
-	position: relative;
+  background-color: #a70000;
+  border: none;
+  border-radius: 0;
+  color: #fff;
+  font-size: 24px;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  text-shadow: 1px 1px 0px #000;
+  box-shadow:
+    inset 0px 1px 0px #e83434, inset 0px -1px 0px #6b0000,
+    inset 1px 0px 0px #e83434, inset -1px 0px 0px #6b0000,
+    0px 2px 5px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
 }
 
 .button:after {
-	content: "";
-	position: absolute;
-	top: 2px;
-	right: 2px;
-	bottom: 2px;
-	left: 2px;
-	border: 1px solid #870000;
-	border-radius: 0;
-	z-index: -1;
+  content: "";
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  bottom: 2px;
+  left: 2px;
+  border: 1px solid #870000;
+  border-radius: 0;
+  z-index: -1;
 }
 
 .button:hover {
-	background-color: #d62929;
-	box-shadow:
-		inset 0px 1px 0px #ff7777, inset 0px -1px 0px #6b0000,
-		inset 1px 0px 0px #ff7777, inset -1px 0px 0px #6b0000,
-		0px 2px 5px rgba(0, 0, 0, 0.3);
+  background-color: #d62929;
+  box-shadow:
+    inset 0px 1px 0px #ff7777, inset 0px -1px 0px #6b0000,
+    inset 1px 0px 0px #ff7777, inset -1px 0px 0px #6b0000,
+    0px 2px 5px rgba(0, 0, 0, 0.3);
 }
 
 .button:hover:after {
-	border: 1px solid #870000;
+  border: 1px solid #870000;
 }
