@@ -10,13 +10,11 @@ import type {
   Player,
 } from "../../common/types";
 
+// Instead of leveling up immediately, increment pendingLevels
 export function checkPlayerExperience(player: Player): boolean {
-  const nextLevel = player.level + 1;
+  const nextLevel = player.level + player.pendingLevels + 1;
   if (player.experience >= experienceRequiredForLevel(nextLevel)) {
-    const newHp = player.maxHp + 10;
-    player.hp += 10;
-    player.level = nextLevel;
-    player.maxHp = newHp;
+    player.pendingLevels = player.pendingLevels + 1;
     return true;
   }
   return false;
@@ -25,7 +23,7 @@ export function checkPlayerExperience(player: Player): boolean {
 export function updatePickUps(
   pickUps: PickUp[],
   gameObjectQuadTree: QuadTree<GameObject>,
-  deltaTime: number,
+  deltaTime: number
 ): {
   expiredPickUps: string[];
   pickUpEvents: PickUpEvent[];
@@ -55,14 +53,13 @@ export function updatePickUps(
         height: PLAYER_SIZE * 2,
       })
       .filter(
-        (gameObject): gameObject is Player =>
-          gameObject.objectType === "player",
+        (gameObject): gameObject is Player => gameObject.objectType === "player"
       );
 
     players.forEach((player) => {
       if (player.alive) {
         const distance = Math.sqrt(
-          Math.pow(player.x - pickUp.x, 2) + Math.pow(player.y - pickUp.y, 2),
+          Math.pow(player.x - pickUp.x, 2) + Math.pow(player.y - pickUp.y, 2)
         );
 
         if (distance < PLAYER_SIZE) {
@@ -75,16 +72,14 @@ export function updatePickUps(
           } else if (pickUp.type === "hp") {
             player.hp = Math.min(
               player.hp + pickUpDB[pickUp.type].value,
-              player.maxHp,
+              player.maxHp
             );
           } else if (pickUp.type === "gold") {
             player.gold += pickUpDB[pickUp.type].value;
           }
+          // Only increment pendingLevels, don't level up immediately
           while (checkPlayerExperience(player)) {
-            events.levelEvents.push({
-              playerId: player.id,
-              player: player,
-            });
+            // Optionally, notify client of pending level (if needed)
           }
         }
       }

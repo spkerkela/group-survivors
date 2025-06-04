@@ -70,6 +70,7 @@ export interface Player extends GameObject {
   objectType: "player";
   level: number;
   experience: number;
+  pendingLevels: number;
   speed: number;
   maxHp: number;
   hp: number;
@@ -137,6 +138,7 @@ export type FromServerEventMap = {
 };
 
 export type ToServerEventMap = {
+  upgradeSelection: (selected: UpgradeChoice[]) => void;
   connection: (arg0: any) => void;
   join: (name: string) => void;
   move: (moveUpdate: MoveUpdate) => void;

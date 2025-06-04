@@ -19,7 +19,7 @@ import { normalize } from "../../common/math";
 export function updateSpells(
   players: ServerPlayer[],
   gameObjectQuadTree: QuadTree<GameObject>,
-  deltaTime: number,
+  deltaTime: number
 ): SpellCastEvent {
   const events: SpellCastEvent = {
     damageEvents: [],
@@ -36,8 +36,7 @@ export function updateSpells(
           height: SCREEN_HEIGHT,
         })
         .filter(
-          (gameObject): gameObject is Enemy =>
-            gameObject.objectType === "enemy",
+          (gameObject): gameObject is Enemy => gameObject.objectType === "enemy"
         );
 
       Object.keys(player.spells).forEach((spell) => {
@@ -46,7 +45,7 @@ export function updateSpells(
           player.spellSMs[spell] = new SpellStateMachine(
             spellData,
             player,
-            enemies,
+            enemies
           );
         }
 
@@ -66,9 +65,13 @@ export function castSpell(
   spell: string,
   player: Player,
   enemies: Enemy[],
-  powerUps: PowerUp[] = [],
+  powerUps: PowerUp[] = []
 ): SpellCastEvent {
   const spellData = spellDB[spell];
+  // Use the player's powerUps for this spell if not provided
+  const spellPowerUps = powerUps.length
+    ? powerUps
+    : player.powerUps?.[spellData.id] || [];
   const result: SpellCastEvent = {
     damageEvents: [],
     projectileEvents: [],
@@ -81,10 +84,16 @@ export function castSpell(
         player.id,
         player.level,
         enemies,
+        spellPowerUps
       );
       break;
     case "projectile-target":
-      const projectileEvent = shootAtNearestEnemy(spellData, player, enemies);
+      const projectileEvent = shootAtNearestEnemy(
+        spellData,
+        player,
+        enemies,
+        spellPowerUps
+      );
       if (projectileEvent) {
         result.projectileEvents.push(projectileEvent);
       }
@@ -97,7 +106,7 @@ export function castSpell(
 
 export function addSpellToPlayer(
   spellId: string,
-  player: ServerPlayer,
+  player: ServerPlayer
 ): boolean {
   if (player.spells[spellId] != null) {
     return false;
@@ -116,11 +125,12 @@ export function shootAtNearestEnemy(
   spellData: SpellData,
   player: Player,
   enemies: Enemy[],
+  powerUps: PowerUp[] = []
 ): SpellProjectileEvent | null {
   const nearestEnemy = enemies.reduce(
     (nearest: { distance: number; enemy: Enemy | null }, enemy: Enemy) => {
       const distance = Math.sqrt(
-        Math.pow(enemy.x - player.x, 2) + Math.pow(enemy.y - player.y, 2),
+        Math.pow(enemy.x - player.x, 2) + Math.pow(enemy.y - player.y, 2)
       );
       if (enemy.alive && distance < nearest.distance) {
         return { distance, enemy };
@@ -128,12 +138,11 @@ export function shootAtNearestEnemy(
         return nearest;
       }
     },
-    { distance: Number.POSITIVE_INFINITY, enemy: null },
+    { distance: Number.POSITIVE_INFINITY, enemy: null }
   );
   const { enemy, distance } = nearestEnemy;
 
   if (enemy && enemy.alive) {
-    const powerUps = player.powerUps[spellData.id] || [];
     const additionalSpellDamage = powerUps
       .filter((powerUp) => powerUp.type === "damage")
       .map((powerUp) => powerUp.value)
@@ -171,21 +180,27 @@ export function tickAura(
   fromId: string,
   playerLevel: number,
   enemies: Enemy[],
+  powerUps: PowerUp[] = []
 ): SpellDamageEvent[] {
   const enemiesInRange = enemies.filter((enemy) => {
     const distance = Math.sqrt(
-      Math.pow(enemy.x - position.x, 2) + Math.pow(enemy.y - position.y, 2),
+      Math.pow(enemy.x - position.x, 2) + Math.pow(enemy.y - position.y, 2)
     );
     return (
       distance <
       spellData.range * spellData.rangeMultiplier + 0.01 * playerLevel
     );
   });
+  const additionalSpellDamage = powerUps
+    .filter((powerUp) => powerUp.type === "damage")
+    .map((powerUp) => powerUp.value)
+    .reduce((a, b) => a + b, 0);
   return enemiesInRange.map((enemy) => {
     const critical = Math.random() < spellData.critChance + 0.01 * playerLevel;
+    const baseDamage = spellData.baseDamage * (1 + additionalSpellDamage);
     const damage = critical
-      ? spellData.baseDamage * spellData.critMultiplier
-      : spellData.baseDamage;
+      ? baseDamage * spellData.critMultiplier
+      : baseDamage;
     return {
       fromId: fromId,
       targetId: enemy.id,

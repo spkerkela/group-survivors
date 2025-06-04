@@ -1,10 +1,3 @@
-import QuadTree from "../common/QuadTree";
-import {
-  GAME_HEIGHT,
-  GAME_WIDTH,
-  SCREEN_HEIGHT,
-  SCREEN_WIDTH,
-} from "../common/constants";
 import { spellDB } from "../common/data";
 import {
   chooseRandom,
@@ -31,6 +24,13 @@ import { addSpellToPlayer } from "./game-logic/spells";
 import { generateId } from "./id-generator";
 import logger from "./logger";
 import type { PlayerMatchState, ServerGameState, ServerPlayer } from "./types";
+import QuadTree from "../common/QuadTree";
+import {
+  GAME_HEIGHT,
+  GAME_WIDTH,
+  SCREEN_HEIGHT,
+  SCREEN_WIDTH,
+} from "../common/constants";
 
 export class ServerScene {
   gameObjectQuadTree: QuadTree<GameObject>;
@@ -53,7 +53,7 @@ export class ServerScene {
   constructor(eventSystems: ServerEventSystems) {
     this.gameObjectQuadTree = new QuadTree(
       { x: 0, y: 0, width: GAME_WIDTH, height: GAME_HEIGHT },
-      5,
+      5
     );
 
     this.gameState = this.newGameState();
@@ -71,12 +71,22 @@ export class ServerScene {
     this.playerUpgradeChoices = {};
   }
 
+  public clearUpgradeChoices(playerId: string) {
+    if (
+      this.playerUpgradeChoices &&
+      Object.prototype.hasOwnProperty.call(this.playerUpgradeChoices, playerId)
+    ) {
+      this.playerUpgradeChoices[playerId] = [];
+    }
+  }
+
   saveMatchState(player: Player) {
     if (!this.playerMatchStates[player.id]) {
       this.playerMatchStates[player.id] = {
         gold: player.gold,
         experience: player.experience,
         level: player.level,
+        pendingLevels: player.pendingLevels,
         spells: player.spells,
         passives: player.passives,
         maxHp: player.maxHp,
@@ -88,6 +98,7 @@ export class ServerScene {
       matchState.gold = player.gold;
       matchState.experience = player.experience;
       matchState.level = player.level;
+      matchState.pendingLevels = player.pendingLevels;
       matchState.spells = player.spells;
       matchState.passives = player.passives;
       matchState.maxHp = player.maxHp;
@@ -102,6 +113,7 @@ export class ServerScene {
       player.gold = matchState.gold;
       player.experience = matchState.experience;
       player.level = matchState.level;
+      player.pendingLevels = matchState.pendingLevels;
       player.passives = matchState.passives;
       player.maxHp = matchState.maxHp;
       player.hp = matchState.maxHp;
@@ -110,7 +122,7 @@ export class ServerScene {
 
       Object.keys(matchState.spells).forEach((spellId) => {
         logger.info(
-          `Adding spell ${spellId} to player ${player.id} from match state`,
+          `Adding spell ${spellId} to player ${player.id} from match state`
         );
         addSpellToPlayer(spellId, player);
       });
@@ -118,22 +130,31 @@ export class ServerScene {
   }
 
   generateUpgradeChoices(playerId: string) {
+    const player = this.getPlayer(playerId);
+    if (!player || player.pendingLevels <= 0) return;
     const choiceCount = 4;
-    const choices: UpgradeChoice[] = [];
-    for (let i = 0; i < choiceCount; i++) {
-      const spellId = chooseRandom(Object.keys(spellDB));
-      const powerUp = randomPowerUp();
-      const id = generateId("upgrade");
-      choices.push({
-        id: id,
-        powerUp,
-        spellId,
-      });
-    }
     if (!this.playerUpgradeChoices[playerId]) {
       this.playerUpgradeChoices[playerId] = [];
     }
-    this.playerUpgradeChoices[playerId].push(choices);
+    for (let lvl = 0; lvl < player.pendingLevels; lvl++) {
+      const choices: UpgradeChoice[] = [];
+      for (let i = 0; i < choiceCount; i++) {
+        const spellId = chooseRandom(Object.keys(spellDB));
+        const powerUp = randomPowerUp();
+        const id = generateId("upgrade");
+        choices.push({
+          id: id,
+          powerUp,
+          spellId,
+        });
+        logger.info(
+          `Generated upgrade choice for player ${playerId}: ${JSON.stringify(choices[i])}`
+        );
+      }
+      this.playerUpgradeChoices[playerId].push(choices);
+    }
+    // Reset pendingLevels after generating choices
+    player.pendingLevels = 0;
   }
 
   getUpgradeChoices(playerId: string) {
@@ -238,7 +259,7 @@ export class ServerScene {
           });
         }
         this.events[id] = [];
-      },
+      }
     );
   }
 

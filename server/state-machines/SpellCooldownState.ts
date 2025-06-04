@@ -12,9 +12,15 @@ export class SpellCooldownState implements State<SpellStateData> {
     return this;
   }
   enter({ spellData, player }: SpellStateData) {
+    // Apply all cooldown power-ups for this spell (multiplicative)
+    const powerUps = player.powerUps[spellData.id] || [];
+    const cooldownMultiplier = powerUps
+      .filter((pu) => pu.type === "cooldown")
+      .reduce((acc, pu) => acc * (1 - pu.value), 1);
     this.cooldown = Math.max(
-      spellData.cooldown * spellData.cooldownMultiplier - player.level * 0.01,
-      0.01,
+      spellData.cooldown * spellData.cooldownMultiplier * cooldownMultiplier -
+        player.level * 0.01,
+      0.01
     );
   }
 }

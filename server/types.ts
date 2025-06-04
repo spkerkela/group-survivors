@@ -11,6 +11,7 @@ export interface PlayerMatchState {
   passives: { [key: string]: number };
   level: number;
   experience: number;
+  pendingLevels: number;
   maxHp: number;
   powerUps: { [key: string]: PowerUp[] };
   globalPowerUps: PowerUp[];

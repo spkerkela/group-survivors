@@ -6,6 +6,7 @@ import { experienceRequiredForLevel, sanitizeName } from "../common/shared";
 import type { ClientGameState, UpgradeEvent } from "../common/types";
 import ClientStateMachine from "./ClientStateMachine";
 import { globalEventSystem, initServerEventSystem } from "./eventSystems";
+import { setServerEventSystem } from "./serverEventSystem";
 import { useAppDispatch } from "./hooks";
 import PhaserMiddleware from "./phaser-middleware";
 import { setExperience } from "./state/experienceSlice";
@@ -26,6 +27,7 @@ export default function GameContainer() {
     const nameInput = document.getElementById("name") as HTMLInputElement;
 
     const serverEventSystem = initServerEventSystem(new EventSystem(), socket);
+    setServerEventSystem(serverEventSystem);
 
     startButton.onclick = () => {
       if (!nameInput.value || sanitizeName(nameInput.value) === "") {
@@ -49,21 +51,27 @@ export default function GameContainer() {
             experienceRequiredForLevel(player.level + 1) -
             experienceRequiredForLevel(player.level);
 
+          // Clamp experience so the bar never overflows
+          const clampedExperience = Math.max(
+            0,
+            Math.min(experience, experienceToNextLevel)
+          );
+
           dispatch(
             setExperience({
-              currentExperience: experience,
+              currentExperience: clampedExperience,
               experienceToNextLevel,
-            }),
+            })
           );
           dispatch(setGold(player.gold));
           dispatch(
             setHealth({
               currentHealth: player.hp,
               maxHealth: player.maxHp,
-            }),
+            })
           );
         }
-      },
+      }
     );
     serverEventSystem.addEventListener("preMatch", () => {
       dispatch(setState("lobby"));
@@ -80,7 +88,7 @@ export default function GameContainer() {
     });
     const sm = new ClientStateMachine(
       serverEventSystem,
-      new PhaserMiddleware(ref.current!, serverEventSystem),
+      new PhaserMiddleware(ref.current!, serverEventSystem)
     );
     let previousTime = Date.now();
     let deltaTime = 0;

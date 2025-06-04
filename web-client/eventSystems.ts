@@ -8,13 +8,17 @@ import type {
   ToServerEventMap,
   UpgradeEvent,
 } from "../common/types";
-import { sendJoinMessage, sendMoveMessage } from "./messages";
+import {
+  sendJoinMessage,
+  sendMoveMessage,
+  sendUpgradeSelectionMessage,
+} from "./messages";
 
 export const globalEventSystem = new EventSystem();
 
 export function initServerEventSystem(
   serverEventSystem: EventSystem,
-  io: Socket<FromServerEventMap, ToServerEventMap>,
+  io: Socket<FromServerEventMap, ToServerEventMap>
 ) {
   io.on("beginMatch", (gameState: ClientGameState) => {
     serverEventSystem.dispatchEvent("beginMatch", gameState);
@@ -46,6 +50,11 @@ export function initServerEventSystem(
 
   serverEventSystem.addEventListener("join", (name: string) => {
     sendJoinMessage(io, name);
+  });
+
+  // Listen for upgrade selection and send to server
+  serverEventSystem.addEventListener("upgradeSelection", (selected: any) => {
+    sendUpgradeSelectionMessage(io, selected);
   });
 
   io.on("joined", (gameState: ClientGameState) => {
