@@ -139,7 +139,7 @@ export type FromServerEventMap = {
 
 export type ToServerEventMap = {
   upgradeSelection: (selected: UpgradeChoice[]) => void;
-  connection: (arg0: any) => void;
+  connection: (arg0: unknown) => void;
   join: (name: string) => void;
   move: (moveUpdate: MoveUpdate) => void;
 };

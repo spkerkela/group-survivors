@@ -20,7 +20,7 @@ export interface ServerEventSystems {
 
 export function initGameEventSystem(
   eventSystem: EventSystem,
-  io: Server<ToServerEventMap, FromServerEventMap, any>
+  io: Server<ToServerEventMap, FromServerEventMap, any>,
 ) {
   io.on("connection", (socket) => {
     const connectionEventSystem = new EventSystem();
@@ -31,7 +31,7 @@ export function initGameEventSystem(
 
 export function initConnectedClientEventSystem(
   eventSystem: EventSystem,
-  socket: Socket<ToServerEventMap, FromServerEventMap, any>
+  socket: Socket<ToServerEventMap, FromServerEventMap, any>,
 ) {
   socket.on("upgradeSelection", (selected) => {
     eventSystem.dispatchEvent("upgradeSelection", selected);
@@ -66,7 +66,7 @@ export function initConnectedClientEventSystem(
     "projectile",
     (projectile: SpellProjectileEvent) => {
       socket.emit("projectile", projectile);
-    }
+    },
   );
   eventSystem.addEventListener("joined", (gameState: ClientGameState) => {
     socket.emit("joined", gameState);

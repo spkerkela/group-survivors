@@ -1,9 +1,9 @@
 import type { State } from "../../common/StateMachine";
+import { applyPowerUp } from "../game-logic/player";
 import logger from "../logger";
 import { EndMatchState } from "./EndMatchState";
 import type { StateMachineData } from "./GameSessionStateMachine";
 import { MatchState } from "./MatchState";
-import { applyPowerUp } from "../game-logic/player";
 export class UpgradeState implements State<StateMachineData> {
   wave: number;
   countdown = 30;
@@ -38,7 +38,7 @@ export class UpgradeState implements State<StateMachineData> {
         const player = scene.gameState.players.find((p: any) => p.id === id);
         if (player && selections) {
           selections.forEach((choice: any) => {
-            if (choice && choice.spellId && choice.powerUp) {
+            if (choice?.spellId && choice.powerUp) {
               // Apply the upgrade
               const { spellId, powerUp } = choice;
               // Add spell if not present
@@ -63,10 +63,9 @@ export class UpgradeState implements State<StateMachineData> {
       // Advance state
       if (this.wave + 1 >= levelData.waves) {
         return new EndMatchState();
-      } else {
-        logger.info("upgrade state finished");
-        return new MatchState(this.wave + 1);
       }
+      logger.info("upgrade state finished");
+      return new MatchState(this.wave + 1);
     }
     return this;
   }

@@ -6,9 +6,9 @@ import { experienceRequiredForLevel, sanitizeName } from "../common/shared";
 import type { ClientGameState, UpgradeEvent } from "../common/types";
 import ClientStateMachine from "./ClientStateMachine";
 import { globalEventSystem, initServerEventSystem } from "./eventSystems";
-import { setServerEventSystem } from "./serverEventSystem";
 import { useAppDispatch } from "./hooks";
 import PhaserMiddleware from "./phaser-middleware";
+import { setServerEventSystem } from "./serverEventSystem";
 import { setExperience } from "./state/experienceSlice";
 import { setState, setTimeLeft, setWave } from "./state/gameSlice";
 import { setGold } from "./state/goldSlice";
@@ -54,24 +54,24 @@ export default function GameContainer() {
           // Clamp experience so the bar never overflows
           const clampedExperience = Math.max(
             0,
-            Math.min(experience, experienceToNextLevel)
+            Math.min(experience, experienceToNextLevel),
           );
 
           dispatch(
             setExperience({
               currentExperience: clampedExperience,
               experienceToNextLevel,
-            })
+            }),
           );
           dispatch(setGold(player.gold));
           dispatch(
             setHealth({
               currentHealth: player.hp,
               maxHealth: player.maxHp,
-            })
+            }),
           );
         }
-      }
+      },
     );
     serverEventSystem.addEventListener("preMatch", () => {
       dispatch(setState("lobby"));
@@ -88,7 +88,7 @@ export default function GameContainer() {
     });
     const sm = new ClientStateMachine(
       serverEventSystem,
-      new PhaserMiddleware(ref.current!, serverEventSystem)
+      new PhaserMiddleware(ref.current!, serverEventSystem),
     );
     let previousTime = Date.now();
     let deltaTime = 0;
@@ -111,6 +111,6 @@ export default function GameContainer() {
       data-testid="canvas"
       width="800"
       height="600"
-    ></canvas>
+    />
   );
 }

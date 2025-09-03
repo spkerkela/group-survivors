@@ -20,7 +20,7 @@ export class SpellCooldownState implements State<SpellStateData> {
     this.cooldown = Math.max(
       spellData.cooldown * spellData.cooldownMultiplier * cooldownMultiplier -
         player.level * 0.01,
-      0.01
+      0.01,
     );
   }
 }

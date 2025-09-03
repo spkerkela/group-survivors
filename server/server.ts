@@ -1,5 +1,5 @@
-import { createServer } from "http";
-import path from "path";
+import { createServer } from "node:http";
+import path from "node:path";
 import express from "express";
 import helmet from "helmet";
 import { Server } from "socket.io";
@@ -30,7 +30,7 @@ export default function ({ port, host }: ServerConfig) {
           },
         },
         hsts: false,
-      })
+      }),
     );
 
     const httpServer = createServer(app);

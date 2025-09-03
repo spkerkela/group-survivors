@@ -1,3 +1,10 @@
+import QuadTree from "../common/QuadTree";
+import {
+  GAME_HEIGHT,
+  GAME_WIDTH,
+  SCREEN_HEIGHT,
+  SCREEN_WIDTH,
+} from "../common/constants";
 import { spellDB } from "../common/data";
 import {
   chooseRandom,
@@ -24,13 +31,6 @@ import { addSpellToPlayer } from "./game-logic/spells";
 import { generateId } from "./id-generator";
 import logger from "./logger";
 import type { PlayerMatchState, ServerGameState, ServerPlayer } from "./types";
-import QuadTree from "../common/QuadTree";
-import {
-  GAME_HEIGHT,
-  GAME_WIDTH,
-  SCREEN_HEIGHT,
-  SCREEN_WIDTH,
-} from "../common/constants";
 
 export class ServerScene {
   gameObjectQuadTree: QuadTree<GameObject>;
@@ -41,7 +41,7 @@ export class ServerScene {
     playersToRemove: string[];
   };
   private events: {
-    [key: string]: { name: string; data: any }[];
+    [key: string]: { name: string; data: unknown }[];
   };
   private playerMatchStates: { [key: string]: PlayerMatchState };
   private playerUpgradeChoices: { [key: string]: UpgradeChoice[][] };
@@ -53,7 +53,7 @@ export class ServerScene {
   constructor(eventSystems: ServerEventSystems) {
     this.gameObjectQuadTree = new QuadTree(
       { x: 0, y: 0, width: GAME_WIDTH, height: GAME_HEIGHT },
-      5
+      5,
     );
 
     this.gameState = this.newGameState();
@@ -120,12 +120,12 @@ export class ServerScene {
       player.powerUps = matchState.powerUps;
       player.globalPowerUps = matchState.globalPowerUps;
 
-      Object.keys(matchState.spells).forEach((spellId) => {
+      for (const spellId of Object.keys(matchState.spells)) {
         logger.info(
-          `Adding spell ${spellId} to player ${player.id} from match state`
+          `Adding spell ${spellId} to player ${player.id} from match state`,
         );
         addSpellToPlayer(spellId, player);
-      });
+      }
     }
   }
 
@@ -148,7 +148,7 @@ export class ServerScene {
           spellId,
         });
         logger.info(
-          `Generated upgrade choice for player ${playerId}: ${JSON.stringify(choices[i])}`
+          `Generated upgrade choice for player ${playerId}: ${JSON.stringify(choices[i])}`,
         );
       }
       this.playerUpgradeChoices[playerId].push(choices);
@@ -212,24 +212,24 @@ export class ServerScene {
 
   updateQuadTree() {
     this.gameObjectQuadTree.clear();
-    this.gameState.players.forEach((player) => {
+    for (const player of this.gameState.players) {
       this.gameObjectQuadTree.insert(player);
-    });
-    this.gameState.enemies.forEach((enemy) => {
+    }
+    for (const enemy of this.gameState.enemies) {
       this.gameObjectQuadTree.insert(enemy);
-    });
-    this.gameState.pickUps.forEach((gem) => {
+    }
+    for (const gem of this.gameState.pickUps) {
       this.gameObjectQuadTree.insert(gem);
-    });
-    this.gameState.projectiles.forEach((projectile) => {
+    }
+    for (const projectile of this.gameState.projectiles) {
       this.gameObjectQuadTree.insert(projectile);
-    });
-    this.gameState.staticObjects.forEach((staticObject) => {
+    }
+    for (const staticObject of this.gameState.staticObjects) {
       this.gameObjectQuadTree.insert(staticObject);
-    });
+    }
   }
 
-  pushEvent(name: string, playerId: string, data: any) {
+  pushEvent(name: string, playerId: string, data: unknown) {
     if (!this.events[playerId]) return;
     this.events[playerId].push({ name, data });
   }
@@ -251,16 +251,16 @@ export class ServerScene {
   }
 
   sendEvents(): void {
-    Object.entries(this.eventSystems.connectionSystems).forEach(
-      ([id, connection]) => {
-        if (this.events[id] != null) {
-          this.events[id].forEach((e) => {
-            connection.dispatchEvent(e.name, e.data);
-          });
+    for (const [id, connection] of Object.entries(
+      this.eventSystems.connectionSystems,
+    )) {
+      if (this.events[id] != null) {
+        for (const e of this.events[id]) {
+          connection.dispatchEvent(e.name, e.data);
         }
-        this.events[id] = [];
       }
-    );
+      this.events[id] = [];
+    }
   }
 
   createGameStateMessage(id: string): ClientGameState {
@@ -287,7 +287,7 @@ export class ServerScene {
       id: id,
       player: player,
     };
-    playerVisibleObjects.forEach((o) => {
+    for (const o of playerVisibleObjects) {
       if (isPlayer(o)) {
         gameState.players.push(o);
       } else if (isEnemy(o)) {
@@ -299,7 +299,7 @@ export class ServerScene {
       } else if (isStaticObject(o)) {
         gameState.staticObjects.push(o);
       }
-    });
+    }
     if (player && !gameState.players.includes(player)) {
       gameState.players.push(player);
     }
@@ -330,8 +330,8 @@ export class ServerScene {
         y: randomBetweenExclusive(0, GAME_HEIGHT),
       });
     }
-    this.readyToJoin.forEach((p) => {
+    for (const p of this.readyToJoin) {
       this.updates.newPlayers.push(p);
-    });
+    }
   }
 }

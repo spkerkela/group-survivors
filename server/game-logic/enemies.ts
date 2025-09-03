@@ -40,19 +40,18 @@ export function updateEnemies(
         player: Player,
       ) => {
         const distance = Math.sqrt(
-          Math.pow(player.x - enemy.x, 2) + Math.pow(player.y - enemy.y, 2),
+          (player.x - enemy.x) ** 2 + (player.y - enemy.y) ** 2,
         );
         if (player.alive && distance < nearest.distance) {
           return { distance, player };
-        } else {
-          return nearest;
         }
+        return nearest;
       },
       { distance: Number.POSITIVE_INFINITY, player: null },
     );
     const { player, distance } = nearestPlayer;
 
-    if (player && player.alive) {
+    if (player?.alive) {
       if (distance > PLAYER_SIZE) {
         const x = player.x - enemy.x;
         const y = player.y - enemy.y;

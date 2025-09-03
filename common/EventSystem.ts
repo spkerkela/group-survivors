@@ -1,18 +1,21 @@
+// biome-ignore lint/suspicious/noExplicitAny: needed for flexible event callback types
+type EventCallback = (...args: any[]) => void;
+
 export default class EventSystem {
-  private _eventMap: Map<string, Array<Function>>;
+  private _eventMap: Map<string, Array<EventCallback>>;
 
   constructor() {
     this._eventMap = new Map();
   }
 
-  public addEventListener(event: string, callback: Function) {
+  public addEventListener(event: string, callback: EventCallback) {
     if (!this._eventMap.has(event)) {
       this._eventMap.set(event, []);
     }
-    this._eventMap.get(event)!.push(callback);
+    this._eventMap.get(event)?.push(callback);
   }
 
-  public removeEventListener(event: string, callback: Function) {
+  public removeEventListener(event: string, callback: EventCallback) {
     if (this._eventMap.has(event)) {
       const callbacks = this._eventMap.get(event) || [];
       const index = callbacks.indexOf(callback);
@@ -22,12 +25,12 @@ export default class EventSystem {
     }
   }
 
-  public dispatchEvent(event: string, ...args: any[]) {
+  public dispatchEvent(event: string, ...args: unknown[]) {
     if (this._eventMap.has(event)) {
       const callbacks = this._eventMap.get(event) || [];
-      callbacks.forEach((callback) => {
+      for (const callback of callbacks) {
         callback(...args);
-      });
+      }
     }
   }
 }

@@ -13,7 +13,7 @@ import { updateBots } from "./bots";
 export function updatePlayers(
   players: Player[],
   updates: Updates,
-  deltaTime: number
+  deltaTime: number,
 ) {
   players.forEach((player) => {
     const update = updates.moves[player.id];
@@ -34,7 +34,7 @@ export function updatePlayers(
 export function createPlayer(
   id: string,
   name: string,
-  { x, y }: Position
+  { x, y }: Position,
 ): ServerPlayer {
   return {
     id: id,
@@ -61,7 +61,7 @@ export function createPlayer(
 export function createPickUp(
   id: string,
   type: string,
-  { x, y }: Position
+  { x, y }: Position,
 ): PickUp {
   return {
     id: id,
@@ -76,7 +76,7 @@ export function createPickUp(
 export function applyPowerUp(
   player: Player,
   spellId: string,
-  powerUp: PowerUp
+  powerUp: PowerUp,
 ) {
   if (player.powerUps[spellId] == null) {
     player.powerUps[spellId] = [];

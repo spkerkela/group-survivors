@@ -23,7 +23,7 @@ export function checkPlayerExperience(player: Player): boolean {
 export function updatePickUps(
   pickUps: PickUp[],
   gameObjectQuadTree: QuadTree<GameObject>,
-  deltaTime: number
+  deltaTime: number,
 ): {
   expiredPickUps: string[];
   pickUpEvents: PickUpEvent[];
@@ -53,13 +53,14 @@ export function updatePickUps(
         height: PLAYER_SIZE * 2,
       })
       .filter(
-        (gameObject): gameObject is Player => gameObject.objectType === "player"
+        (gameObject): gameObject is Player =>
+          gameObject.objectType === "player",
       );
 
     players.forEach((player) => {
       if (player.alive) {
         const distance = Math.sqrt(
-          Math.pow(player.x - pickUp.x, 2) + Math.pow(player.y - pickUp.y, 2)
+          (player.x - pickUp.x) ** 2 + (player.y - pickUp.y) ** 2,
         );
 
         if (distance < PLAYER_SIZE) {
@@ -72,7 +73,7 @@ export function updatePickUps(
           } else if (pickUp.type === "hp") {
             player.hp = Math.min(
               player.hp + pickUpDB[pickUp.type].value,
-              player.maxHp
+              player.maxHp,
             );
           } else if (pickUp.type === "gold") {
             player.gold += pickUpDB[pickUp.type].value;

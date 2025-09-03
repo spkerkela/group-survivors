@@ -267,7 +267,8 @@ export function updateGameObject<T extends Position>(
   if (gameObject instanceof Phaser.GameObjects.GameObject) {
     updateFn(gameObject, obj);
     return gameObject;
-  } else if (gameObject == null) {
+  }
+  if (gameObject == null) {
     return instantiateFn(scene, obj);
   }
   return null;

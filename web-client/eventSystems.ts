@@ -18,7 +18,7 @@ export const globalEventSystem = new EventSystem();
 
 export function initServerEventSystem(
   serverEventSystem: EventSystem,
-  io: Socket<FromServerEventMap, ToServerEventMap>
+  io: Socket<FromServerEventMap, ToServerEventMap>,
 ) {
   io.on("beginMatch", (gameState: ClientGameState) => {
     serverEventSystem.dispatchEvent("beginMatch", gameState);

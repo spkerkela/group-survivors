@@ -77,7 +77,7 @@ import { serverEventSystem } from "./serverEventSystem";
 function Upgrade() {
   const { choices } = useAppSelector((state) => state.upgradeChoices);
   const [selected, setSelected] = useState<(string | null)[]>(() =>
-    choices.map(() => null)
+    choices.map(() => null),
   );
 
   // Handler for selecting an upgrade for a given level
@@ -93,7 +93,7 @@ function Upgrade() {
   function handleConfirm() {
     // Gather the selected UpgradeChoice objects
     const selectedChoices = choices.map((choiceGroup, idx) =>
-      choiceGroup.find((c) => c.id === selected[idx])
+      choiceGroup.find((c) => c.id === selected[idx]),
     );
     // Only send if all are selected and serverEventSystem is available
     if (selectedChoices.every(Boolean) && serverEventSystem) {
@@ -234,7 +234,7 @@ function HealthBar() {
 
 function ExperienceBar() {
   const { experienceToNextLevel, currentExperience } = useAppSelector(
-    (state) => state.experience
+    (state) => state.experience,
   );
   return (
     <Bar

@@ -32,7 +32,7 @@ export function rectangleIntersects(
 
 export function circleIntersects(circle1: Circle, circle2: Circle) {
   return (
-    Math.pow(circle1.x - circle2.x, 2) + Math.pow(circle1.y - circle2.y, 2) <
-    Math.pow(circle1.radius + circle2.radius, 2)
+    (circle1.x - circle2.x) ** 2 + (circle1.y - circle2.y) ** 2 <
+    (circle1.radius + circle2.radius) ** 2
   );
 }

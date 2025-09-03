@@ -19,7 +19,7 @@ import { normalize } from "../../common/math";
 export function updateSpells(
   players: ServerPlayer[],
   gameObjectQuadTree: QuadTree<GameObject>,
-  deltaTime: number
+  deltaTime: number,
 ): SpellCastEvent {
   const events: SpellCastEvent = {
     damageEvents: [],
@@ -36,7 +36,8 @@ export function updateSpells(
           height: SCREEN_HEIGHT,
         })
         .filter(
-          (gameObject): gameObject is Enemy => gameObject.objectType === "enemy"
+          (gameObject): gameObject is Enemy =>
+            gameObject.objectType === "enemy",
         );
 
       Object.keys(player.spells).forEach((spell) => {
@@ -45,7 +46,7 @@ export function updateSpells(
           player.spellSMs[spell] = new SpellStateMachine(
             spellData,
             player,
-            enemies
+            enemies,
           );
         }
 
@@ -65,7 +66,7 @@ export function castSpell(
   spell: string,
   player: Player,
   enemies: Enemy[],
-  powerUps: PowerUp[] = []
+  powerUps: PowerUp[] = [],
 ): SpellCastEvent {
   const spellData = spellDB[spell];
   // Use the player's powerUps for this spell if not provided
@@ -84,20 +85,21 @@ export function castSpell(
         player.id,
         player.level,
         enemies,
-        spellPowerUps
+        spellPowerUps,
       );
       break;
-    case "projectile-target":
+    case "projectile-target": {
       const projectileEvent = shootAtNearestEnemy(
         spellData,
         player,
         enemies,
-        spellPowerUps
+        spellPowerUps,
       );
       if (projectileEvent) {
         result.projectileEvents.push(projectileEvent);
       }
       break;
+    }
     default:
       return result;
   }
@@ -106,7 +108,7 @@ export function castSpell(
 
 export function addSpellToPlayer(
   spellId: string,
-  player: ServerPlayer
+  player: ServerPlayer,
 ): boolean {
   if (player.spells[spellId] != null) {
     return false;
@@ -125,24 +127,23 @@ export function shootAtNearestEnemy(
   spellData: SpellData,
   player: Player,
   enemies: Enemy[],
-  powerUps: PowerUp[] = []
+  powerUps: PowerUp[] = [],
 ): SpellProjectileEvent | null {
   const nearestEnemy = enemies.reduce(
     (nearest: { distance: number; enemy: Enemy | null }, enemy: Enemy) => {
       const distance = Math.sqrt(
-        Math.pow(enemy.x - player.x, 2) + Math.pow(enemy.y - player.y, 2)
+        (enemy.x - player.x) ** 2 + (enemy.y - player.y) ** 2,
       );
       if (enemy.alive && distance < nearest.distance) {
         return { distance, enemy };
-      } else {
-        return nearest;
       }
+      return nearest;
     },
-    { distance: Number.POSITIVE_INFINITY, enemy: null }
+    { distance: Number.POSITIVE_INFINITY, enemy: null },
   );
   const { enemy, distance } = nearestEnemy;
 
-  if (enemy && enemy.alive) {
+  if (enemy?.alive) {
     const additionalSpellDamage = powerUps
       .filter((powerUp) => powerUp.type === "damage")
       .map((powerUp) => powerUp.value)
@@ -180,11 +181,11 @@ export function tickAura(
   fromId: string,
   playerLevel: number,
   enemies: Enemy[],
-  powerUps: PowerUp[] = []
+  powerUps: PowerUp[] = [],
 ): SpellDamageEvent[] {
   const enemiesInRange = enemies.filter((enemy) => {
     const distance = Math.sqrt(
-      Math.pow(enemy.x - position.x, 2) + Math.pow(enemy.y - position.y, 2)
+      (enemy.x - position.x) ** 2 + (enemy.y - position.y) ** 2,
     );
     return (
       distance <

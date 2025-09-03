@@ -35,8 +35,7 @@ export function updateProjectiles(
     enemies.forEach((enemy) => {
       if (enemy.alive) {
         const distance = Math.sqrt(
-          Math.pow(enemy.x - projectile.x, 2) +
-            Math.pow(enemy.y - projectile.y, 2),
+          (enemy.x - projectile.x) ** 2 + (enemy.y - projectile.y) ** 2,
         );
         if (distance < ENEMY_SIZE) {
           // an enemy can only be hit once per projectile
