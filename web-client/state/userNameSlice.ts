@@ -1,20 +1,22 @@
 import { type PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { sanitizeName } from "../../common/shared";
 
+const EMPTY_NAME_ERROR = "Please enter a name";
+
+function getErrorMessage(name: string) {
+  return sanitizeName(name) === "" ? EMPTY_NAME_ERROR : "";
+}
+
 export const userNameSlice = createSlice({
   name: "userName",
   initialState: {
     userName: "",
-    error: "",
+    error: getErrorMessage(""),
   },
   reducers: {
     set: (state, action: PayloadAction<string>) => {
       const newName = action.payload;
-      if (sanitizeName(newName) === "") {
-        state.error = "Please enter a name";
-      } else {
-        state.error = "";
-      }
+      state.error = getErrorMessage(newName);
       state.userName = action.payload;
     },
   },
