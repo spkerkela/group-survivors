@@ -1,7 +1,15 @@
+import {
+  type ChangeEvent,
+  type KeyboardEvent,
+  useEffect,
+  useState,
+} from "react";
 import { spellDB } from "../common/data";
 import type { PowerUp } from "../common/types";
+import { globalEventSystem } from "./eventSystems";
 import { useAppDispatch, useAppSelector } from "./hooks";
-import { set } from "./state/userNameSlice";
+import { serverEventSystem } from "./serverEventSystem";
+import { reset, set } from "./state/userNameSlice";
 
 export default function UI() {
   const game = useAppSelector((state) => state.game);
@@ -70,9 +78,6 @@ function SpellPowerUp({
     </div>
   );
 }
-
-import { useState } from "react";
-import { serverEventSystem } from "./serverEventSystem";
 
 function Upgrade() {
   const { choices } = useAppSelector((state) => state.upgradeChoices);
@@ -147,8 +152,55 @@ function Upgrade() {
 }
 
 function JoinGame() {
-  const userName = useAppSelector((state) => state.userName);
   const dispatch = useAppDispatch();
+  const { input, sanitized, error, isValid } = useAppSelector(
+    (state) => state.userName,
+  );
+  const [isJoinLocked, setIsJoinLocked] = useState(false);
+
+  useEffect(() => {
+    const handleDisable = () => {
+      setIsJoinLocked(true);
+    };
+    const handleEnable = () => {
+      setIsJoinLocked(false);
+      dispatch(reset());
+    };
+
+    globalEventSystem.addEventListener("disableJoinUI", handleDisable);
+    globalEventSystem.addEventListener("enableJoinUI", handleEnable);
+
+    return () => {
+      globalEventSystem.removeEventListener("disableJoinUI", handleDisable);
+      globalEventSystem.removeEventListener("enableJoinUI", handleEnable);
+    };
+  }, [dispatch]);
+
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    dispatch(set(event.target.value));
+  };
+
+  const submitJoinRequest = () => {
+    if (!isValid || isJoinLocked || sanitized === "") {
+      return;
+    }
+
+    if (serverEventSystem) {
+      serverEventSystem.dispatchEvent("join", sanitized);
+      globalEventSystem.dispatchEvent("disableJoinUI");
+      setIsJoinLocked(true);
+    }
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      submitJoinRequest();
+    }
+  };
+
+  const isStartDisabled = !isValid || isJoinLocked;
+
   return (
     <div className="join-game-container">
       <input
@@ -157,16 +209,21 @@ function JoinGame() {
         data-testid="name"
         type="text"
         placeholder="Name"
-        onChange={(e) => dispatch(set(e.target.value))}
+        value={input}
+        disabled={isJoinLocked}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
       />
       <div id="error" data-testid="error">
-        {userName.error}
+        {error}
       </div>
       <button
-        className={"button"}
+        className="button"
         id="start"
         data-testid="start"
-        disabled={userName.error !== ""}
+        type="button"
+        disabled={isStartDisabled}
+        onClick={submitJoinRequest}
       >
         Start
       </button>

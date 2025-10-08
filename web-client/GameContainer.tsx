@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import parser from "socket.io-msgpack-parser";
 import EventSystem from "../common/EventSystem";
-import { experienceRequiredForLevel, sanitizeName } from "../common/shared";
+import { experienceRequiredForLevel } from "../common/shared";
 import type { ClientGameState, UpgradeEvent } from "../common/types";
 import ClientStateMachine from "./ClientStateMachine";
 import { globalEventSystem, initServerEventSystem } from "./eventSystems";
@@ -23,19 +23,8 @@ export default function GameContainer() {
   useEffect(() => {
     const socket = io({ parser });
 
-    const startButton = document.getElementById("start") as HTMLButtonElement;
-    const nameInput = document.getElementById("name") as HTMLInputElement;
-
     const serverEventSystem = initServerEventSystem(new EventSystem(), socket);
     setServerEventSystem(serverEventSystem);
-
-    startButton.onclick = () => {
-      if (!nameInput.value || sanitizeName(nameInput.value) === "") {
-        return;
-      }
-      serverEventSystem.dispatchEvent("join", sanitizeName(nameInput.value));
-      globalEventSystem.dispatchEvent("disableJoinUI");
-    };
 
     serverEventSystem.addEventListener(
       "update",
