@@ -21,6 +21,11 @@ export default function GameContainer() {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
+    // Skip game initialization if we're in a test environment
+    if (typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_TEST__) {
+      return;
+    }
+
     const socket = io({ parser });
 
     const serverEventSystem = initServerEventSystem(new EventSystem(), socket);

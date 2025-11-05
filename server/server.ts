@@ -25,6 +25,8 @@ export default function ({ port, host }: ServerConfig) {
           useDefaults: false,
           directives: {
             defaultSrc: ["'self'"],
+            scriptSrc: ["'self'"],
+            connectSrc: ["'self'", "ws:", "wss:"],
             imgSrc: ["'self'", "data:", "blob:"],
             upgradeInsecureRequests: null,
           },
