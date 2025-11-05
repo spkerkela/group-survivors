@@ -95,17 +95,17 @@ describe("Server", () => {
     p2Conn.addEventListener("update", p2JoinedSpy);
     p1Conn.dispatchEvent("join", "Random Name");
     p2Conn.dispatchEvent("join", "Random Name 2");
-    serverScene?.gameState.players = [
+    serverScene!.gameState.players = [
       createPlayer("test-id", "Random Name", { x: 500, y: 500 }),
       createPlayer("test-id-2", "Random Name 2", { x: 1000, y: 1000 }),
     ];
-    serverScene?.updateQuadTree();
+    serverScene!.updateQuadTree();
     const gameStates: ClientGameState[] = [];
-    Object.entries(serverScene?.eventSystems.connectionSystems).forEach(
+    Object.entries(serverScene!.eventSystems.connectionSystems).forEach(
       ([id]) => {
-        const gameState = serverScene?.createGameStateMessage(id);
+        const gameState = serverScene!.createGameStateMessage(id);
         gameStates.push(gameState);
-        serverScene?.pushEvent("update", id, gameState);
+        serverScene!.pushEvent("update", id, gameState);
       },
     );
     server?.update(0);
@@ -117,7 +117,7 @@ describe("Server", () => {
     const p2Conn = createTestConnection(serverScene!, "test-id-2");
     p1Conn.dispatchEvent("join", "Random Name");
     p2Conn.dispatchEvent("join", "Random Name 2");
-    serverScene?.gameState.players = [
+    serverScene!.gameState.players = [
       createPlayer("test-id", "Random Name", { x: 1, y: 1 }),
       createPlayer("test-id-2", "Random Name 2", { x: 1000, y: 1000 }),
       createPlayer("test-id-3", "Random Name 3", { x: 1001, y: 1000 }),
@@ -128,13 +128,13 @@ describe("Server", () => {
       createPlayer("test-id-8", "Random Name 8", { x: 1006, y: 1000 }),
       createPlayer("test-id-9", "Random Name 9", { x: 1007, y: 1000 }),
     ];
-    serverScene?.updateQuadTree();
+    serverScene!.updateQuadTree();
     const gameStates: ClientGameState[] = [];
-    Object.entries(serverScene?.eventSystems.connectionSystems).forEach(
+    Object.entries(serverScene!.eventSystems.connectionSystems).forEach(
       ([id]) => {
-        const gameState = serverScene?.createGameStateMessage(id);
+        const gameState = serverScene!.createGameStateMessage(id);
         gameStates.push(gameState);
-        serverScene?.pushEvent("update", id, gameState);
+        serverScene!.pushEvent("update", id, gameState);
       },
     );
     server?.update(0);
