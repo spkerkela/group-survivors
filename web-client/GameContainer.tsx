@@ -43,11 +43,12 @@ export default function GameContainer() {
             set({ level: player.level, pendingLevels: player.pendingLevels }),
           );
           dispatch(setActiveSpells(player.spells));
+          const effectiveLevel = player.level + player.pendingLevels;
           const experience =
-            player.experience - experienceRequiredForLevel(player.level);
+            player.experience - experienceRequiredForLevel(effectiveLevel);
           const experienceToNextLevel =
-            experienceRequiredForLevel(player.level + 1) -
-            experienceRequiredForLevel(player.level);
+            experienceRequiredForLevel(effectiveLevel + 1) -
+            experienceRequiredForLevel(effectiveLevel);
 
           // Clamp experience so the bar never overflows
           const clampedExperience = Math.max(
