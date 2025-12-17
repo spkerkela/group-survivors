@@ -186,13 +186,22 @@ export function updateProjectile(
 const particleObjectName = "projectileParticles";
 const whitePixelObjectName = "whitePixel";
 
+const colorMap: { [key: string]: number } = {
+  fire: 0xff0000,
+  cold: 0x0000ff,
+  poison: 0x00ff00,
+  physical: 0xffffff,
+};
+
 export function instantiateProjectile(
   scene: Phaser.Scene,
   projectile: Projectile,
 ): Phaser.GameObjects.Container {
+  const tint = colorMap[projectile.damageType] || 0xffffff;
   const newProjectile = scene.add
     .sprite(0, 0, "projectile")
-    .setOrigin(0.5, 0.5);
+    .setOrigin(0.5, 0.5)
+    .setTint(tint);
   let particles = scene.children.getByName(
     particleObjectName,
   ) as Phaser.GameObjects.Particles.ParticleEmitterManager;
@@ -207,6 +216,7 @@ export function instantiateProjectile(
     scale: { start: 1, end: 0 },
     blendMode: "ADD",
     follow: projectileContainer,
+    tint: tint,
     reserve: 100,
   });
   projectileContainer.add(newProjectile);
