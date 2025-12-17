@@ -1,11 +1,11 @@
 import EventSystem from "../../common/EventSystem";
 import { type ClientGameState, GameState } from "../../common/types";
 import { GameServer } from "../../server/GameServer";
-import { ServerScene } from "../../server/ServerScene";
 import { createPlayer } from "../../server/game-logic/player";
 import { EndMatchState } from "../../server/game-session/EndMatchState";
 import { MatchState } from "../../server/game-session/MatchState";
 import { PreMatchState } from "../../server/game-session/PreMatchState";
+import { ServerScene } from "../../server/ServerScene";
 import { createTestConnection } from "./connectionUtils";
 import { levelData } from "./fixtures";
 

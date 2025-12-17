@@ -4,12 +4,12 @@ import express from "express";
 import helmet from "helmet";
 import { Server } from "socket.io";
 import parser from "socket.io-msgpack-parser";
-import EventSystem from "../common/EventSystem";
 import { GAME_HEIGHT, GAME_WIDTH } from "../common/constants";
+import EventSystem from "../common/EventSystem";
+import { initGameEventSystem, type ServerEventSystems } from "./eventSystems";
 import { GameServer } from "./GameServer";
-import { ServerScene } from "./ServerScene";
-import { type ServerEventSystems, initGameEventSystem } from "./eventSystems";
 import logger from "./logger";
+import { ServerScene } from "./ServerScene";
 
 export interface ServerConfig {
   port: number;

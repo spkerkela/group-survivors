@@ -1,9 +1,9 @@
 import { SERVER_UPDATE_RATE } from "../common/constants";
 import type { StaticObject } from "../common/types";
-import type { ServerScene } from "./ServerScene";
 import { playersRequired, serverTimeScale } from "./config";
 import GameSessionStateMachine from "./game-session/GameSessionStateMachine";
 import logger from "./logger";
+import type { ServerScene } from "./ServerScene";
 
 export interface LevelData {
   name: string;

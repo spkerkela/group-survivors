@@ -3,8 +3,8 @@ import StateMachine from "../../common/StateMachine";
 import { sanitizeName } from "../../common/shared";
 import type { MoveUpdate } from "../../common/types";
 import type { LevelData } from "../GameServer";
-import type { ServerScene } from "../ServerScene";
 import logger from "../logger";
+import type { ServerScene } from "../ServerScene";
 import { PreMatchState } from "./PreMatchState";
 
 export interface StateMachineData {

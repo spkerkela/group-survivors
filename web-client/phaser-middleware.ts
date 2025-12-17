@@ -1,6 +1,6 @@
 import Phaser from "phaser";
-import type EventSystem from "../common/EventSystem";
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from "../common/constants";
+import type EventSystem from "../common/EventSystem";
 import type { ClientGameState } from "../common/types";
 import { GameScene } from "./GameScene";
 import type { FrontendGameScene, GameFrontend } from "./middleware";
@@ -90,7 +90,7 @@ export default class PhaserMiddleware implements GameFrontend {
     this.currentScene = this.phaserInstance.scene.getScene("Lobby");
   }
 
-  setScene(scene: FrontendGameScene, data?: ClientGameState): void {
+  setScene(scene: FrontendGameScene, _data?: ClientGameState): void {
     switch (scene) {
       case "lobby":
         this.currentScene?.scene.start("Lobby");

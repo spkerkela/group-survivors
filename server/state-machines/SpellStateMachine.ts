@@ -1,5 +1,5 @@
-import StateMachine from "../../common/StateMachine";
 import type { SpellData } from "../../common/data";
+import StateMachine from "../../common/StateMachine";
 import type { Enemy, Player, SpellCastEvent } from "../../common/types";
 import { CastSpellState } from "./CastSpellState";
 

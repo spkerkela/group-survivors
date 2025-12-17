@@ -1,4 +1,4 @@
-import { type PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { sanitizeName } from "../../common/shared";
 
 const EMPTY_NAME_ERROR = "Please enter a name";

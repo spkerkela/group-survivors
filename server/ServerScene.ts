@@ -1,4 +1,3 @@
-import QuadTree from "../common/QuadTree";
 import {
   GAME_HEIGHT,
   GAME_WIDTH,
@@ -6,6 +5,7 @@ import {
   SCREEN_WIDTH,
 } from "../common/constants";
 import { spellDB } from "../common/data";
+import QuadTree from "../common/QuadTree";
 import {
   chooseRandom,
   randomBetweenExclusive,
@@ -14,18 +14,17 @@ import {
 import {
   type ClientGameState,
   type GameObject,
-  type Player,
-  type PlayerUpdate,
-  PowerUp,
-  type UpgradeChoice,
   isEnemy,
   isPickUp,
   isPlayer,
   isProjectile,
   isStaticObject,
+  type Player,
+  type PlayerUpdate,
+  type UpgradeChoice,
 } from "../common/types";
-import type { LevelData } from "./GameServer";
 import type { ServerEventSystems } from "./eventSystems";
+import type { LevelData } from "./GameServer";
 import { createPlayer } from "./game-logic/player";
 import { addSpellToPlayer } from "./game-logic/spells";
 import { generateId } from "./id-generator";
@@ -74,6 +73,7 @@ export class ServerScene {
   public clearUpgradeChoices(playerId: string) {
     if (
       this.playerUpgradeChoices &&
+      // biome-ignore lint/suspicious/noPrototypeBuiltins: Object.hasOwn is not supported in this environment
       Object.prototype.hasOwnProperty.call(this.playerUpgradeChoices, playerId)
     ) {
       this.playerUpgradeChoices[playerId] = [];
@@ -150,21 +150,21 @@ export class ServerScene {
     for (let lvl = 0; lvl < player.pendingLevels; lvl++) {
       const choices: UpgradeChoice[] = [];
       for (let i = 0; i < choiceCount; i++) {
-        // Fallback: If pool is empty (e.g. player has no spells and limit is 0? shouldn't happen), 
+        // Fallback: If pool is empty (e.g. player has no spells and limit is 0? shouldn't happen),
         // or something goes wrong, we might pick undefined. chooseRandom handles array.
         const spellId = chooseRandom(availablePool);
-        
+
         if (spellId) {
-            const powerUp = randomPowerUp();
-            const id = generateId("upgrade");
-            choices.push({
-              id: id,
-              powerUp,
-              spellId,
-            });
-            logger.info(
-              `Generated upgrade choice for player ${playerId}: ${JSON.stringify(choices[i])}`,
-            );
+          const powerUp = randomPowerUp();
+          const id = generateId("upgrade");
+          choices.push({
+            id: id,
+            powerUp,
+            spellId,
+          });
+          logger.info(
+            `Generated upgrade choice for player ${playerId}: ${JSON.stringify(choices[i])}`,
+          );
         }
       }
       this.playerUpgradeChoices[playerId].push(choices);

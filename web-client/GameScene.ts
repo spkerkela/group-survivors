@@ -1,5 +1,4 @@
 import Phaser from "phaser";
-import type EventSystem from "../common/EventSystem";
 import {
   GAME_HEIGHT,
   GAME_WIDTH,
@@ -8,6 +7,7 @@ import {
   SCREEN_HEIGHT,
   SCREEN_WIDTH,
 } from "../common/constants";
+import type EventSystem from "../common/EventSystem";
 import { chooseRandom, randomBetweenExclusive } from "../common/random";
 import type {
   ClientGameState,
@@ -24,13 +24,13 @@ import type {
 import { assets, sounds, spriteSheets } from "./assets";
 import { globalEventSystem } from "./eventSystems";
 import {
-  type Middleware,
   destroyPlayer,
   instantiateEnemy,
   instantiatePickUp,
   instantiatePlayer,
   instantiateProjectile,
   instantiateStaticObject,
+  type Middleware,
   removeInvalidGameObjects,
   updateGameObject,
   updateMiddleWare,
@@ -306,5 +306,5 @@ export class GameScene extends Phaser.Scene implements Middleware {
     return this.children.getByName(this.data.get("gameState").id);
   }
 
-  updateLevel(serverPlayer: Player) {}
+  updateLevel(_serverPlayer: Player) {}
 }

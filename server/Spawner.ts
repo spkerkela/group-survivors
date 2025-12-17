@@ -1,7 +1,7 @@
 import { GAME_HEIGHT, GAME_WIDTH } from "../common/constants";
 import { enemyDB } from "../common/data";
 import { chooseRandom, randomBetweenExclusive } from "../common/random";
-import { ClientGameState, type Enemy, type GameState } from "../common/types";
+import type { Enemy, GameState } from "../common/types";
 import { generateId } from "./id-generator";
 
 interface SpawnTable {

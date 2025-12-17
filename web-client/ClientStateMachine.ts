@@ -11,7 +11,7 @@ interface ClientState {
 
 export class DisconnectedState implements State<ClientState> {
   id = "";
-  update(dt: number, _: ClientState): State<ClientState> {
+  update(_dt: number, _: ClientState): State<ClientState> {
     if (this.id !== "") {
       return new ConnectedState(this.id);
     }
@@ -40,7 +40,7 @@ export class ConnectedState implements State<ClientState> {
   receivedMatchBegin = false;
   receivedDisconnect = false;
   receivedUpdate = false;
-  update(dt: number, { frontend }: ClientState): State<ClientState> {
+  update(_dt: number, { frontend }: ClientState): State<ClientState> {
     if (this.receivedDisconnect) {
       frontend.setScene("lobby");
       return new DisconnectedState();
@@ -50,7 +50,7 @@ export class ConnectedState implements State<ClientState> {
     }
     return this;
   }
-  updateCallback: (data: ClientGameState) => void = (data) => {
+  updateCallback: (data: ClientGameState) => void = (_data) => {
     this.receivedUpdate = true;
   };
   beginMatchCallback = () => {
@@ -80,7 +80,7 @@ export class GameLoopState implements State<ClientState> {
     this.id = id;
   }
 
-  update(dt: number, data: ClientState): State<ClientState> {
+  update(_dt: number, data: ClientState): State<ClientState> {
     if (this.upgradeCalled) {
       return new UpgradeState(this.id);
     }
@@ -126,7 +126,7 @@ export class UpgradeState implements State<ClientState> {
   constructor(id: string) {
     this.id = id;
   }
-  update(dt: number, { frontend }: ClientState): State<ClientState> {
+  update(_dt: number, { frontend }: ClientState): State<ClientState> {
     if (this.beginMatchCalled) {
       return new GameLoopState(this.id);
     }

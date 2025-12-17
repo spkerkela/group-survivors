@@ -1,6 +1,7 @@
-import type QuadTree from "../../common/QuadTree";
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from "../../common/constants";
 import { type SpellData, spellDB } from "../../common/data";
+import { normalize } from "../../common/math";
+import type QuadTree from "../../common/QuadTree";
 import type {
   Enemy,
   GameObject,
@@ -13,8 +14,6 @@ import type {
 } from "../../common/types";
 import SpellStateMachine from "../state-machines/SpellStateMachine";
 import type { ServerPlayer } from "../types";
-
-import { normalize } from "../../common/math";
 
 export function updateSpells(
   players: ServerPlayer[],
@@ -141,7 +140,7 @@ export function shootAtNearestEnemy(
     },
     { distance: Number.POSITIVE_INFINITY, enemy: null },
   );
-  const { enemy, distance } = nearestEnemy;
+  const { enemy } = nearestEnemy;
 
   if (enemy?.alive) {
     const additionalSpellDamage = powerUps

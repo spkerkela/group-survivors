@@ -1,4 +1,3 @@
-import type QuadTree from "../../common/QuadTree";
 import {
   INVULNERABILITY_SECONDS,
   PLAYER_SIZE,
@@ -6,6 +5,7 @@ import {
   SCREEN_WIDTH,
 } from "../../common/constants";
 import { normalize } from "../../common/math";
+import type QuadTree from "../../common/QuadTree";
 import { randomBetweenExclusive } from "../../common/random";
 import type {
   DamageEvent,

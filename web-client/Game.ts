@@ -2,6 +2,7 @@ import type EventSystem from "../common/EventSystem";
 import type { ClientGameState } from "../common/types";
 import { globalEventSystem } from "./eventSystems";
 import type { GameFrontend } from "./middleware";
+
 const pressedKeys: { [key: string]: boolean } = {};
 window.onkeyup = (e: { keyCode: string | number }) => {
   pressedKeys[e.keyCode] = false;

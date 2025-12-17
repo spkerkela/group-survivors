@@ -1,4 +1,4 @@
-import { type PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 export const levelSlice = createSlice({
   name: "level",
@@ -10,7 +10,10 @@ export const levelSlice = createSlice({
     increment: (state) => {
       state.level += 1;
     },
-    set: (state, action: PayloadAction<{ level: number; pendingLevels: number }>) => {
+    set: (
+      state,
+      action: PayloadAction<{ level: number; pendingLevels: number }>,
+    ) => {
       state.level = action.payload.level;
       state.pendingLevels = action.payload.pendingLevels;
     },

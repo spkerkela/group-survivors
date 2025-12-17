@@ -1,4 +1,4 @@
-import { type PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { experienceRequiredForLevel } from "../../common/shared";
 
 export const experienceSlice = createSlice({

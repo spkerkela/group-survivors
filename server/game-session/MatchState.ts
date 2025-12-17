@@ -1,9 +1,9 @@
 import type { Logger } from "winston";
-import type EventSystem from "../../common/EventSystem";
-import type { State } from "../../common/StateMachine";
 import { spellDB } from "../../common/data";
+import type EventSystem from "../../common/EventSystem";
 import { normalize } from "../../common/math";
 import { chooseRandom } from "../../common/random";
+import type { State } from "../../common/StateMachine";
 import { sanitizeName } from "../../common/shared";
 import type {
   InputState,
@@ -11,8 +11,6 @@ import type {
   Position,
   SpellProjectileEvent,
 } from "../../common/types";
-import type { ServerScene } from "../ServerScene";
-import Spawner from "../Spawner";
 import { removeDeadEnemies, updateEnemies } from "../game-logic/enemies";
 import { updatePickUps } from "../game-logic/pickUps";
 import {
@@ -24,6 +22,8 @@ import { updateProjectiles } from "../game-logic/projectiles";
 import { addSpellToPlayer, updateSpells } from "../game-logic/spells";
 import { generateId } from "../id-generator";
 import logger from "../logger";
+import type { ServerScene } from "../ServerScene";
+import Spawner from "../Spawner";
 import { EndMatchState } from "./EndMatchState";
 import type { StateMachineData } from "./GameSessionStateMachine";
 import { UpgradeState } from "./UpgradeState";

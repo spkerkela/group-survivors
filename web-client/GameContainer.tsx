@@ -1,21 +1,21 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import parser from "socket.io-msgpack-parser";
 import EventSystem from "../common/EventSystem";
 import { experienceRequiredForLevel } from "../common/shared";
 import type { ClientGameState, UpgradeEvent } from "../common/types";
 import ClientStateMachine from "./ClientStateMachine";
-import { globalEventSystem, initServerEventSystem } from "./eventSystems";
+import { initServerEventSystem } from "./eventSystems";
 import { useAppDispatch } from "./hooks";
 import PhaserMiddleware from "./phaser-middleware";
 import { setServerEventSystem } from "./serverEventSystem";
+import { setActiveSpells } from "./state/activeSpellsSlice";
 import { setExperience } from "./state/experienceSlice";
 import { setState, setTimeLeft, setWave } from "./state/gameSlice";
 import { setGold } from "./state/goldSlice";
 import { setHealth } from "./state/healthSlice";
 import { set } from "./state/levelSlice";
 import { setUpgradeChoices } from "./state/upgradeChoicesSlice";
-import { setActiveSpells } from "./state/activeSpellsSlice";
 
 export default function GameContainer() {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -23,7 +23,7 @@ export default function GameContainer() {
 
   useEffect(() => {
     // Skip game initialization if we're in a test environment
-    if (typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_TEST__) {
+    if (typeof window !== "undefined" && (window as any).__PLAYWRIGHT_TEST__) {
       return;
     }
 
@@ -102,7 +102,7 @@ export default function GameContainer() {
     }
 
     requestAnimationFrame(update);
-  }, [ref]);
+  }, [dispatch]);
   return (
     <canvas
       ref={ref}

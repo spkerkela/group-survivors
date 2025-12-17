@@ -52,10 +52,10 @@ const config: PlaywrightTestConfig = {
         ...devices["Desktop Chrome"],
         launchOptions: {
           args: [
-            '--use-gl=swiftshader',
-            '--disable-dev-shm-usage',
-            '--disable-setuid-sandbox',
-            '--no-sandbox',
+            "--use-gl=swiftshader",
+            "--disable-dev-shm-usage",
+            "--disable-setuid-sandbox",
+            "--no-sandbox",
           ],
         },
         contextOptions: {

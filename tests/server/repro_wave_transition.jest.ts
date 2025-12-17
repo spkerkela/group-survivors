@@ -1,8 +1,8 @@
 import EventSystem from "../../common/EventSystem";
 import { GameServer } from "../../server/GameServer";
-import { ServerScene } from "../../server/ServerScene";
 import { MatchState } from "../../server/game-session/MatchState";
 import { UpgradeState } from "../../server/game-session/UpgradeState";
+import { ServerScene } from "../../server/ServerScene";
 import { createTestConnection } from "./connectionUtils";
 import { levelData } from "./fixtures";
 
@@ -29,25 +29,32 @@ describe("Wave Transition", () => {
     // 2. Start Game
     server?.update(0); // Process events
     server?.update(0); // Transition to MatchState
-    expect(server?.gameStateMachine.stateMachine.state).toBeInstanceOf(MatchState);
+    expect(server?.gameStateMachine.stateMachine.state).toBeInstanceOf(
+      MatchState,
+    );
     expect(serverScene?.gameState.players.length).toBe(2);
 
     // 3. Fast forward to UpgradeState
     server?.update(1.1); // > 1s waveLength
-    expect(server?.gameStateMachine.stateMachine.state).toBeInstanceOf(UpgradeState);
+    expect(server?.gameStateMachine.stateMachine.state).toBeInstanceOf(
+      UpgradeState,
+    );
 
     // 4. Simulate Upgrade Selection (or timeout)
     // We'll just wait for the timeout (countdown)
     // UpgradeState has a countdown of 30s. We can force it by updating with huge dt.
-    server?.update(31); 
-    
+    server?.update(31);
+
     // 5. Verify transition to Wave 2
-    expect(server?.gameStateMachine.stateMachine.state).toBeInstanceOf(MatchState);
-    
+    expect(server?.gameStateMachine.stateMachine.state).toBeInstanceOf(
+      MatchState,
+    );
+
     // Tick once more to allow MatchState.update to process newPlayers
     server?.update(0);
 
-    const matchState = server?.gameStateMachine.stateMachine.state as MatchState;
+    const matchState = server?.gameStateMachine.stateMachine
+      .state as MatchState;
     expect(matchState.wave).toBe(1); // 0-indexed, so 1 is Wave 2
 
     // 6. CHECK FOR PLAYERS

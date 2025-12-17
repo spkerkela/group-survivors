@@ -1,4 +1,4 @@
-import { type PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 export interface ActiveSpellsState {
   spells: { [key: string]: number };
@@ -12,7 +12,10 @@ export const activeSpellsSlice = createSlice({
   name: "activeSpells",
   initialState,
   reducers: {
-    setActiveSpells: (state, action: PayloadAction<{ [key: string]: number }>) => {
+    setActiveSpells: (
+      state,
+      action: PayloadAction<{ [key: string]: number }>,
+    ) => {
       state.spells = action.payload;
     },
   },

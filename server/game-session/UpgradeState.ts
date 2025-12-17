@@ -1,6 +1,8 @@
 import type { State } from "../../common/StateMachine";
+import type { UpgradeChoice } from "../../common/types";
 import { applyPowerUp } from "../game-logic/player";
 import logger from "../logger";
+import type { ServerPlayer } from "../types";
 import { EndMatchState } from "./EndMatchState";
 import type { StateMachineData } from "./GameSessionStateMachine";
 import { MatchState } from "./MatchState";
@@ -8,8 +10,10 @@ export class UpgradeState implements State<StateMachineData> {
   wave: number;
   countdown = 30;
   private readyPlayers: Set<string> = new Set();
-  private upgradeSelections: { [id: string]: any[] } = {};
-  private upgradeListeners: { [id: string]: (selected: any[]) => void } = {};
+  private upgradeSelections: { [id: string]: UpgradeChoice[] } = {};
+  private upgradeListeners: {
+    [id: string]: (selected: UpgradeChoice[]) => void;
+  } = {};
 
   constructor(wave: number) {
     this.wave = wave;
@@ -21,23 +25,25 @@ export class UpgradeState implements State<StateMachineData> {
   ): State<StateMachineData> {
     scene.sendEvents();
     const playerIds: string[] = scene.connectionIds();
-    if (
-      this.readyPlayers.size === playerIds.length ||
-      (this.countdown -= dt) <= 0
-    ) {
+    this.countdown -= dt;
+    if (this.readyPlayers.size === playerIds.length || this.countdown <= 0) {
       // For any players who didn't submit, pick random upgrades
       playerIds.forEach((id: string) => {
         if (!this.readyPlayers.has(id)) {
-          const choices: any[][] = scene.getUpgradeChoices(id);
+          const choices: UpgradeChoice[][] = scene.getUpgradeChoices(id);
           // Pick first option for each pending level as fallback
-          this.upgradeSelections[id] = choices.map((group: any[]) => group[0]);
+          this.upgradeSelections[id] = choices.map(
+            (group: UpgradeChoice[]) => group[0],
+          );
         }
       });
       playerIds.forEach((id: string) => {
         const selections = this.upgradeSelections[id];
-        const player = scene.gameState.players.find((p: any) => p.id === id);
+        const player = scene.gameState.players.find(
+          (p: ServerPlayer) => p.id === id,
+        );
         if (player && selections) {
-          selections.forEach((choice: any) => {
+          selections.forEach((choice: UpgradeChoice) => {
             if (choice?.spellId && choice.powerUp) {
               // Apply the upgrade
               const { spellId, powerUp } = choice;
@@ -76,7 +82,8 @@ export class UpgradeState implements State<StateMachineData> {
     (scene.connectionIds() as string[]).forEach((id: string) => {
       // Ensure upgrade choices are generated before sending
       scene.generateUpgradeChoices(id);
-      const playerUpgradeChoices: any[][] = scene.getUpgradeChoices(id);
+      const playerUpgradeChoices: UpgradeChoice[][] =
+        scene.getUpgradeChoices(id);
       logger.info("upgrade choices", playerUpgradeChoices);
       scene.pushEvent("upgrade", id, {
         choices: playerUpgradeChoices,
@@ -89,14 +96,14 @@ export class UpgradeState implements State<StateMachineData> {
         );
       }
       // Register new listener
-      this.upgradeListeners[id] = (selected: any[]) => {
+      this.upgradeListeners[id] = (selected: UpgradeChoice[]) => {
         // Validate selection
-        const validChoices: any[][] = scene.getUpgradeChoices(id);
+        const validChoices: UpgradeChoice[][] = scene.getUpgradeChoices(id);
         if (
           Array.isArray(selected) &&
           selected.length === validChoices.length &&
-          selected.every((sel: any, idx: number) =>
-            validChoices[idx].some((c: any) => c.id === sel.id),
+          selected.every((sel: UpgradeChoice, idx: number) =>
+            validChoices[idx].some((c: UpgradeChoice) => c.id === sel.id),
           )
         ) {
           this.upgradeSelections[id] = selected;
@@ -121,13 +128,13 @@ export class UpgradeState implements State<StateMachineData> {
         delete this.upgradeListeners[id];
       }
     });
-    
+
     // Save state and move players to readyToJoin for the next wave
     scene.gameState.players.forEach((p) => {
-        scene.saveMatchState(p);
-        if (!scene.readyToJoin.find((r) => r.id === p.id)) {
-            scene.readyToJoin.push({ id: p.id, screenName: p.screenName });
-        }
+      scene.saveMatchState(p);
+      if (!scene.readyToJoin.find((r) => r.id === p.id)) {
+        scene.readyToJoin.push({ id: p.id, screenName: p.screenName });
+      }
     });
 
     this.readyPlayers.clear();

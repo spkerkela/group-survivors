@@ -1,5 +1,5 @@
-import type QuadTree from "../../common/QuadTree";
 import { ENEMY_SIZE } from "../../common/constants";
+import type QuadTree from "../../common/QuadTree";
 import type {
   Enemy,
   GameObject,
