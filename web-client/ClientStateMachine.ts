@@ -149,8 +149,8 @@ export class UpgradeState implements State<ClientState> {
   }
 
   exit({ frontend, serverEvents }: ClientState) {
-    serverEvents.removeEventListener("beginMatch", this.gameOverCallback);
-    serverEvents.addEventListener("gameOver", this.gameOverCallback);
+    serverEvents.removeEventListener("beginMatch", this.beginMatchCallback);
+    serverEvents.removeEventListener("gameOver", this.gameOverCallback);
   }
 }
 

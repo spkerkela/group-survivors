@@ -121,6 +121,15 @@ export class UpgradeState implements State<StateMachineData> {
         delete this.upgradeListeners[id];
       }
     });
+    
+    // Save state and move players to readyToJoin for the next wave
+    scene.gameState.players.forEach((p) => {
+        scene.saveMatchState(p);
+        if (!scene.readyToJoin.find((r) => r.id === p.id)) {
+            scene.readyToJoin.push({ id: p.id, screenName: p.screenName });
+        }
+    });
+
     this.readyPlayers.clear();
     this.upgradeSelections = {};
   }
