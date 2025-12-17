@@ -38,7 +38,9 @@ export default function GameContainer() {
         dispatch(setTimeLeft(timeRemaining));
         dispatch(setWave(wave + 1));
         if (player != null) {
-          dispatch(set(player.level));
+          dispatch(
+            set({ level: player.level, pendingLevels: player.pendingLevels }),
+          );
           const experience =
             player.experience - experienceRequiredForLevel(player.level);
           const experienceToNextLevel =

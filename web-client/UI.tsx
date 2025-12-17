@@ -303,8 +303,17 @@ function ExperienceBar() {
 }
 
 function PlayerLevel() {
-  const { level } = useAppSelector((state) => state.level);
-  return <div>Player Level: {level}</div>;
+  const { level, pendingLevels } = useAppSelector((state) => state.level);
+  return (
+    <div>
+      Player Level: {level}
+      {pendingLevels > 0 && (
+        <span style={{ color: "yellow", marginLeft: "0.5rem" }}>
+          (+{pendingLevels})
+        </span>
+      )}
+    </div>
+  );
 }
 function Gold() {
   const gold = useAppSelector((state) => state.gold);
