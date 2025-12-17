@@ -239,6 +239,25 @@ function MatchUI() {
         <ExperienceBar />
       </div>
       <MatchStatus />
+      <ActiveSpells />
+    </div>
+  );
+}
+
+function ActiveSpells() {
+  const { spells } = useAppSelector((state) => state.activeSpells);
+  return (
+    <div className="active-spells">
+      {Object.entries(spells).map(([spellId, level]) => {
+        const spell = spellDB[spellId];
+        if (!spell) return null;
+        return (
+          <div key={spellId} className="active-spell-card">
+            <div className="spell-name">{spell.name}</div>
+            <div className="spell-level">Lvl {level}</div>
+          </div>
+        );
+      })}
     </div>
   );
 }

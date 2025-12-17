@@ -1,4 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
+import activeSpellsReducer from "../state/activeSpellsSlice";
 import experienceReducer from "../state/experienceSlice";
 import gameReducer from "../state/gameSlice";
 import goldReducer from "../state/goldSlice";
@@ -16,6 +17,7 @@ const store = configureStore({
     health: healthReducer,
     gold: goldReducer,
     upgradeChoices: upgradeChoiceReducer,
+    activeSpells: activeSpellsReducer,
   },
 });
 

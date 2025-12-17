@@ -15,6 +15,7 @@ import { setGold } from "./state/goldSlice";
 import { setHealth } from "./state/healthSlice";
 import { set } from "./state/levelSlice";
 import { setUpgradeChoices } from "./state/upgradeChoicesSlice";
+import { setActiveSpells } from "./state/activeSpellsSlice";
 
 export default function GameContainer() {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -41,6 +42,7 @@ export default function GameContainer() {
           dispatch(
             set({ level: player.level, pendingLevels: player.pendingLevels }),
           );
+          dispatch(setActiveSpells(player.spells));
           const experience =
             player.experience - experienceRequiredForLevel(player.level);
           const experienceToNextLevel =

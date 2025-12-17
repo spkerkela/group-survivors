@@ -190,3 +190,32 @@ h1 {
 .button:hover:after {
   border: 1px solid #870000;
 }
+
+.active-spells {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: flex-end;
+}
+
+.active-spell-card {
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 1px solid #ffffff;
+  border-radius: 5px;
+  padding: 5px;
+  text-align: right;
+  width: 150px;
+}
+
+.spell-name {
+  font-weight: bold;
+  font-size: 12px;
+  color: #ffff00;
+}
+
+.spell-level {
+  font-size: 10px;
+}
