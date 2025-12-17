@@ -13,9 +13,9 @@
   - [x] server receives choice, remembers that player has done the choice, adds the choice to the server game-state
   - [x] once all players have done their choice the next wave starts
   - [x] if someone is too slow to make a choice (timeout tbd, perhaps 30 seconds?) a random choice is forced by the server and the match starts anyway
-- Enforce spell/passive limits
-  - Players can have a limited amount of active and passive spells (e.g., 5 active, 5 passive).
-  - When generating upgrade choices:
-    - If limit reached, only offer upgrades for existing spells/passives.
-    - If limit not reached, can offer new spells/passives.
+- [x] Enforce spell/passive limits
+  - [x] Players can have a limited amount of active and passive spells (e.g., 5 active, 5 passive).
+  - [x] When generating upgrade choices:
+    - [x] If limit reached, only offer upgrades for existing spells/passives.
+    - [x] If limit not reached, can offer new spells/passives.
 

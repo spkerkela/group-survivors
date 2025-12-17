@@ -133,23 +133,39 @@ export class ServerScene {
     const player = this.getPlayer(playerId);
     if (!player || player.pendingLevels <= 0) return;
     const choiceCount = 4;
+    const MAX_ACTIVE_SPELLS = 5;
+
     if (!this.playerUpgradeChoices[playerId]) {
       this.playerUpgradeChoices[playerId] = [];
     }
+
+    const currentSpells = Object.keys(player.spells);
+    const canAddNewSpell = currentSpells.length < MAX_ACTIVE_SPELLS;
+
+    // If limit reached, available pool is restricted to current spells.
+    // Otherwise, pool is all spells in DB.
+    // Note: This assumes all items in spellDB are 'active' spells.
+    const availablePool = canAddNewSpell ? Object.keys(spellDB) : currentSpells;
+
     for (let lvl = 0; lvl < player.pendingLevels; lvl++) {
       const choices: UpgradeChoice[] = [];
       for (let i = 0; i < choiceCount; i++) {
-        const spellId = chooseRandom(Object.keys(spellDB));
-        const powerUp = randomPowerUp();
-        const id = generateId("upgrade");
-        choices.push({
-          id: id,
-          powerUp,
-          spellId,
-        });
-        logger.info(
-          `Generated upgrade choice for player ${playerId}: ${JSON.stringify(choices[i])}`,
-        );
+        // Fallback: If pool is empty (e.g. player has no spells and limit is 0? shouldn't happen), 
+        // or something goes wrong, we might pick undefined. chooseRandom handles array.
+        const spellId = chooseRandom(availablePool);
+        
+        if (spellId) {
+            const powerUp = randomPowerUp();
+            const id = generateId("upgrade");
+            choices.push({
+              id: id,
+              powerUp,
+              spellId,
+            });
+            logger.info(
+              `Generated upgrade choice for player ${playerId}: ${JSON.stringify(choices[i])}`,
+            );
+        }
       }
       this.playerUpgradeChoices[playerId].push(choices);
     }
