@@ -36,7 +36,7 @@ const config: PlaywrightTestConfig = {
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
     actionTimeout: 0,
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: "http://localhost:3000",
+    baseURL: "http://localhost:4000",
     /* Navigation timeout */
     navigationTimeout: 30000,
 
@@ -114,7 +114,7 @@ const config: PlaywrightTestConfig = {
   /* Run your local dev server before starting the tests */
   webServer: {
     command: "npm run server",
-    url: "http://localhost:3000",
+    url: "http://localhost:4000",
     reuseExistingServer: !process.env.CI,
     timeout: 1000 * 60,
   },
