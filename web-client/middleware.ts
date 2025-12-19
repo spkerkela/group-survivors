@@ -11,7 +11,7 @@ import type {
   StaticObject,
 } from "../common/types";
 
-function setupSpellEmitters(
+function updateSpellEmitters(
   p: Player,
   instantiated: Phaser.GameObjects.GameObject,
 ) {
@@ -19,25 +19,24 @@ function setupSpellEmitters(
     "auraEmitter",
   ) as Phaser.GameObjects.Particles.ParticleEmitter;
 
-  if (emitter) {
+  if (!emitter) return;
+
+  const shouldHaveAura = !!p.spells["damageAura"];
+  const isAuraActive = instantiated.getData("auraActive") as boolean;
+
+  if (shouldHaveAura && !isAuraActive) {
+    const spelldata = spellDB["damageAura"];
+    emitter.setEmitZone({
+      source: new Phaser.Geom.Circle(0, 0, spelldata.range),
+      type: "edge",
+      quantity: 48,
+    });
+    emitter.start();
+    instantiated.setData("auraActive", true);
+  } else if (!shouldHaveAura && isAuraActive) {
     emitter.stop();
+    instantiated.setData("auraActive", false);
   }
-  Object.keys(p.spells).forEach((spellId) => {
-    if (spellId === "damageAura") {
-      const spelldata = spellDB[spellId];
-      const emitter = instantiated.getData(
-        "auraEmitter",
-      ) as Phaser.GameObjects.Particles.ParticleEmitter;
-      if (emitter) {
-        emitter.setEmitZone({
-          source: new Phaser.Geom.Circle(0, 0, spelldata.range),
-          type: "edge",
-          quantity: 48,
-        });
-        emitter.start();
-      }
-    }
-  });
 }
 
 export function instantiatePlayer(
@@ -85,7 +84,8 @@ export function instantiatePlayer(
     emitter.stop();
   });
 
-  setupSpellEmitters(player, playerContainer);
+  playerContainer.setData("auraActive", false);
+  updateSpellEmitters(player, playerContainer);
   return playerContainer;
 }
 
@@ -101,6 +101,7 @@ export function updatePlayer(
     duration: SERVER_UPDATE_RATE,
     ease: "Power1",
   });
+  updateSpellEmitters(serverPlayer, player);
 }
 
 export function destroyPlayer(player: Phaser.GameObjects.GameObject) {

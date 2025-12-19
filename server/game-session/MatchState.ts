@@ -237,9 +237,7 @@ export class MatchState implements State<StateMachineData> {
       },
     );
     scene.readyToJoin.forEach(({ id, screenName }) => {
-      scene.pushEvent("beginMatch", id, {
-        gameState: scene.createGameStateMessage(id),
-      });
+      scene.pushEvent("beginMatch", id, scene.createGameStateMessage(id));
       Object.entries(scene.eventSystems.connectionSystems).forEach(
         ([id, connection]) => this.setupMoveListener(id, connection, scene),
       );

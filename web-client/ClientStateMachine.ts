@@ -53,13 +53,15 @@ export class ConnectedState implements State<ClientState> {
   updateCallback: (data: ClientGameState) => void = (_data) => {
     this.receivedUpdate = true;
   };
-  beginMatchCallback = () => {
-    this.receivedMatchBegin = true;
-  };
+  beginMatchCallback!: (data: ClientGameState) => void;
   disconnectCallback = () => {
     this.receivedDisconnect = true;
   };
-  enter({ serverEvents }: ClientState): void {
+  enter({ serverEvents, frontend }: ClientState): void {
+    this.beginMatchCallback = (data: ClientGameState) => {
+      frontend.update(data);
+      this.receivedMatchBegin = true;
+    };
     serverEvents.addEventListener("disconnect", this.disconnectCallback);
     serverEvents.addEventListener("beginMatch", this.beginMatchCallback);
     serverEvents.addEventListener("update", this.updateCallback);
@@ -121,7 +123,7 @@ export class UpgradeState implements State<ClientState> {
   beginMatchCalled = false;
   gameOverCalled = false;
   gameOverCallback!: () => void;
-  beginMatchCallback!: () => void;
+  beginMatchCallback!: (data: ClientGameState) => void;
   id: string;
   constructor(id: string) {
     this.id = id;
@@ -137,7 +139,8 @@ export class UpgradeState implements State<ClientState> {
   }
   enter({ frontend, serverEvents }: ClientState) {
     frontend.setScene("upgrade");
-    this.beginMatchCallback = () => {
+    this.beginMatchCallback = (data: ClientGameState) => {
+      frontend.update(data);
       this.beginMatchCalled = true;
     };
     this.gameOverCallback = () => {
