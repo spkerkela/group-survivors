@@ -36,3 +36,7 @@ export function circleIntersects(circle1: Circle, circle2: Circle) {
     (circle1.radius + circle2.radius) ** 2
   );
 }
+
+export function distance(p1: Position, p2: Position): number {
+  return Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2);
+}

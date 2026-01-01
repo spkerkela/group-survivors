@@ -1,6 +1,6 @@
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from "../../common/constants";
 import { type SpellData, spellDB } from "../../common/data";
-import { normalize } from "../../common/math";
+import { distance, normalize } from "../../common/math";
 import type QuadTree from "../../common/QuadTree";
 import type {
   Enemy,
@@ -131,11 +131,9 @@ export function shootAtNearestEnemy(
 ): SpellProjectileEvent | null {
   const nearestEnemy = enemies.reduce(
     (nearest: { distance: number; enemy: Enemy | null }, enemy: Enemy) => {
-      const distance = Math.sqrt(
-        (enemy.x - player.x) ** 2 + (enemy.y - player.y) ** 2,
-      );
-      if (enemy.alive && distance < nearest.distance) {
-        return { distance, enemy };
+      const dist = distance(player, enemy);
+      if (enemy.alive && dist < nearest.distance) {
+        return { distance: dist, enemy };
       }
       return nearest;
     },
@@ -184,11 +182,8 @@ export function tickAura(
   powerUps: PowerUp[] = [],
 ): SpellDamageEvent[] {
   const enemiesInRange = enemies.filter((enemy) => {
-    const distance = Math.sqrt(
-      (enemy.x - position.x) ** 2 + (enemy.y - position.y) ** 2,
-    );
     return (
-      distance <
+      distance(position, enemy) <
       spellData.range * spellData.rangeMultiplier + 0.01 * playerLevel
     );
   });

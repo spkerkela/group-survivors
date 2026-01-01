@@ -4,7 +4,7 @@ import {
   SCREEN_HEIGHT,
   SCREEN_WIDTH,
 } from "../../common/constants";
-import { normalize } from "../../common/math";
+import { distance, normalize } from "../../common/math";
 import type QuadTree from "../../common/QuadTree";
 import { randomBetweenExclusive } from "../../common/random";
 import type {
@@ -39,20 +39,18 @@ export function updateEnemies(
         nearest: { player: Player | null; distance: number },
         player: Player,
       ) => {
-        const distance = Math.sqrt(
-          (player.x - enemy.x) ** 2 + (player.y - enemy.y) ** 2,
-        );
-        if (player.alive && distance < nearest.distance) {
-          return { distance, player };
+        const dist = distance(player, enemy);
+        if (player.alive && dist < nearest.distance) {
+          return { distance: dist, player };
         }
         return nearest;
       },
       { distance: Number.POSITIVE_INFINITY, player: null },
     );
-    const { player, distance } = nearestPlayer;
+    const { player, distance: dist } = nearestPlayer;
 
     if (player?.alive) {
-      if (distance > PLAYER_SIZE) {
+      if (dist > PLAYER_SIZE) {
         const x = player.x - enemy.x;
         const y = player.y - enemy.y;
         const { x: nx, y: ny } = normalize(x, y);
