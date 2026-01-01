@@ -139,6 +139,7 @@ export type FromServerEventMap = {
 
 export type ToServerEventMap = {
   upgradeSelection: (selected: UpgradeChoice[]) => void;
+  upgradeReroll: () => void;
   connection: (arg0: unknown) => void;
   join: (name: string) => void;
   move: (moveUpdate: MoveUpdate) => void;
@@ -219,4 +220,5 @@ export interface LevelEvent {
 
 export interface UpgradeEvent {
   choices: UpgradeChoice[][];
+  rerollCost: number;
 }

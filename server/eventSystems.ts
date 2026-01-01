@@ -36,6 +36,9 @@ export function initConnectedClientEventSystem(
   socket.on("upgradeSelection", (selected) => {
     eventSystem.dispatchEvent("upgradeSelection", selected);
   });
+  socket.on("upgradeReroll", () => {
+    eventSystem.dispatchEvent("upgradeReroll");
+  });
   socket.on("join", (joinName: string) => {
     eventSystem.dispatchEvent("join", joinName);
   });

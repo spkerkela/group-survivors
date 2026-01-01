@@ -27,3 +27,9 @@ export function sendJoinMessage(
 ) {
   socket.emit("join", name);
 }
+
+export function sendUpgradeRerollMessage(
+  socket: Socket<FromServerEventMap, ToServerEventMap>,
+) {
+  socket.emit("upgradeReroll");
+}

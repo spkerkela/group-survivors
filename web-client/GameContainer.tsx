@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 import parser from "socket.io-msgpack-parser";
 import EventSystem from "../common/EventSystem";
 import { experienceRequiredForLevel } from "../common/shared";
-import type { ClientGameState, UpgradeEvent } from "../common/types";
+import type { ClientGameState, LevelEvent, UpgradeEvent } from "../common/types";
 import ClientStateMachine from "./ClientStateMachine";
 import { initServerEventSystem } from "./eventSystems";
 import { useAppDispatch } from "./hooks";
@@ -72,6 +72,19 @@ export default function GameContainer() {
         }
       },
     );
+    serverEventSystem.addEventListener("level", (data: LevelEvent) => {
+      if (data.player) {
+        dispatch(
+          set({
+            level: data.player.level,
+            pendingLevels: data.player.pendingLevels,
+          }),
+        );
+        dispatch(setGold(data.player.gold));
+        dispatch(setActiveSpells(data.player.spells));
+      }
+    });
+
     serverEventSystem.addEventListener("preMatch", () => {
       dispatch(setState("lobby"));
     });
@@ -80,7 +93,7 @@ export default function GameContainer() {
     });
     serverEventSystem.addEventListener("upgrade", (data: UpgradeEvent) => {
       dispatch(setState("upgrade"));
-      dispatch(setUpgradeChoices(data.choices));
+      dispatch(setUpgradeChoices(data));
     });
     serverEventSystem.addEventListener("gameOver", () => {
       dispatch(setState("gameOver"));

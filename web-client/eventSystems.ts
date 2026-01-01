@@ -11,6 +11,7 @@ import type {
 import {
   sendJoinMessage,
   sendMoveMessage,
+  sendUpgradeRerollMessage,
   sendUpgradeSelectionMessage,
 } from "./messages";
 
@@ -55,6 +56,10 @@ export function initServerEventSystem(
   // Listen for upgrade selection and send to server
   serverEventSystem.addEventListener("upgradeSelection", (selected: any) => {
     sendUpgradeSelectionMessage(io, selected);
+  });
+
+  serverEventSystem.addEventListener("upgradeReroll", () => {
+    sendUpgradeRerollMessage(io);
   });
 
   io.on("joined", (gameState: ClientGameState) => {

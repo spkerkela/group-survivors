@@ -177,6 +177,43 @@ h1 {
   padding: 20px;
 }
 
+.upgrade-ui-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.upgrade-ui-gold {
+  color: #ffd700;
+  font-size: 18px;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+.upgrade-reroll-btn {
+  background: linear-gradient(145deg, #4b0082, #2a004d);
+  color: white;
+  border: 1px solid #9370db;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.upgrade-reroll-btn:hover:not(:disabled) {
+  background: linear-gradient(145deg, #6a5acd, #4b0082);
+  transform: scale(1.05);
+}
+
+.upgrade-reroll-btn:disabled {
+  background: #333;
+  border-color: #555;
+  color: #777;
+  cursor: not-allowed;
+}
+
 .upgrade-ui-title {
   font-size: 28px;
   color: #ffd700;

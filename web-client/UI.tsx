@@ -80,10 +80,17 @@ function SpellPowerUp({
 }
 
 function Upgrade() {
-  const { choices } = useAppSelector((state) => state.upgradeChoices);
+  const { choices, rerollCost } = useAppSelector(
+    (state) => state.upgradeChoices,
+  );
+  const { gold } = useAppSelector((state) => state.gold);
   const [selected, setSelected] = useState<(string | null)[]>(() =>
     choices.map(() => null),
   );
+
+  useEffect(() => {
+    setSelected(choices.map(() => null));
+  }, [choices]);
 
   function handleSelect(levelIdx: number, upgradeId: string) {
     setSelected((prev) => {
@@ -102,9 +109,25 @@ function Upgrade() {
     }
   }
 
+  function handleReroll() {
+    if (serverEventSystem && gold >= rerollCost) {
+      serverEventSystem.dispatchEvent("upgradeReroll");
+    }
+  }
+
   return (
     <div className="upgrade-ui">
-      <div className="upgrade-ui-title">UPGRADE</div>
+      <div className="upgrade-ui-header">
+        <div className="upgrade-ui-title">UPGRADE</div>
+        <div className="upgrade-ui-gold">Gold: {gold}</div>
+        <button
+          className="upgrade-reroll-btn"
+          disabled={gold < rerollCost}
+          onClick={handleReroll}
+        >
+          Reroll ({rerollCost} Gold)
+        </button>
+      </div>
       {choices.map((choiceGroup, levelIdx) => (
         <div key={levelIdx} className="upgrade-level-section">
           <div className="upgrade-level-title">

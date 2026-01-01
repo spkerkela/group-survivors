@@ -14,6 +14,11 @@ export class UpgradeState implements State<StateMachineData> {
   private upgradeListeners: {
     [id: string]: (selected: UpgradeChoice[]) => void;
   } = {};
+  private rerollListeners: {
+    [id: string]: () => void;
+  } = {};
+
+  private readonly REROLL_COST = 5;
 
   constructor(wave: number) {
     this.wave = wave;
@@ -58,7 +63,7 @@ export class UpgradeState implements State<StateMachineData> {
               // Increment player level for each upgrade spent
 
               player.level += 1;
-              scene.pushEvent("level", id, player);
+              scene.pushEvent("level", id, { playerId: id, player: player });
             }
           });
         }
@@ -89,6 +94,7 @@ export class UpgradeState implements State<StateMachineData> {
       logger.info("upgrade choices", playerUpgradeChoices);
       scene.pushEvent("upgrade", id, {
         choices: playerUpgradeChoices,
+        rerollCost: this.REROLL_COST,
       });
       // Remove any previous listener
       if (this.upgradeListeners[id]) {
@@ -116,6 +122,28 @@ export class UpgradeState implements State<StateMachineData> {
         "upgradeSelection",
         this.upgradeListeners[id],
       );
+
+      this.rerollListeners[id] = () => {
+        const player = scene.gameState.players.find((p) => p.id === id);
+        if (player && player.gold >= this.REROLL_COST) {
+          player.gold -= this.REROLL_COST;
+          const currentChoices = scene.getUpgradeChoices(id);
+          const pendingLevelsToRestore = currentChoices.length;
+          scene.clearUpgradeChoices(id);
+          player.pendingLevels = pendingLevelsToRestore;
+          scene.generateUpgradeChoices(id);
+          const newChoices = scene.getUpgradeChoices(id);
+          scene.pushEvent("upgrade", id, {
+            choices: newChoices,
+            rerollCost: this.REROLL_COST,
+          });
+          scene.pushEvent("level", id, { playerId: id, player: player });
+        }
+      };
+      scene.eventSystems.connectionSystems[id].addEventListener(
+        "upgradeReroll",
+        this.rerollListeners[id],
+      );
     });
   }
 
@@ -128,6 +156,13 @@ export class UpgradeState implements State<StateMachineData> {
           this.upgradeListeners[id],
         );
         delete this.upgradeListeners[id];
+      }
+      if (this.rerollListeners[id]) {
+        scene.eventSystems.connectionSystems[id].removeEventListener(
+          "upgradeReroll",
+          this.rerollListeners[id],
+        );
+        delete this.rerollListeners[id];
       }
     });
 
