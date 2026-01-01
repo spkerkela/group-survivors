@@ -12,7 +12,7 @@ describe("Spells", () => {
     const player = createPlayer("test", "test", { x: 0, y: 0 });
     addSpellToPlayer(testSpellId, player);
     addSpellToPlayer(testSpellId, player);
-    expect(player.spells).toEqual({ [testSpellId]: 0 });
+    expect(player.spells).toEqual({ [testSpellId]: 1 });
   });
   it("adding a spell should create a spell state machine entry", () => {
     const player = createPlayer("test", "test", { x: 0, y: 0 });

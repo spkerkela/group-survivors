@@ -47,9 +47,11 @@ export class UpgradeState implements State<StateMachineData> {
             if (choice?.spellId && choice.powerUp) {
               // Apply the upgrade
               const { spellId, powerUp } = choice;
-              // Add spell if not present
+              // Add spell if not present, otherwise increment level
               if (!(spellId in player.spells)) {
                 player.spells[spellId] = 1;
+              } else {
+                player.spells[spellId] += 1;
               }
               // Apply powerup
               applyPowerUp(player, spellId, powerUp);

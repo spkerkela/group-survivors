@@ -108,6 +108,7 @@ export function castSpell(
 export function addSpellToPlayer(
   spellId: string,
   player: ServerPlayer,
+  level = 1,
 ): boolean {
   if (player.spells[spellId] != null) {
     return false;
@@ -119,7 +120,7 @@ export function addSpellToPlayer(
     }
     player.spellSMs[spellId] = new SpellStateMachine(spellData, player);
   }
-  player.spells[spellId] = 0;
+  player.spells[spellId] = level;
   return true;
 }
 export function shootAtNearestEnemy(

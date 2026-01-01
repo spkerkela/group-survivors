@@ -120,11 +120,11 @@ export class ServerScene {
       player.powerUps = matchState.powerUps;
       player.globalPowerUps = matchState.globalPowerUps;
 
-      for (const spellId of Object.keys(matchState.spells)) {
+      for (const [spellId, level] of Object.entries(matchState.spells)) {
         logger.info(
-          `Adding spell ${spellId} to player ${player.id} from match state`,
+          `Adding spell ${spellId} (Lvl ${level}) to player ${player.id} from match state`,
         );
-        addSpellToPlayer(spellId, player);
+        addSpellToPlayer(spellId, player, level);
       }
     }
   }
