@@ -121,32 +121,134 @@ h1 {
 
 .power-up-card {
   cursor: pointer;
-  padding: 10px;
+  padding: 16px 20px;
   display: flex;
-  background-color: rgba(0, 0, 0, 0.5);
-  border-radius: 10px;
-  border: 1px solid #ffffff;
+  background: linear-gradient(
+    145deg,
+    rgba(30, 30, 50, 0.95),
+    rgba(15, 15, 30, 0.95)
+  );
+  border-radius: 12px;
+  border: 2px solid rgba(100, 100, 150, 0.4);
   flex-direction: column;
-  justify-content: space-between;
-  width: 25%;
-  height: 30%;
-  margin-top: 10px;
-  margin-left: 10px;
-  gap: 3px;
+  justify-content: flex-start;
+  width: 160px;
+  min-height: 120px;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.power-up-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(150, 150, 200, 0.6);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
 }
 
 .power-up-card-title {
   text-align: center;
-  color: #ffff00;
+  color: #ffd700;
   font-weight: bold;
+  font-size: 14px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+  padding-bottom: 8px;
+  margin-bottom: 4px;
+}
+
+.power-up-card-description {
+  font-size: 12px;
+  color: #c0c0d0;
+  line-height: 1.4;
+  text-align: center;
 }
 
 .upgrade-ui {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   height: 600px;
-  justify-content: space-around;
+  justify-content: center;
   align-items: center;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(40, 20, 80, 0.3) 0%,
+    transparent 70%
+  );
+  padding: 20px;
+}
+
+.upgrade-ui-title {
+  font-size: 28px;
+  color: #ffd700;
+  text-shadow: 0 2px 10px rgba(255, 215, 0, 0.4);
+  margin-bottom: 24px;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+.upgrade-level-section {
+  margin-bottom: 20px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 16px;
+  padding: 16px 24px;
+  border: 1px solid rgba(100, 100, 150, 0.3);
+}
+
+.upgrade-level-title {
+  font-size: 16px;
+  color: #a0a0ff;
+  margin-bottom: 12px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.upgrade-choices-row {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.upgrade-choice-wrapper {
+  border-radius: 14px;
+  padding: 3px;
+  transition: all 0.2s ease;
+}
+
+.upgrade-choice-wrapper.selected {
+  background: linear-gradient(135deg, #ffd700, #ff8c00);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+.upgrade-choice-wrapper:not(.selected) {
+  background: transparent;
+}
+
+.upgrade-confirm-btn {
+  margin-top: 24px;
+  font-size: 20px;
+  padding: 12px 40px;
+  background: linear-gradient(145deg, #a70000, #800000);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 15px rgba(167, 0, 0, 0.4);
+}
+
+.upgrade-confirm-btn:hover:not(:disabled) {
+  background: linear-gradient(145deg, #d62929, #a70000);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(167, 0, 0, 0.5);
+}
+
+.upgrade-confirm-btn:disabled {
+  background: linear-gradient(145deg, #444, #333);
+  color: #888;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 .button {

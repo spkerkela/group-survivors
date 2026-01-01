@@ -85,7 +85,6 @@ function Upgrade() {
     choices.map(() => null),
   );
 
-  // Handler for selecting an upgrade for a given level
   function handleSelect(levelIdx: number, upgradeId: string) {
     setSelected((prev) => {
       const next = [...prev];
@@ -94,43 +93,28 @@ function Upgrade() {
     });
   }
 
-  // Confirm button handler
   function handleConfirm() {
-    // Gather the selected UpgradeChoice objects
     const selectedChoices = choices.map((choiceGroup, idx) =>
       choiceGroup.find((c) => c.id === selected[idx]),
     );
-    // Only send if all are selected and serverEventSystem is available
     if (selectedChoices.every(Boolean) && serverEventSystem) {
       serverEventSystem.dispatchEvent("upgradeSelection", selectedChoices);
     }
   }
 
-  // Render each group of choices (one per pending level)
   return (
-    <div className="upgrade-ui" style={{ flexDirection: "column" }}>
+    <div className="upgrade-ui">
+      <div className="upgrade-ui-title">UPGRADE</div>
       {choices.map((choiceGroup, levelIdx) => (
-        <div key={levelIdx} style={{ marginBottom: 24 }}>
-          <div style={{ marginBottom: 8, fontWeight: "bold" }}>
-            Choose upgrade for Level {levelIdx + 1}
+        <div key={levelIdx} className="upgrade-level-section">
+          <div className="upgrade-level-title">
+            Level {levelIdx + 1} Upgrade
           </div>
-          <div style={{ display: "flex", gap: 16 }}>
+          <div className="upgrade-choices-row">
             {choiceGroup.map((data) => (
               <div
                 key={data.id}
-                style={{
-                  border:
-                    selected[levelIdx] === data.id
-                      ? "3px solid #ffff00"
-                      : "2px solid #333",
-                  borderRadius: 8,
-                  cursor: "pointer",
-                  background: selected[levelIdx] === data.id ? "#222" : "#111",
-                  boxShadow:
-                    selected[levelIdx] === data.id
-                      ? "0 0 8px 2px #ffff00"
-                      : undefined,
-                }}
+                className={`upgrade-choice-wrapper ${selected[levelIdx] === data.id ? "selected" : ""}`}
                 onClick={() => handleSelect(levelIdx, data.id)}
               >
                 <SpellPowerUp powerUp={data.powerUp} spellId={data.spellId} />
@@ -140,8 +124,7 @@ function Upgrade() {
         </div>
       ))}
       <button
-        className="button"
-        style={{ marginTop: 32, fontSize: 28 }}
+        className="upgrade-confirm-btn"
         disabled={selected.some((s) => !s)}
         onClick={handleConfirm}
       >
