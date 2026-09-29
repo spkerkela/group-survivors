@@ -56,7 +56,6 @@ export function instantiatePlayer(
     .container(player.x, player.y)
     .setName(player.id);
   const playerSprite = scene.add.sprite(0, 0, "player").setOrigin(0.5, 0.5);
-  playerSprite.play({ key: "player", repeat: -1 });
   playerContainer.add(playerSprite);
   const playerText = scene.add
     .text(0, -20, player.screenName, {
@@ -106,6 +105,16 @@ export function updatePlayer(
   serverPlayer: Player,
 ) {
   const scene = player.scene;
+  const container = player as Phaser.GameObjects.Container;
+  const sprite = container.getAt(0) as Phaser.GameObjects.Sprite;
+  // Ignore sub-pixel tween settling so idle players don't keep walking.
+  if (
+    Math.hypot(serverPlayer.x - container.x, serverPlayer.y - container.y) > 0.1
+  ) {
+    sprite.play({ key: "player", repeat: -1, frameRate: 8 }, true);
+  } else {
+    sprite.stop().setFrame(0);
+  }
   scene.add.tween({
     targets: player,
     x: serverPlayer.x,
