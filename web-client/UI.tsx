@@ -27,11 +27,32 @@ export default function UI() {
         return <JoinGame />;
     }
   })();
-  return <div id="ui">{ui}</div>;
+  return (
+    <div id="ui" data-screen={game.state}>
+      {ui}
+    </div>
+  );
 }
 
 function GameOver() {
-  return <div className="gameOver">Game Over</div>;
+  return (
+    <section className="screen game-over" aria-labelledby="game-over-title">
+      <div className="result-mark" aria-hidden="true">
+        ✦
+      </div>
+      <p className="eyebrow">Until the next run</p>
+      <h2 id="game-over-title">Game Over</h2>
+      <p className="muted">Every wave makes a survivor.</p>
+      <p role="status" className="waiting-note">
+        Returning to the lobby shortly…
+      </p>
+    </section>
+  );
+}
+
+function formatTime(seconds: number) {
+  const wholeSeconds = Math.max(0, Math.floor(seconds));
+  return `${Math.floor(wholeSeconds / 60)}:${String(wholeSeconds % 60).padStart(2, "0")}`;
 }
 
 function SpellPowerUp({
@@ -55,7 +76,7 @@ function SpellPowerUp({
     }
   })();
 
-  const valueAsPercentage = (powerUp.value * 100).toFixed(2);
+  const valueAsPercentage = Number((powerUp.value * 100).toFixed(2));
   const description = ((spellName: string) => {
     switch (powerUp.type) {
       case "damage":
@@ -70,12 +91,17 @@ function SpellPowerUp({
   })(spell.name);
 
   return (
-    <div className="power-up-card">
-      <div className="power-up-card-title">
-        {spell.name}-{powerUpTitle}
-      </div>
-      <div className="power-up-card-description">{description}</div>
-    </div>
+    <span className="power-up-card">
+      <span className="power-up-card-spell">{spell.name}</span>
+      <span className="power-up-card-title">{powerUpTitle}</span>
+      <span className="power-up-card-value">
+        {powerUp.type === "cooldown" ? "−" : "+"}
+        {powerUp.type === "additionalCast"
+          ? powerUp.value
+          : `${valueAsPercentage}%`}
+      </span>
+      <span className="power-up-card-description">{description}</span>
+    </span>
   );
 }
 
@@ -120,57 +146,92 @@ function Upgrade() {
   }
 
   return (
-    <div className="upgrade-ui">
-      <div className="upgrade-ui-header">
-        <div className="upgrade-ui-title">UPGRADE</div>
+    <section className="screen upgrade-ui" aria-labelledby="upgrade-title">
+      <header className="upgrade-ui-header">
+        <div>
+          <p className="eyebrow">Between waves</p>
+          <h2 id="upgrade-title">Grow stronger.</h2>
+          <p className="muted">
+            {choices.length
+              ? "Choose one boost from each set."
+              : "No upgrades this round. Ready for another wave?"}
+          </p>
+        </div>
         {timeLeft !== null && (
           <div
-            className="upgrade-level-title"
+            className="timer-chip"
             role="timer"
             aria-label="Upgrade time remaining"
           >
-            Time remaining: {Math.floor(timeLeft / 60)}:
-            {String(timeLeft % 60).padStart(2, "0")}
+            <span>Time to choose</span>
+            <strong>{formatTime(timeLeft)}</strong>
           </div>
         )}
-        <div className="upgrade-ui-gold">Gold: {gold}</div>
+      </header>
+      <div className="upgrade-toolbar">
+        <span className="upgrade-ui-gold">Gold: {gold}</span>
         <button
-          className="upgrade-reroll-btn"
-          disabled={confirmed || gold < rerollCost}
+          type="button"
+          className="upgrade-reroll-btn secondary-button"
+          disabled={confirmed || gold < rerollCost || choices.length === 0}
           onClick={handleReroll}
         >
-          Reroll ({rerollCost} Gold)
+          Reroll · {rerollCost} Gold
         </button>
       </div>
-      {choices.map((choiceGroup, levelIdx) => (
-        <div key={levelIdx} className="upgrade-level-section">
-          <div className="upgrade-level-title">
-            Level {levelIdx + 1} Upgrade
-          </div>
-          <div className="upgrade-choices-row">
-            {choiceGroup.map((data) => (
-              <div
-                key={data.id}
-                className={`upgrade-choice-wrapper ${selected[levelIdx] === data.id ? "selected" : ""}`}
-                onClick={() => handleSelect(levelIdx, data.id)}
-              >
-                <SpellPowerUp powerUp={data.powerUp} spellId={data.spellId} />
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
-      <button
-        className="upgrade-confirm-btn"
-        disabled={confirmed || selected.some((s) => !s)}
-        onClick={handleConfirm}
-      >
-        {confirmed ? "Upgrades Confirmed" : "Confirm Upgrades"}
-      </button>
-      <div role="status" className="upgrade-level-title">
-        {confirmed && "Waiting for other players…"}
+      <div className="upgrade-sets">
+        {choices.map((choiceGroup, levelIdx) => (
+          <fieldset
+            key={choiceGroup.map((choice) => choice.id).join(",")}
+            className="upgrade-level-section"
+            disabled={confirmed}
+          >
+            <legend className="upgrade-level-title">
+              Upgrade {levelIdx + 1}
+            </legend>
+            <div className="upgrade-choices-row">
+              {choiceGroup.map((data) => (
+                <label
+                  key={data.id}
+                  className={`upgrade-choice-wrapper ${selected[levelIdx] === data.id ? "selected" : ""}`}
+                >
+                  <input
+                    type="radio"
+                    name={`upgrade-${levelIdx}`}
+                    value={data.id}
+                    checked={selected[levelIdx] === data.id}
+                    onChange={() => handleSelect(levelIdx, data.id)}
+                  />
+                  <SpellPowerUp powerUp={data.powerUp} spellId={data.spellId} />
+                  <span className="choice-state" aria-hidden="true">
+                    {selected[levelIdx] === data.id
+                      ? "✓ Selected"
+                      : "Select boost"}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        ))}
       </div>
-    </div>
+      <footer className="upgrade-footer">
+        <div role="status" className="waiting-note">
+          {confirmed && "Waiting for other players…"}
+        </div>
+        <button
+          type="button"
+          className="upgrade-confirm-btn button"
+          disabled={confirmed || selected.some((s) => !s)}
+          onClick={handleConfirm}
+        >
+          {confirmed
+            ? "Upgrades Confirmed"
+            : choices.length
+              ? "Confirm Upgrades"
+              : "Continue"}
+        </button>
+      </footer>
+    </section>
   );
 }
 
@@ -225,32 +286,74 @@ function JoinGame() {
   const isStartDisabled = !isValid || isJoinLocked;
 
   return (
-    <div className="join-game-container">
-      <input
-        autoComplete="off"
-        id="name"
-        data-testid="name"
-        type="text"
-        placeholder="Name"
-        value={input}
-        disabled={isJoinLocked}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-      />
-      <div id="error" data-testid="error">
-        {error}
+    <section className="screen lobby" aria-labelledby="lobby-title">
+      <div className="lobby-intro">
+        <p className="eyebrow">Co-op survival</p>
+        <h2 id="lobby-title">
+          Stand together.
+          <br />
+          <em>Survive the swarm.</em>
+        </h2>
+        <p className="muted">
+          Gather your group, take on the horde, and build a little more power
+          with every wave.
+        </p>
       </div>
-      <button
-        className="button"
-        id="start"
-        data-testid="start"
-        type="button"
-        disabled={isStartDisabled}
-        onClick={submitJoinRequest}
-      >
-        Start
-      </button>
-    </div>
+      <div className="join-game-container">
+        <label htmlFor="name">Your survivor name</label>
+        <input
+          autoComplete="off"
+          spellCheck={false}
+          id="name"
+          data-testid="name"
+          type="text"
+          placeholder="Enter your name"
+          value={input}
+          disabled={isJoinLocked}
+          aria-invalid={input.length > 0 && !isValid}
+          aria-describedby="error"
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+        />
+        <div id="error" data-testid="error" aria-live="polite">
+          {input.length > 0 && error}
+        </div>
+        <button
+          className="button"
+          id="start"
+          data-testid="start"
+          type="button"
+          disabled={isStartDisabled}
+          onClick={submitJoinRequest}
+        >
+          {isJoinLocked ? "Joining…" : "Join the fight"}
+        </button>
+        <p role="status" className="join-status">
+          {isJoinLocked
+            ? "Waiting for the game…"
+            : "Pick a name. Make it through together."}
+        </p>
+      </div>
+      <section className="how-to-play" aria-label="How to play">
+        <div>
+          <span className="control-keys">
+            <kbd>W</kbd>
+            <kbd>A</kbd>
+            <kbd>S</kbd>
+            <kbd>D</kbd>
+          </span>
+          <span>Move & evade</span>
+        </div>
+        <div>
+          <strong>Auto-attack</strong>
+          <span>Stay close. Spells do the work.</span>
+        </div>
+        <div>
+          <strong>Collect & upgrade</strong>
+          <span>Gather gems. Build your power.</span>
+        </div>
+      </section>
+    </section>
   );
 }
 
@@ -258,17 +361,27 @@ function MatchUI() {
   const currentHealth = useAppSelector((state) => state.health.currentHealth);
   return (
     <div className="match-ui">
-      <div className="bars">
-        <HealthBar />
-        <ExperienceBar />
+      <div className="hud-top">
+        <div className="bars">
+          <HealthBar />
+          <ExperienceBar />
+        </div>
+        <MatchStatus />
       </div>
       {currentHealth <= 0 && (
         <div role="status" className="death-notice">
-          You died. Please wait until the round is over.
+          <span className="eyebrow">Hold on, survivor</span>
+          <strong>You fell in battle.</strong>
+          <span>Wait for the round to end. Your group fights on.</span>
         </div>
       )}
-      <MatchStatus />
-      <ActiveSpells />
+      <div className="hud-bottom">
+        <div className="player-stats">
+          <PlayerLevel />
+          <Gold />
+        </div>
+        <ActiveSpells />
+      </div>
     </div>
   );
 }
@@ -276,18 +389,18 @@ function MatchUI() {
 function ActiveSpells() {
   const { spells } = useAppSelector((state) => state.activeSpells);
   return (
-    <div className="active-spells">
+    <section className="active-spells" aria-label="Active spells">
       {Object.entries(spells).map(([spellId, level]) => {
         const spell = spellDB[spellId];
         if (!spell) return null;
         return (
           <div key={spellId} className="active-spell-card">
             <div className="spell-name">{spell.name}</div>
-            <div className="spell-level">Lvl {level}</div>
+            <div className="spell-level">Lv. {level}</div>
           </div>
         );
       })}
-    </div>
+    </section>
   );
 }
 
@@ -297,12 +410,16 @@ function MatchStatus() {
     <div className="match-status">
       {game.wave > 0 && (
         <>
-          <div id="wave">Wave: {game.wave}</div>
-          <div id="timeRemaining">Time remaining: {game.timeLeft}</div>
+          <div id="wave">
+            <span className="stat-label">Wave</span>
+            <strong>{String(game.wave).padStart(2, "0")}</strong>
+          </div>
+          <div id="timeRemaining" role="timer" aria-label="Wave time remaining">
+            <span className="stat-label">Remaining</span>
+            <strong>{formatTime(game.timeLeft)}</strong>
+          </div>
         </>
       )}
-      <PlayerLevel />
-      <Gold />
     </div>
   );
 }
@@ -310,31 +427,44 @@ function MatchStatus() {
 function Bar({
   current,
   max,
-  color,
+  label,
+  kind,
 }: {
   current: number;
   max: number;
-  color: string;
+  label: string;
+  kind: string;
 }) {
-  const percent = Math.round((current / max) * 100);
+  const limit = Math.max(0, max);
+  const value = Math.max(0, Math.min(current, limit));
+  const percent = limit > 0 ? (value / limit) * 100 : 0;
   return (
-    <div className="bar-outer">
-      <div className="bar-container-text">
-        <div className="bar-container-text-align-center">
-          {Math.floor(current)}/{Math.ceil(max)}
-        </div>
+    <div className={`resource-bar ${kind}`}>
+      <div className="bar-label">
+        <span>{label}</span>
+        <span>
+          {Math.floor(value)}/{Math.ceil(limit)}
+        </span>
       </div>
       <div
-        className="bar-inner"
-        style={{ width: `${percent}%`, backgroundColor: color }}
-      />
+        className="bar-outer"
+        role="progressbar"
+        aria-label={label}
+        aria-valuemin={0}
+        aria-valuemax={limit}
+        aria-valuenow={value}
+      >
+        <div className="bar-inner" style={{ width: `${percent}%` }} />
+      </div>
     </div>
   );
 }
 
 function HealthBar() {
   const { currentHealth, maxHealth } = useAppSelector((state) => state.health);
-  return <Bar current={currentHealth} max={maxHealth} color="#ff0000" />;
+  return (
+    <Bar current={currentHealth} max={maxHealth} label="Health" kind="health" />
+  );
 }
 
 function ExperienceBar() {
@@ -345,7 +475,8 @@ function ExperienceBar() {
     <Bar
       current={currentExperience}
       max={experienceToNextLevel}
-      color="#0000ff"
+      label="Experience"
+      kind="experience"
     />
   );
 }
@@ -353,11 +484,14 @@ function ExperienceBar() {
 function PlayerLevel() {
   const { level, pendingLevels } = useAppSelector((state) => state.level);
   return (
-    <div>
-      Player Level: {level}
+    <div className="player-level">
+      <span className="stat-label">Level</span> <strong>{level}</strong>
       {pendingLevels > 0 && (
-        <span style={{ color: "yellow", marginLeft: "0.5rem" }}>
-          (+{pendingLevels})
+        <span
+          className="pending-levels"
+          title="Upgrades available after this wave"
+        >
+          +{pendingLevels} pending
         </span>
       )}
     </div>
@@ -365,5 +499,9 @@ function PlayerLevel() {
 }
 function Gold() {
   const gold = useAppSelector((state) => state.gold);
-  return <div id="gold">Gold: {gold.gold}</div>;
+  return (
+    <div id="gold">
+      <span className="stat-label">Gold</span> <strong>{gold.gold}</strong>
+    </div>
+  );
 }

@@ -54,7 +54,10 @@ test.beforeAll(async () => {
 test("dead players wait for the round to end, then return to the normal UI", async ({
   page,
 }) => {
-  await page.setContent('<div id="root"></div>');
+  await page.setContent(
+    '<div id="app"><main id="root" class="game-stage"></main></div>',
+  );
+  await page.addStyleTag({ path: "web-client/style.css" });
   await page.addScriptTag({ content: uiScript });
   await page.waitForFunction("window.serverEvents?.update");
   await page.evaluate(`
@@ -65,19 +68,19 @@ test("dead players wait for the round to end, then return to the normal UI", asy
     window.serverEvents.beginMatch(window.liveUpdate);
     window.serverEvents.update(window.liveUpdate);
   `);
-  const notice = page.getByText(
-    "You died. Please wait until the round is over.",
-  );
+  const notice = page.getByText("You fell in battle.");
   await expect(notice).toHaveCount(0);
 
   // The server removes a dead player before sending the next update.
   await page.evaluate(
     "window.serverEvents.update({ ...window.liveUpdate, player: null })",
   );
-  await expect(page.getByRole("status")).toHaveText(
-    "You died. Please wait until the round is over.",
+  await expect(page.getByRole("status")).toContainText(
+    "Wait for the round to end. Your group fights on.",
   );
-  await expect(page.locator("#timeRemaining")).toHaveText("Time remaining: 30");
+  await expect(
+    page.getByRole("timer", { name: "Wave time remaining" }),
+  ).toContainText("0:30");
   await page.evaluate(
     "window.serverEvents.update({ ...window.liveUpdate, player: null, waveSecondsRemaining: 20 })",
   );
@@ -87,9 +90,7 @@ test("dead players wait for the round to end, then return to the normal UI", asy
     "window.serverEvents.upgrade({ choices: [], rerollCost: 5, timeLeft: null })",
   );
   await expect(notice).toHaveCount(0);
-  await expect(
-    page.getByRole("button", { name: "Confirm Upgrades" }),
-  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Continue" })).toBeVisible();
   await page.evaluate(`
     window.serverEvents.beginMatch(window.liveUpdate);
     window.serverEvents.update(window.liveUpdate);

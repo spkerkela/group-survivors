@@ -8,7 +8,9 @@ const container = document.getElementById("app");
 const root = createRoot(container!);
 root.render(
   <Provider store={store}>
-    <GameContainer />
-    <UI />
+    <main className="game-stage" aria-label="Group Survivors game">
+      <GameContainer />
+      <UI />
+    </main>
   </Provider>,
 );

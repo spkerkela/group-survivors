@@ -24,32 +24,18 @@ class LobbyScene extends Phaser.Scene {
   constructor() {
     super({ key: "Lobby", active: false });
   }
-  create() {
-    this.add.text(10, 10, "Lobby");
-  }
-  update() {}
 }
 
 class UpgradeScene extends Phaser.Scene {
   constructor() {
     super({ key: "Upgrade", active: false });
   }
-
-  create() {
-    this.add.text(10, 10, "Upgrade");
-  }
-
-  update() {}
 }
 
 class GameOverScene extends Phaser.Scene {
   constructor() {
     super({ key: "GameOver", active: false });
   }
-  create() {
-    this.add.text(10, 10, "Game Over");
-  }
-  update() {}
 }
 
 export default class PhaserMiddleware implements GameFrontend {
@@ -72,7 +58,7 @@ export default class PhaserMiddleware implements GameFrontend {
         new UpgradeScene(),
         new GameOverScene(),
       ],
-      backgroundColor: "#170332",
+      backgroundColor: "#13101e",
     });
 
     this.phaserInstance.scene.start("Lobby");

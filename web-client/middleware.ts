@@ -50,13 +50,15 @@ export function instantiatePlayer(
   playerSprite.play({ key: "player", repeat: -1 });
   playerContainer.add(playerSprite);
   const playerText = scene.add
-    .text(0, -32, player.screenName, {
-      font: "24x Arial",
-      stroke: "#000000",
+    .text(0, -20, player.screenName, {
+      fontFamily: "Arial, sans-serif",
+      fontSize: "9px",
+      color: "#f5efdf",
+      stroke: "#13101e",
       strokeThickness: 2,
     })
     .setOrigin(0.5, 0.5)
-    .setShadow(2, 2, "#333333", 2, true, true);
+    .setShadow(0, 1, "#13101e", 1, true, true);
   playerContainer.add(playerText);
   playerContainer.setData("text", playerText);
   playerContainer.setData("type", "player");
