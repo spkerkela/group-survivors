@@ -1,0 +1,366 @@
+import assert from "node:assert/strict";
+import { beforeEach, describe, it, mock } from "node:test";
+import EventSystem from "../../common/EventSystem";
+import type { ClientGameState } from "../../common/types";
+import { GameServer } from "../../server/GameServer";
+import { createPlayer } from "../../server/game-logic/player";
+import { EndMatchState } from "../../server/game-session/EndMatchState";
+import { MatchState } from "../../server/game-session/MatchState";
+import { PreMatchState } from "../../server/game-session/PreMatchState";
+import { ServerScene } from "../../server/ServerScene";
+import { createTestConnection } from "./connectionUtils";
+import { levelData } from "./fixtures";
+
+describe("Server", () => {
+  let server: GameServer;
+  let serverScene: ServerScene;
+  beforeEach(() => {
+    serverScene = new ServerScene({
+      gameEventSystem: new EventSystem(),
+      connectionSystems: {},
+    });
+    server = new GameServer(serverScene, levelData);
+  });
+  function beginGame(playerCount = 1) {
+    for (let i = 0; i < playerCount; i++) {
+      const conn = createTestConnection(serverScene, `test-id-${i}`);
+      conn.dispatchEvent("join", `Random Name ${i}`);
+    }
+    server.update(0);
+  }
+
+  it("should remain in the pre-match state when someone connects", () => {
+    createTestConnection(serverScene, "test-id");
+    server.update(0);
+    assert.ok(
+      server.gameStateMachine.stateMachine.state instanceof PreMatchState,
+    );
+  });
+  it("should remain in pre-match even if enough players join but they have not sent a join event", () => {
+    createTestConnection(serverScene, "test-id");
+    createTestConnection(serverScene, "test-id-2");
+    server.update(0);
+    assert.ok(
+      server.gameStateMachine.stateMachine.state instanceof PreMatchState,
+    );
+  });
+  it("starts for a ready player without waiting for an idle browser", () => {
+    server.gameStateMachine.data.playersRequired = 1;
+    const player = createTestConnection(serverScene, "player");
+    const idle = createTestConnection(serverScene, "idle-browser");
+    const playerBegin = mock.fn();
+    const idleBegin = mock.fn();
+    player.addEventListener("beginMatch", playerBegin);
+    idle.addEventListener("beginMatch", idleBegin);
+    player.dispatchEvent("join", "Ready Player");
+    server.update(0);
+    server.update(0);
+
+    assert.ok(server.gameStateMachine.stateMachine.state instanceof MatchState);
+    assert.deepEqual(
+      serverScene.gameState.players.map((p) => p.id),
+      ["player"],
+    );
+    assert.equal(playerBegin.mock.callCount(), 1);
+    assert.equal(idleBegin.mock.callCount(), 0);
+  });
+
+  it("lets an already-connected idle browser join the running match", () => {
+    const idle = createTestConnection(serverScene, "idle-browser");
+    const begin = mock.fn();
+    idle.addEventListener("beginMatch", begin);
+    beginGame();
+    server.update(0);
+    idle.dispatchEvent("join", "Late Player");
+    server.update(0);
+
+    assert.equal(begin.mock.callCount(), 1);
+    assert.deepEqual(serverScene.gameState.players.map((p) => p.id).sort(), [
+      "idle-browser",
+      "test-id-0",
+    ]);
+    idle.dispatchEvent("move", {
+      up: false,
+      down: false,
+      left: false,
+      right: true,
+    });
+    assert.deepEqual(serverScene.updates.moves["idle-browser"], { x: 1, y: 0 });
+  });
+
+  it("counts only distinct connected players who joined toward the required minimum", () => {
+    server.gameStateMachine.data.playersRequired = 2;
+    const first = createTestConnection(serverScene, "first");
+    const second = createTestConnection(serverScene, "second");
+    createTestConnection(serverScene, "idle-browser");
+    first.dispatchEvent("join", "First Player");
+    first.dispatchEvent("join", "First Player");
+    server.update(0);
+    assert.ok(
+      server.gameStateMachine.stateMachine.state instanceof PreMatchState,
+    );
+    second.dispatchEvent("join", "Second Player");
+    second.dispatchEvent("disconnect");
+    server.update(0);
+    assert.ok(
+      server.gameStateMachine.stateMachine.state instanceof PreMatchState,
+    );
+    const replacement = createTestConnection(serverScene, "replacement");
+    replacement.dispatchEvent("join", "Replacement Player");
+    server.update(0);
+    assert.ok(server.gameStateMachine.stateMachine.state instanceof MatchState);
+  });
+  it("should send 'joined' event to player in response to 'join' event", () => {
+    const p1Conn = createTestConnection(serverScene, "test-id");
+    const p1JoinedSpy = mock.fn();
+    p1Conn.addEventListener("joined", p1JoinedSpy);
+    p1Conn.dispatchEvent("join", "Random Name");
+    server.update(0);
+    assert.ok(p1JoinedSpy.mock.callCount() > 0);
+  });
+  it("should move to the game state if enough players join", () => {
+    const p1Conn = createTestConnection(serverScene, "test-id");
+    const p2Conn = createTestConnection(serverScene, "test-id-2");
+    p1Conn.dispatchEvent("join", "Random Name");
+    p2Conn.dispatchEvent("join", "Random Name 2");
+    server.update(0);
+    server.update(0);
+
+    assert.ok(server.gameStateMachine.stateMachine.state instanceof MatchState);
+    assert.equal(serverScene.gameState.players.length, 2);
+  });
+  it("should send 'beginMatch' event to all players when the game starts", () => {
+    const p1Conn = createTestConnection(serverScene, "test-id");
+    const p2Conn = createTestConnection(serverScene, "test-id-2");
+    const p1JoinedSpy = mock.fn();
+    const p2JoinedSpy = mock.fn();
+    p1Conn.addEventListener("beginMatch", p1JoinedSpy);
+    p2Conn.addEventListener("beginMatch", p2JoinedSpy);
+    p1Conn.dispatchEvent("join", "Random Name");
+    p2Conn.dispatchEvent("join", "Random Name 2");
+    server.update(0);
+    server.update(0);
+    assert.ok(p1JoinedSpy.mock.callCount() > 0);
+    assert.ok(p2JoinedSpy.mock.callCount() > 0);
+  });
+  it("should send an 'update' event to all players when the game is in update", () => {
+    const p1Conn = createTestConnection(serverScene, "test-id");
+    const p2Conn = createTestConnection(serverScene, "test-id-2");
+    const p1JoinedSpy = mock.fn();
+    const p2JoinedSpy = mock.fn();
+    p1Conn.addEventListener("update", p1JoinedSpy);
+    p2Conn.addEventListener("update", p2JoinedSpy);
+    p1Conn.dispatchEvent("join", "Random Name");
+    p2Conn.dispatchEvent("join", "Random Name 2");
+    serverScene.gameState.players = [
+      createPlayer("test-id", "Random Name", { x: 500, y: 500 }),
+      createPlayer("test-id-2", "Random Name 2", { x: 1000, y: 1000 }),
+    ];
+    serverScene.updateQuadTree();
+    const gameStates: ClientGameState[] = [];
+    Object.entries(serverScene.eventSystems.connectionSystems).forEach(
+      ([id]) => {
+        const gameState = serverScene.createGameStateMessage(id);
+        gameStates.push(gameState);
+        serverScene.pushEvent("update", id, gameState);
+      },
+    );
+    server.update(0);
+    assert.deepEqual(p1JoinedSpy.mock.calls[0].arguments, [gameStates[0]]);
+    assert.deepEqual(p2JoinedSpy.mock.calls[0].arguments, [gameStates[1]]);
+  });
+  it("should not send positions of players that are not close to each other", () => {
+    const p1Conn = createTestConnection(serverScene, "test-id");
+    const p2Conn = createTestConnection(serverScene, "test-id-2");
+    p1Conn.dispatchEvent("join", "Random Name");
+    p2Conn.dispatchEvent("join", "Random Name 2");
+    serverScene.gameState.players = [
+      createPlayer("test-id", "Random Name", { x: 1, y: 1 }),
+      createPlayer("test-id-2", "Random Name 2", { x: 1000, y: 1000 }),
+      createPlayer("test-id-3", "Random Name 3", { x: 1001, y: 1000 }),
+      createPlayer("test-id-4", "Random Name 4", { x: 1002, y: 1000 }),
+      createPlayer("test-id-5", "Random Name 5", { x: 1003, y: 1000 }),
+      createPlayer("test-id-6", "Random Name 6", { x: 1004, y: 1000 }),
+      createPlayer("test-id-7", "Random Name 7", { x: 1005, y: 1000 }),
+      createPlayer("test-id-8", "Random Name 8", { x: 1006, y: 1000 }),
+      createPlayer("test-id-9", "Random Name 9", { x: 1007, y: 1000 }),
+    ];
+    serverScene.updateQuadTree();
+    const gameStates: ClientGameState[] = [];
+    Object.entries(serverScene.eventSystems.connectionSystems).forEach(
+      ([id]) => {
+        const gameState = serverScene.createGameStateMessage(id);
+        gameStates.push(gameState);
+        serverScene.pushEvent("update", id, gameState);
+      },
+    );
+    server.update(0);
+    assert.equal(gameStates[0].players.length, 1);
+    assert.equal(gameStates[1].players.length, 8);
+  });
+  it("should move to retrospective state when the game is over", () => {
+    const p1Conn = createTestConnection(serverScene, "test-id");
+    const p2Conn = createTestConnection(serverScene, "test-id-2");
+    p1Conn.dispatchEvent("join", "Random Name");
+    p2Conn.dispatchEvent("join", "Random Name 2");
+    server.update(0);
+    server.update(0);
+    [p1Conn, p2Conn].forEach((conn) => {
+      conn.dispatchEvent("disconnect");
+    });
+    server.update(0);
+
+    assert.ok(
+      server.gameStateMachine.stateMachine.state instanceof EndMatchState,
+    );
+  });
+  it("should add new players when they join a game that is in update", () => {
+    const p1Conn = createTestConnection(serverScene, "test-id");
+    const p2Conn = createTestConnection(serverScene, "test-id-2");
+    p1Conn.dispatchEvent("join", "Random Name");
+    p2Conn.dispatchEvent("join", "Random Name 2");
+    server.update(0);
+    server.update(0);
+    const p3Conn = createTestConnection(serverScene, "test-id-3");
+    p3Conn.dispatchEvent("join", "Random Name 3");
+
+    assert.deepEqual(serverScene.updates.newPlayers, [
+      {
+        id: "test-id-3",
+        screenName: "Random Name 3",
+      },
+    ]);
+    server.update(0);
+    assert.equal(serverScene.gameState.players.length, 3);
+    assert.deepEqual(serverScene.updates.newPlayers, []);
+  });
+  it("should send endMatch event to all players when the game is over", () => {
+    const p1Conn = createTestConnection(serverScene, "test-id");
+    const p2Conn = createTestConnection(serverScene, "test-id-2");
+    const p1JoinedSpy = mock.fn();
+    const p2JoinedSpy = mock.fn();
+    p1Conn.addEventListener("endMatch", p1JoinedSpy);
+    p2Conn.addEventListener("endMatch", p2JoinedSpy);
+    p1Conn.dispatchEvent("join", "Random Name");
+    p2Conn.dispatchEvent("join", "Random Name 2");
+    server.update(0);
+    server.update(0);
+    serverScene.gameState.players.forEach((player) => {
+      player.hp = 0;
+      player.alive = false;
+    });
+    server.update(0);
+    server.update(0);
+    assert.ok(p1JoinedSpy.mock.callCount() > 0);
+    assert.ok(p2JoinedSpy.mock.callCount() > 0);
+  });
+  it("should move to the lobby state after ten seconds", () => {
+    const p1Conn = createTestConnection(serverScene, "test-id");
+    const p2Conn = createTestConnection(serverScene, "test-id-2");
+    p1Conn.dispatchEvent("join", "Random Name");
+    p2Conn.dispatchEvent("join", "Random Name 2");
+    server.update(0);
+    server.update(0);
+    serverScene.gameState.players.forEach((player) => {
+      player.hp = 0;
+      player.alive = false;
+    });
+    server.update(0);
+    server.update(2);
+
+    assert.ok(
+      server.gameStateMachine.stateMachine.state instanceof EndMatchState,
+    );
+    server.update(10);
+    assert.ok(
+      server.gameStateMachine.stateMachine.state instanceof PreMatchState,
+    );
+  });
+  for (const joinDuring of ["game over", "lobby"]) {
+    it(`should restart when a late arrival joins during ${joinDuring} and the first player rejoins`, () => {
+      beginGame();
+      server.update(0);
+      const p1Conn = serverScene.eventSystems.connectionSystems["test-id-0"];
+      const p2Conn = createTestConnection(serverScene, "late-player");
+      const p1Begin = mock.fn();
+      const p2Begin = mock.fn();
+      p1Conn.addEventListener("beginMatch", p1Begin);
+      p2Conn.addEventListener("beginMatch", p2Begin);
+
+      serverScene.gameState.players[0].alive = false;
+      server.update(0);
+      assert.ok(
+        server.gameStateMachine.stateMachine.state instanceof EndMatchState,
+      );
+      if (joinDuring === "game over") {
+        p2Conn.dispatchEvent("join", "Late Player");
+      }
+      server.update(10);
+      assert.ok(
+        server.gameStateMachine.stateMachine.state instanceof PreMatchState,
+      );
+      p1Conn.dispatchEvent("join", "Returning Player");
+      if (joinDuring === "lobby") {
+        p2Conn.dispatchEvent("join", "Late Player");
+      }
+      server.update(0);
+      server.update(0);
+
+      assert.ok(
+        server.gameStateMachine.stateMachine.state instanceof MatchState,
+      );
+      assert.deepEqual(serverScene.gameState.players.map((p) => p.id).sort(), [
+        "late-player",
+        "test-id-0",
+      ]);
+      assert.equal(p1Begin.mock.callCount(), 1);
+      assert.equal(p2Begin.mock.callCount(), 1);
+    });
+  }
+
+  it("should move from Retrospective to Lobby state if no players connected", () => {
+    const p1Conn = createTestConnection(serverScene, "test-id");
+    const p2Conn = createTestConnection(serverScene, "test-id-2");
+    p1Conn.dispatchEvent("join", "Random Name");
+    p2Conn.dispatchEvent("join", "Random Name 2");
+    server.update(0);
+    server.update(0);
+    assert.ok(server.gameStateMachine.stateMachine.state instanceof MatchState);
+    p1Conn.dispatchEvent("disconnect");
+    p2Conn.dispatchEvent("disconnect");
+    server.update(0);
+    server.update(0);
+
+    assert.ok(
+      server.gameStateMachine.stateMachine.state instanceof PreMatchState,
+    );
+  });
+  it("Game should start in PreMatch", () => {
+    assert.ok(
+      server.gameStateMachine.stateMachine.state instanceof PreMatchState,
+    );
+  });
+
+  it("should transition to MatchState when enough players join", () => {
+    beginGame();
+    assert.ok(server.gameStateMachine.stateMachine.state instanceof MatchState);
+  });
+  it("game state should contain the correct number of players", () => {
+    beginGame(2);
+    server.update(0);
+    assert.equal(serverScene.gameState.players.length, 2);
+  });
+  it("game should start even with ridiculous number of players", () => {
+    beginGame(100);
+    server.update(0.5);
+    server.update(0.5);
+    assert.ok(server.gameStateMachine.stateMachine.state instanceof MatchState);
+    assert.equal(serverScene.gameState.players.length, 100);
+  });
+  it("game should not add same player twice", () => {
+    beginGame(1);
+    beginGame(1);
+    assert.ok(server.gameStateMachine.stateMachine.state instanceof MatchState);
+    assert.equal(serverScene.gameState.players.length, 1);
+  });
+});

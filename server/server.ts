@@ -5,11 +5,8 @@ import helmet from "helmet";
 import { Server } from "socket.io";
 import parser from "socket.io-msgpack-parser";
 import { GAME_HEIGHT, GAME_WIDTH } from "../common/constants";
-import EventSystem from "../common/EventSystem";
-import { initGameEventSystem, type ServerEventSystems } from "./eventSystems";
-import { GameServer } from "./GameServer";
+import { initGameEventSystem } from "./eventSystems";
 import logger from "./logger";
-import { ServerScene } from "./ServerScene";
 
 export interface ServerConfig {
   port: number;
@@ -47,14 +44,7 @@ export default function ({ port, host }: ServerConfig) {
       parser,
     });
 
-    const events: ServerEventSystems = {
-      gameEventSystem: new EventSystem(),
-      connectionSystems: {},
-    };
-
-    initGameEventSystem(events.gameEventSystem, io);
-
-    const gameServer = new GameServer(new ServerScene(events), {
+    const stopGames = initGameEventSystem(io, {
       name: "Level 1",
       bots: 6,
       playerStartPosition: { x: GAME_WIDTH / 2, y: GAME_HEIGHT / 2 },
@@ -69,9 +59,8 @@ export default function ({ port, host }: ServerConfig) {
       waves: 10,
     });
 
-    gameServer.start();
     return function stop() {
-      gameServer.stop();
+      stopGames();
       httpServer.close();
       io.close();
     };

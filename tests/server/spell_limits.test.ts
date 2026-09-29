@@ -1,3 +1,5 @@
+import assert from "node:assert/strict";
+import { afterEach, beforeEach, describe, it } from "node:test";
 import { spellDB } from "../../common/data";
 import EventSystem from "../../common/EventSystem";
 import { GameServer } from "../../server/GameServer";
@@ -21,7 +23,7 @@ describe("Spell Limits", () => {
     server = new GameServer(serverScene, levelData);
 
     // Clear and Mock spellDB
-    Object.keys(spellDB).forEach((key) => delete spellDB[key]);
+    for (const key of Object.keys(spellDB)) delete spellDB[key];
     Object.assign(spellDB, {
       s1: { id: "s1", type: "aura" },
       s2: { id: "s2", type: "aura" },
@@ -35,7 +37,7 @@ describe("Spell Limits", () => {
 
   afterEach(() => {
     // Restore spellDB
-    Object.keys(spellDB).forEach((key) => delete spellDB[key]);
+    for (const key of Object.keys(spellDB)) delete spellDB[key];
     Object.assign(spellDB, originalSpellDB);
   });
 
@@ -62,10 +64,10 @@ describe("Spell Limits", () => {
     // 4. Verify choices
     // Since limit is 5, and we have 5, we should ONLY see s1-s5 offered.
     // s6 and s7 should NEVER be offered.
-    expect(choices.length).toBeGreaterThan(0);
+    assert.ok(choices.length > 0);
     choices.forEach((choice) => {
-      expect(["s1", "s2", "s3", "s4", "s5"]).toContain(choice.spellId);
-      expect(["s6", "s7"]).not.toContain(choice.spellId);
+      assert.ok(["s1", "s2", "s3", "s4", "s5"].includes(choice.spellId));
+      assert.ok(!["s6", "s7"].includes(choice.spellId));
     });
   });
 
@@ -96,9 +98,9 @@ describe("Spell Limits", () => {
     const choiceGroups = serverScene!.getUpgradeChoices(playerId);
 
     const allOfferedSpellIds = new Set<string>();
-    choiceGroups.forEach((group) =>
-      group.forEach((c) => allOfferedSpellIds.add(c.spellId)),
-    );
+    for (const group of choiceGroups) {
+      for (const choice of group) allOfferedSpellIds.add(choice.spellId);
+    }
 
     // Verify that we saw at least one new spell (s5, s6, or s7)
     // This is probabilistic but with 4 choices * 10 levels = 40 picks from 7 items,
@@ -106,6 +108,6 @@ describe("Spell Limits", () => {
     const newSpellsSeen = ["s5", "s6", "s7"].some((id) =>
       allOfferedSpellIds.has(id),
     );
-    expect(newSpellsSeen).toBe(true);
+    assert.equal(newSpellsSeen, true);
   });
 });

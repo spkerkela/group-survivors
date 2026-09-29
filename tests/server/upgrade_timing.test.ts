@@ -1,3 +1,5 @@
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import EventSystem from "../../common/EventSystem";
 import type { UpgradeEvent } from "../../common/types";
 import { GameServer } from "../../server/GameServer";
@@ -50,58 +52,53 @@ describe("Upgrade timing", () => {
   it("waits indefinitely for a solo player's confirmation, even with a spectator", () => {
     const { scene, server, upgrades, confirm } = startUpgrade(1);
     createTestConnection(scene, "spectator");
-    expect(upgrades[0].timeLeft).toBeNull();
+    assert.equal(upgrades[0].timeLeft, null);
     server.update(3600);
-    expect(server.gameStateMachine.stateMachine.state).toBeInstanceOf(
-      UpgradeState,
+    assert.ok(
+      server.gameStateMachine.stateMachine.state instanceof UpgradeState,
     );
     confirm(0);
     server.update(0);
-    expect(server.gameStateMachine.stateMachine.state).toBeInstanceOf(
-      MatchState,
-    );
+    assert.ok(server.gameStateMachine.stateMachine.state instanceof MatchState);
     server.update(0);
-    expect(scene.gameState.players[0].level).toBe(2);
+    assert.equal(scene.gameState.players[0].level, 2);
   });
 
   it("allows 60 seconds in multiplayer, keeps the timer on reroll, and applies fallback upgrades", () => {
     const { scene, server, connections, upgrades, times } = startUpgrade(2);
-    expect(upgrades[0].timeLeft).toBe(60);
+    assert.equal(upgrades[0].timeLeft, 60);
     server.update(31);
-    expect(server.gameStateMachine.stateMachine.state).toBeInstanceOf(
-      UpgradeState,
+    assert.ok(
+      server.gameStateMachine.stateMachine.state instanceof UpgradeState,
     );
-    expect(times[times.length - 1]).toBe(29);
+    assert.equal(times[times.length - 1], 29);
     connections[0].dispatchEvent("upgradeReroll");
     server.update(0);
-    expect(upgrades[upgrades.length - 1].timeLeft).toBe(29);
+    assert.equal(upgrades[upgrades.length - 1].timeLeft, 29);
     server.update(28);
-    expect(server.gameStateMachine.stateMachine.state).toBeInstanceOf(
-      UpgradeState,
+    assert.ok(
+      server.gameStateMachine.stateMachine.state instanceof UpgradeState,
     );
-    expect(times[times.length - 1]).toBe(1);
+    assert.equal(times[times.length - 1], 1);
     server.update(1);
-    expect(server.gameStateMachine.stateMachine.state).toBeInstanceOf(
-      MatchState,
-    );
+    assert.ok(server.gameStateMachine.stateMachine.state instanceof MatchState);
     server.update(0);
-    expect(scene.gameState.players.map((player) => player.level)).toEqual([
-      2, 2,
-    ]);
+    assert.deepEqual(
+      scene.gameState.players.map((player) => player.level),
+      [2, 2],
+    );
   });
 
   it("resumes early only after everyone confirms", () => {
     const { server, confirm } = startUpgrade(2);
     confirm(0);
     server.update(0);
-    expect(server.gameStateMachine.stateMachine.state).toBeInstanceOf(
-      UpgradeState,
+    assert.ok(
+      server.gameStateMachine.stateMachine.state instanceof UpgradeState,
     );
     confirm(1);
     server.update(0);
-    expect(server.gameStateMachine.stateMachine.state).toBeInstanceOf(
-      MatchState,
-    );
+    assert.ok(server.gameStateMachine.stateMachine.state instanceof MatchState);
   });
 
   it("removes the time limit if the remaining player becomes solo", () => {
@@ -109,14 +106,12 @@ describe("Upgrade timing", () => {
     confirm(1);
     connections[1].dispatchEvent("disconnect");
     server.update(60);
-    expect(server.gameStateMachine.stateMachine.state).toBeInstanceOf(
-      UpgradeState,
+    assert.ok(
+      server.gameStateMachine.stateMachine.state instanceof UpgradeState,
     );
-    expect(times[times.length - 1]).toBeNull();
+    assert.equal(times[times.length - 1], null);
     confirm(0);
     server.update(0);
-    expect(server.gameStateMachine.stateMachine.state).toBeInstanceOf(
-      MatchState,
-    );
+    assert.ok(server.gameStateMachine.stateMachine.state instanceof MatchState);
   });
 });

@@ -1,3 +1,5 @@
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import StateMachine, { type State } from "../../common/StateMachine";
 
 class FirstState implements State<number> {
@@ -31,29 +33,29 @@ class SecondState implements State<number> {
 describe("StateMachine", () => {
   it("should set state to initial state", () => {
     const sm = new StateMachine<number>(new FirstState(), 0);
-    expect(sm.state).toBeInstanceOf(FirstState);
+    assert.ok(sm.state instanceof FirstState);
   });
   it("should transition to second state", () => {
     const sm = new StateMachine<number>(new FirstState(), 0);
     sm.update(0, 2);
-    expect(sm.state).toBeInstanceOf(SecondState);
+    assert.ok(sm.state instanceof SecondState);
   });
   it("should transition back to first state", () => {
     const sm = new StateMachine<number>(new FirstState(), 0);
     sm.update(0, 2);
     sm.update(0, 11);
-    expect(sm.state).toBeInstanceOf(FirstState);
+    assert.ok(sm.state instanceof FirstState);
   });
   it("should call enter on second state", () => {
     const sm = new StateMachine<number>(new FirstState(), 0);
     sm.update(0, 2);
-    expect((sm.state as SecondState).calledEnter).toBe(true);
+    assert.equal((sm.state as SecondState).calledEnter, true);
   });
   it("should call exit on second state", () => {
     const sm = new StateMachine<number>(new FirstState(), 0);
     sm.update(0, 2);
     const state = sm.state as SecondState;
     sm.update(0, 11);
-    expect(state.calledExit).toBe(true);
+    assert.equal(state.calledExit, true);
   });
 });

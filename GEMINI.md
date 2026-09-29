@@ -29,7 +29,7 @@ The project is a monorepo structure containing both the backend (Node.js/Express
 
 ### Tooling & Quality
 *   **Linting/Formatting:** Biome (`@biomejs/biome`)
-*   **Unit Testing:** Jest (`test-backend`)
+*   **Unit Testing:** Node.js test runner with tsx (`test-backend`)
 *   **E2E Testing:** Playwright (`test`)
 *   **Scripting:** Bash (for local env setup)
 
@@ -50,7 +50,7 @@ The project is a monorepo structure containing both the backend (Node.js/Express
     *   `UI.tsx`: React overlay for HUD and menus.
     *   `state/`: Redux slices for UI state (health, exp, etc.).
 *   **`tests/`**: Test suites.
-    *   `server/`: Backend unit/integration tests (Jest).
+    *   `server/`: Backend unit/integration tests (Node.js test runner).
     *   `client/`: Client logic tests.
     *   `shared/`: Tests for common utilities.
     *   `*.spec.ts`: Playwright E2E tests.
@@ -81,7 +81,7 @@ The project includes a helper script that uses `tmux` to run both client and ser
 *   **Client Production Build:** `npm run build-client` (Output: `server/dist`)
 
 ### Testing & Quality
-*   **Backend Tests (Jest):** `npm run test-backend`
+*   **Unit/Backend Tests (Node.js):** `npm run test-backend` (`tests/**/*.test.ts`)
 *   **E2E Tests (Playwright):** `npm test`
 *   **Lint/Check:** `npm run lint`
 

@@ -34,7 +34,8 @@ export default function GameContainer() {
       return;
     }
 
-    const socket = io({ parser });
+    const gameId = new URLSearchParams(window.location.search).get("game");
+    const socket = io({ parser, auth: { gameId } });
 
     const serverEventSystem = initServerEventSystem(new EventSystem(), socket);
     setServerEventSystem(serverEventSystem);

@@ -1,5 +1,6 @@
 import type { Server, Socket } from "socket.io";
 import EventSystem from "../common/EventSystem";
+import { isValidGameId } from "../common/shared";
 import type {
   ClientGameState,
   DamageEvent,
@@ -12,6 +13,8 @@ import type {
   ToServerEventMap,
   UpgradeEvent,
 } from "../common/types";
+import { GameServer, type LevelData } from "./GameServer";
+import { ServerScene } from "./ServerScene";
 
 export interface ServerEventSystems {
   gameEventSystem: EventSystem;
@@ -19,14 +22,53 @@ export interface ServerEventSystems {
 }
 
 export function initGameEventSystem(
-  eventSystem: EventSystem,
   io: Server<ToServerEventMap, FromServerEventMap, any>,
+  levelData: LevelData,
 ) {
+  // ponytail: games live in this process until empty; add persistence for resumable games.
+  const games = new Map<string, GameServer>();
+  io.use((socket, next) => {
+    next(
+      isValidGameId(socket.handshake.auth.gameId)
+        ? undefined
+        : new Error("Invalid game ID"),
+    );
+  });
   io.on("connection", (socket) => {
+    const gameId = socket.handshake.auth.gameId as string;
+    let game = games.get(gameId);
+    if (!game) {
+      game = new GameServer(
+        new ServerScene({
+          gameEventSystem: new EventSystem(),
+          connectionSystems: {},
+        }),
+        levelData,
+      );
+      games.set(gameId, game);
+      game.start();
+    }
     const connectionEventSystem = new EventSystem();
     initConnectedClientEventSystem(connectionEventSystem, socket);
-    eventSystem.dispatchEvent("connection", socket.id, connectionEventSystem);
+    game.scene.eventSystems.gameEventSystem.dispatchEvent(
+      "connection",
+      socket.id,
+      connectionEventSystem,
+    );
+    const currentGame = game;
+    socket.on("disconnect", () => {
+      if (currentGame.scene.connectionIds().length === 0) {
+        currentGame.stop();
+        games.delete(gameId);
+      }
+    });
   });
+  return () => {
+    games.forEach((game) => {
+      game.stop();
+    });
+    games.clear();
+  };
 }
 
 export function initConnectedClientEventSystem(
