@@ -1,5 +1,5 @@
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from "../../common/constants";
-import { type SpellData, spellDB } from "../../common/data";
+import { auraRadius, type SpellData, spellDB } from "../../common/data";
 import { distance, normalize } from "../../common/math";
 import type QuadTree from "../../common/QuadTree";
 import type {
@@ -181,12 +181,10 @@ export function tickAura(
   enemies: Enemy[],
   powerUps: PowerUp[] = [],
 ): SpellDamageEvent[] {
-  const enemiesInRange = enemies.filter((enemy) => {
-    return (
-      distance(position, enemy) <
-      spellData.range * spellData.rangeMultiplier + 0.01 * playerLevel
-    );
-  });
+  const radius = auraRadius(spellData, playerLevel);
+  const enemiesInRange = enemies.filter(
+    (enemy) => distance(position, enemy) < radius,
+  );
   const additionalSpellDamage = powerUps
     .filter((powerUp) => powerUp.type === "damage")
     .map((powerUp) => powerUp.value)

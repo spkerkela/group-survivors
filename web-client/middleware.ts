@@ -1,5 +1,5 @@
 import { SERVER_UPDATE_RATE } from "../common/constants";
-import { spellDB } from "../common/data";
+import { auraRadius, spellDB } from "../common/data";
 import type EventSystem from "../common/EventSystem";
 import type {
   ClientGameState,
@@ -21,22 +21,31 @@ function updateSpellEmitters(
 
   if (!emitter) return;
 
-  const shouldHaveAura = !!p.spells["damageAura"];
-  const isAuraActive = instantiated.getData("auraActive") as boolean;
+  const aura = instantiated.getData("aura") as Phaser.GameObjects.Graphics;
+  const radius = p.spells.damageAura
+    ? auraRadius(spellDB.damageAura, p.level)
+    : 0;
+  if (instantiated.getData("auraRadius") === radius) return;
 
-  if (shouldHaveAura && !isAuraActive) {
-    const spelldata = spellDB["damageAura"];
+  aura.clear().setVisible(radius > 0);
+  emitter.stop().killAll();
+  if (radius > 0) {
+    // The permanent disk, not individual decorative flames, marks damage range.
+    aura.fillStyle(0xff5a12, 0.16).fillCircle(0, 0, radius);
+    aura.lineStyle(4, 0xff4a0a, 0.5).strokeCircle(0, 0, radius - 2);
+    aura.lineStyle(1, 0xffcc55, 0.95).strokeCircle(0, 0, radius - 0.5);
+    const area = new Phaser.Geom.Circle(0, 0, radius);
     emitter.setEmitZone({
-      source: new Phaser.Geom.Circle(0, 0, spelldata.range),
-      type: "edge",
-      quantity: 48,
+      source: {
+        getRandomPoint: (point) => Object.assign(point, area.getRandomPoint()),
+      },
+      type: "random",
     });
+    emitter.setDeathZone({ source: area, type: "onLeave" });
     emitter.start();
-    instantiated.setData("auraActive", true);
-  } else if (!shouldHaveAura && isAuraActive) {
-    emitter.stop();
-    instantiated.setData("auraActive", false);
+    emitter.emitParticle(32);
   }
+  instantiated.setData("auraRadius", radius);
 }
 
 export function instantiatePlayer(
@@ -62,31 +71,32 @@ export function instantiatePlayer(
   playerContainer.add(playerText);
   playerContainer.setData("text", playerText);
   playerContainer.setData("type", "player");
-  let damageAuraParticles = scene.children.getByName(
-    particleObjectName,
-  ) as Phaser.GameObjects.Particles.ParticleEmitterManager;
-  if (!damageAuraParticles) {
-    damageAuraParticles = scene.add
-      .particles("projectile")
-      .setName(particleObjectName);
+  const aura = scene.add.graphics();
+  if (!scene.textures.exists("aura-flame")) {
+    const flame = scene.add.graphics();
+    flame.fillStyle(0xff5511).fillTriangle(0, 12, 3, 0, 8, 12);
+    flame.fillStyle(0xffbb33).fillTriangle(2, 12, 5, 4, 7, 12);
+    flame.fillStyle(0xffee99).fillTriangle(3, 12, 4, 7, 5, 12);
+    flame.generateTexture("aura-flame", 8, 12);
+    flame.destroy();
   }
-
-  const emitter = damageAuraParticles.createEmitter({
+  const flames = scene.add.particles("aura-flame");
+  // Local-space particles move with the damage area, never leaving a false trail.
+  playerContainer.add([aura, flames]);
+  const emitter = flames.createEmitter({
+    on: false,
     blendMode: "ADD",
-    alpha: { start: 1, end: 0 },
-    scale: { start: 1, end: 0 },
-    follow: playerContainer,
-    tint: 0x0044ff,
+    lifespan: { min: 250, max: 550 },
+    frequency: 30,
+    quantity: 4,
+    speedX: { min: -4, max: 4 },
+    speedY: { min: -18, max: -8 },
+    alpha: { start: 0.85, end: 0 },
+    scale: { start: 0.65, end: 0 },
     reserve: 100,
   });
-  emitter.stop();
+  playerContainer.setData("aura", aura);
   playerContainer.setData("auraEmitter", emitter);
-
-  playerContainer.on("destroy", () => {
-    emitter.stop();
-  });
-
-  playerContainer.setData("auraActive", false);
   updateSpellEmitters(player, playerContainer);
   return playerContainer;
 }

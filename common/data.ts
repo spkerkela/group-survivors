@@ -54,6 +54,10 @@ export interface SpellData {
   multiCastCooldown: number;
 }
 
+export function auraRadius(spell: SpellData, playerLevel: number): number {
+  return spell.range * spell.rangeMultiplier + 0.01 * playerLevel;
+}
+
 export type SpellDB = { [key: string]: SpellData };
 
 export const spellDB: SpellDB = {
