@@ -21,7 +21,7 @@ export class UpgradeState implements State<StateMachineData> {
     [id: string]: (selected: UpgradeChoice[]) => void;
   } = {};
   private rerollListeners: {
-    [id: string]: () => void;
+    [id: string]: (levelIndex: number) => void;
   } = {};
 
   private readonly REROLL_COST = 5;
@@ -151,23 +151,29 @@ export class UpgradeState implements State<StateMachineData> {
         this.upgradeListeners[id],
       );
 
-      this.rerollListeners[id] = () => {
+      this.rerollListeners[id] = (levelIndex: number) => {
         const player = scene.gameState.players.find((p) => p.id === id);
-        if (player && player.gold >= this.REROLL_COST) {
+        const choices = scene.getUpgradeChoices(id);
+        if (
+          !player ||
+          this.readyPlayers.has(id) ||
+          !Number.isInteger(levelIndex) ||
+          levelIndex < 0 ||
+          levelIndex >= choices.length
+        )
+          return;
+
+        if (player.gold >= this.REROLL_COST) {
+          choices[levelIndex] = scene.generateUpgradeChoiceGroup(player);
           player.gold -= this.REROLL_COST;
-          const currentChoices = scene.getUpgradeChoices(id);
-          const pendingLevelsToRestore = currentChoices.length;
-          scene.clearUpgradeChoices(id);
-          player.pendingLevels = pendingLevelsToRestore;
-          scene.generateUpgradeChoices(id);
-          const newChoices = scene.getUpgradeChoices(id);
-          scene.pushEvent("upgrade", id, {
-            choices: newChoices,
-            rerollCost: this.REROLL_COST,
-            timeLeft: this.timeLeft,
-          });
-          scene.pushEvent("level", id, { playerId: id, player: player });
         }
+        // Also refresh an unaffordable request so the client can unlock its UI.
+        scene.pushEvent("upgrade", id, {
+          choices,
+          rerollCost: this.REROLL_COST,
+          timeLeft: this.timeLeft,
+        });
+        scene.pushEvent("level", id, { playerId: id, player });
       };
       scene.eventSystems.connectionSystems[id].addEventListener(
         "upgradeReroll",

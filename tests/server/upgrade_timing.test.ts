@@ -72,7 +72,7 @@ describe("Upgrade timing", () => {
       server.gameStateMachine.stateMachine.state instanceof UpgradeState,
     );
     assert.equal(times[times.length - 1], 29);
-    connections[0].dispatchEvent("upgradeReroll");
+    connections[0].dispatchEvent("upgradeReroll", 0);
     server.update(0);
     assert.equal(upgrades[upgrades.length - 1].timeLeft, 29);
     server.update(28);

@@ -123,19 +123,34 @@ for (const viewport of [
       }});
     `);
     const firstSet = page.getByRole("group", {
-      name: "Upgrade 1",
+      name: "Upgrade 1 of 2",
       exact: true,
     });
+    await expect(page.getByRole("group")).toHaveCount(1);
+    const next = page.getByRole("button", { name: "Next level" });
+    await expect(next).toBeDisabled();
     await firstSet.getByRole("radio").first().focus();
     await page.keyboard.press("Space");
     await expect(firstSet.getByRole("radio").first()).toBeChecked();
     await page.keyboard.press("ArrowRight");
     await expect(firstSet.getByRole("radio").last()).toBeChecked();
-    await page
-      .getByRole("group", { name: "Upgrade 2", exact: true })
-      .getByRole("radio")
-      .first()
-      .check();
+    await next.click();
+    await expect(firstSet).toHaveCount(0);
+    await expect(page.getByRole("group")).toHaveCount(1);
+    const secondSet = page.getByRole("group", {
+      name: "Upgrade 2 of 2",
+      exact: true,
+    });
+    await expect(secondSet).toBeFocused();
+    await expect(
+      page.getByRole("button", { name: "Confirm Upgrades" }),
+    ).toBeDisabled();
+    expect(await page.evaluate("window.upgradeEvents")).toEqual([]);
+    await page.evaluate(
+      'window.store.dispatch({ type: "upgradeChoices/setUpgradeTimeLeft", payload: 8 })',
+    );
+    await expect(secondSet).toBeVisible();
+    await secondSet.getByRole("radio").first().check();
     const confirm = page.getByRole("button", { name: "Confirm Upgrades" });
     await confirm.scrollIntoViewIfNeeded();
     await expect(confirm).toBeInViewport();
@@ -203,24 +218,65 @@ for (const viewport of [
   });
 }
 
-test("rerolls clear selections, unaffordable rerolls lock, and an empty round can continue", async ({
+test("rerolls only the current level and preserves earlier selections", async ({
+  page,
+}) => {
+  await page.evaluate(`
+    const group = window.store.getState().upgradeChoices.choices[0];
+    window.store.dispatch({ type: "upgradeChoices/setUpgradeChoices", payload: {
+      choices: [group, group.map(c => ({ ...c, id: c.id + "-next" })), group.map(c => ({ ...c, id: c.id + "-last" }))], rerollCost: 5, timeLeft: 60
+    }});
+  `);
+  await page.getByRole("radio").last().check();
+  await page.getByRole("button", { name: "Next level" }).click();
+  await expect(page.getByRole("group")).toHaveAccessibleName("Upgrade 2 of 3");
+  await page.getByRole("radio").first().check();
+  const reroll = page.getByRole("button", { name: /Reroll/ });
+  await reroll.click();
+  await expect(reroll).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Next level" })).toBeDisabled();
+  await expect(page.getByRole("radio").first()).toBeDisabled();
+  await reroll.evaluate((button: HTMLButtonElement) => button.click());
+  expect(await page.evaluate("window.upgradeEvents")).toEqual([
+    { name: "upgradeReroll", data: 1 },
+  ]);
+  await page.evaluate(`
+    const groups = window.store.getState().upgradeChoices.choices;
+    window.store.dispatch({ type: "upgradeChoices/setUpgradeChoices", payload: {
+      choices: [groups[0], [{ id: "new", spellId: "missile", powerUp: { type: "cooldown", value: 0.1 } }], groups[2]], rerollCost: 5, timeLeft: 10
+    }});
+  `);
+  await expect(page.getByRole("group")).toHaveAccessibleName("Upgrade 2 of 3");
+  await expect(page.getByRole("radio")).not.toBeChecked();
+  await expect(reroll).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Next level" })).toBeDisabled();
+  await page.getByRole("radio").check();
+  await page.getByRole("button", { name: "Next level" }).click();
+  await expect(page.getByRole("group")).toHaveAccessibleName("Upgrade 3 of 3");
+  await page.getByRole("radio").first().check();
+  await page.getByRole("button", { name: "Confirm Upgrades" }).click();
+  expect(
+    await page.evaluate("window.upgradeEvents[1].data.map(c => c.id)"),
+  ).toEqual(["second", "new", "first-last"]);
+});
+
+test("an unaffordable reroll response unlocks selection and an empty round can continue", async ({
   page,
 }) => {
   await page.getByRole("radio").first().check();
   await page.getByRole("button", { name: /Reroll/ }).click();
-  expect(await page.evaluate("window.upgradeEvents")).toEqual([
-    { name: "upgradeReroll" },
-  ]);
   await page.evaluate(`
+    window.store.dispatch({ type: "gold/setGold", payload: 0 });
     window.store.dispatch({ type: "upgradeChoices/setUpgradeChoices", payload: {
-      choices: [[{ id: "new", spellId: "missile", powerUp: { type: "cooldown", value: 0.1 } }]], rerollCost: 200, timeLeft: 10
+      ...structuredClone(window.store.getState().upgradeChoices),
     }});
   `);
-  await expect(page.getByRole("radio")).not.toBeChecked();
+  await expect(page.getByRole("radio").first()).toBeChecked();
+  await expect(page.getByRole("radio").first()).toBeEnabled();
   await expect(page.getByRole("button", { name: /Reroll/ })).toBeDisabled();
   await expect(
     page.getByRole("button", { name: "Confirm Upgrades" }),
-  ).toBeDisabled();
+  ).toBeEnabled();
   await page.evaluate(
     'window.store.dispatch({ type: "upgradeChoices/setUpgradeChoices", payload: { choices: [], rerollCost: 5, timeLeft: null } })',
   );

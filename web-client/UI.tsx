@@ -1,6 +1,7 @@
 import {
   type ChangeEvent,
   type KeyboardEvent,
+  useCallback,
   useEffect,
   useState,
 } from "react";
@@ -111,25 +112,50 @@ function Upgrade() {
   );
   const { gold } = useAppSelector((state) => state.gold);
   const [confirmed, setConfirmed] = useState(false);
+  const [rerolling, setRerolling] = useState(false);
+  const [currentLevel, setCurrentLevel] = useState(0);
+  const focusLevel = useCallback((fieldset: HTMLFieldSetElement | null) => {
+    fieldset?.focus();
+  }, []);
+  const choiceGroup = choices[currentLevel];
   const [selected, setSelected] = useState<(string | null)[]>(() =>
     choices.map(() => null),
   );
 
   useEffect(() => {
-    setSelected(choices.map(() => null));
+    setSelected((previous) =>
+      choices.map((group, index) =>
+        group.some((choice) => choice.id === previous[index])
+          ? previous[index]
+          : null,
+      ),
+    );
+    setCurrentLevel((level) =>
+      Math.min(level, Math.max(0, choices.length - 1)),
+    );
+    setRerolling(false);
   }, [choices]);
 
-  function handleSelect(levelIdx: number, upgradeId: string) {
-    if (confirmed) return;
+  function handleSelect(upgradeId: string) {
+    if (confirmed || rerolling) return;
     setSelected((prev) => {
       const next = [...prev];
-      next[levelIdx] = upgradeId;
+      next[currentLevel] = upgradeId;
       return next;
     });
   }
 
   function handleConfirm() {
-    if (confirmed) return;
+    if (
+      confirmed ||
+      rerolling ||
+      (choices.length > 0 && !selected[currentLevel])
+    )
+      return;
+    if (currentLevel < choices.length - 1) {
+      setCurrentLevel(currentLevel + 1);
+      return;
+    }
     const selectedChoices = choices.map((choiceGroup, idx) =>
       choiceGroup.find((c) => c.id === selected[idx]),
     );
@@ -140,8 +166,15 @@ function Upgrade() {
   }
 
   function handleReroll() {
-    if (!confirmed && serverEventSystem && gold >= rerollCost) {
-      serverEventSystem.dispatchEvent("upgradeReroll");
+    if (
+      !confirmed &&
+      !rerolling &&
+      choiceGroup &&
+      serverEventSystem &&
+      gold >= rerollCost
+    ) {
+      setRerolling(true);
+      serverEventSystem.dispatchEvent("upgradeReroll", currentLevel);
     }
   }
 
@@ -153,7 +186,7 @@ function Upgrade() {
           <h2 id="upgrade-title">Grow stronger.</h2>
           <p className="muted">
             {choices.length
-              ? "Choose one boost from each set."
+              ? "Choose one boost, then move to the next level."
               : "No upgrades this round. Ready for another wave?"}
           </p>
         </div>
@@ -173,38 +206,42 @@ function Upgrade() {
         <button
           type="button"
           className="upgrade-reroll-btn secondary-button"
-          disabled={confirmed || gold < rerollCost || choices.length === 0}
+          disabled={
+            confirmed || rerolling || gold < rerollCost || choices.length === 0
+          }
           onClick={handleReroll}
         >
-          Reroll · {rerollCost} Gold
+          {rerolling ? "Rerolling…" : `Reroll · ${rerollCost} Gold`}
         </button>
       </div>
       <div className="upgrade-sets">
-        {choices.map((choiceGroup, levelIdx) => (
+        {choiceGroup && (
           <fieldset
+            ref={focusLevel}
+            tabIndex={-1}
             key={choiceGroup.map((choice) => choice.id).join(",")}
             className="upgrade-level-section"
-            disabled={confirmed}
+            disabled={confirmed || rerolling}
           >
             <legend className="upgrade-level-title">
-              Upgrade {levelIdx + 1}
+              Upgrade {currentLevel + 1} of {choices.length}
             </legend>
             <div className="upgrade-choices-row">
               {choiceGroup.map((data) => (
                 <label
                   key={data.id}
-                  className={`upgrade-choice-wrapper ${selected[levelIdx] === data.id ? "selected" : ""}`}
+                  className={`upgrade-choice-wrapper ${selected[currentLevel] === data.id ? "selected" : ""}`}
                 >
                   <input
                     type="radio"
-                    name={`upgrade-${levelIdx}`}
+                    name={`upgrade-${currentLevel}`}
                     value={data.id}
-                    checked={selected[levelIdx] === data.id}
-                    onChange={() => handleSelect(levelIdx, data.id)}
+                    checked={selected[currentLevel] === data.id}
+                    onChange={() => handleSelect(data.id)}
                   />
                   <SpellPowerUp powerUp={data.powerUp} spellId={data.spellId} />
                   <span className="choice-state" aria-hidden="true">
-                    {selected[levelIdx] === data.id
+                    {selected[currentLevel] === data.id
                       ? "✓ Selected"
                       : "Select boost"}
                   </span>
@@ -212,7 +249,7 @@ function Upgrade() {
               ))}
             </div>
           </fieldset>
-        ))}
+        )}
       </div>
       <footer className="upgrade-footer">
         <div role="status" className="waiting-note">
@@ -221,14 +258,20 @@ function Upgrade() {
         <button
           type="button"
           className="upgrade-confirm-btn button"
-          disabled={confirmed || selected.some((s) => !s)}
+          disabled={
+            confirmed ||
+            rerolling ||
+            (choices.length > 0 && !selected[currentLevel])
+          }
           onClick={handleConfirm}
         >
           {confirmed
             ? "Upgrades Confirmed"
-            : choices.length
-              ? "Confirm Upgrades"
-              : "Continue"}
+            : currentLevel < choices.length - 1
+              ? "Next level"
+              : choices.length
+                ? "Confirm Upgrades"
+                : "Continue"}
         </button>
       </footer>
     </section>

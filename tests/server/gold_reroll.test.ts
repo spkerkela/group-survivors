@@ -21,7 +21,7 @@ describe("Gold Reroll", () => {
     server = new GameServer(serverScene, shortLevelData);
   });
 
-  it("should reroll choices and deduct gold when upgradeReroll event is dispatched", () => {
+  it("rerolls only the requested level, preserving other picks and rejecting invalid or confirmed requests", () => {
     const playerId = "p1";
     const connection = createTestConnection(serverScene, playerId);
 
@@ -36,18 +36,49 @@ describe("Gold Reroll", () => {
     const player = serverScene.gameState.players.find((p) => p.id === playerId);
     assert.ok(player);
     player.gold = 10;
-    player.pendingLevels = 1;
+    player.pendingLevels = 3;
     serverScene.generateUpgradeChoices(playerId);
-    const initialChoices = JSON.stringify(
+    const initialChoices = structuredClone(
       serverScene.getUpgradeChoices(playerId),
     );
-    assert.notEqual(initialChoices, "[]");
+    assert.equal(initialChoices.length, 3);
 
-    connection.dispatchEvent("upgradeReroll");
+    for (const invalid of [
+      undefined,
+      null,
+      -1,
+      3,
+      0.5,
+      "1",
+      {},
+      NaN,
+      Infinity,
+    ]) {
+      connection.dispatchEvent("upgradeReroll", invalid);
+      assert.equal(player.gold, 10);
+      assert.deepEqual(serverScene.getUpgradeChoices(playerId), initialChoices);
+    }
+    connection.dispatchEvent("upgradeReroll", 1);
 
     assert.equal(player.gold, 5);
-    const newChoices = JSON.stringify(serverScene.getUpgradeChoices(playerId));
-    assert.notEqual(newChoices, initialChoices);
+    assert.equal(player.pendingLevels, 0);
+    const newChoices = structuredClone(serverScene.getUpgradeChoices(playerId));
+    assert.equal(newChoices.length, 3);
+    assert.deepEqual(newChoices[0], initialChoices[0]);
+    assert.notDeepEqual(newChoices[1], initialChoices[1]);
+    assert.equal(newChoices[1].length, 4);
+    assert.deepEqual(newChoices[2], initialChoices[2]);
+
+    connection.dispatchEvent("upgradeSelection", [
+      initialChoices[0][1],
+      newChoices[1][0],
+      initialChoices[2][0],
+    ]);
+    connection.dispatchEvent("upgradeReroll", 1);
+    assert.equal(player.gold, 5);
+    assert.deepEqual(serverScene.getUpgradeChoices(playerId), newChoices);
+    server.update(0);
+    assert.equal(player.level, 4);
   });
 
   it("should NOT reroll if player has insufficient gold", () => {
@@ -62,11 +93,13 @@ describe("Gold Reroll", () => {
     const player = serverScene.gameState.players.find((p) => p.id === playerId);
     assert.ok(player);
     player.gold = 2;
+    player.pendingLevels = 1;
+    serverScene.generateUpgradeChoices(playerId);
     const initialChoices = JSON.stringify(
       serverScene.getUpgradeChoices(playerId),
     );
 
-    connection.dispatchEvent("upgradeReroll");
+    connection.dispatchEvent("upgradeReroll", 0);
 
     assert.equal(player.gold, 2);
     const newChoices = JSON.stringify(serverScene.getUpgradeChoices(playerId));
@@ -94,7 +127,7 @@ describe("Gold Reroll", () => {
       assert.equal(data.player.gold, 5);
     });
     connection.addEventListener("level", onLevel);
-    connection.dispatchEvent("upgradeReroll");
+    connection.dispatchEvent("upgradeReroll", 0);
     server.update(0);
     assert.equal(onLevel.mock.callCount(), 1);
   });

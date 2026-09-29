@@ -132,13 +132,20 @@ export class ServerScene {
   generateUpgradeChoices(playerId: string) {
     const player = this.getPlayer(playerId);
     if (!player || player.pendingLevels <= 0) return;
-    const choiceCount = 4;
-    const MAX_ACTIVE_SPELLS = 5;
-
     if (!this.playerUpgradeChoices[playerId]) {
       this.playerUpgradeChoices[playerId] = [];
     }
+    for (let lvl = 0; lvl < player.pendingLevels; lvl++) {
+      this.playerUpgradeChoices[playerId].push(
+        this.generateUpgradeChoiceGroup(player),
+      );
+    }
+    player.pendingLevels = 0;
+  }
 
+  generateUpgradeChoiceGroup(player: ServerPlayer): UpgradeChoice[] {
+    const choiceCount = 4;
+    const MAX_ACTIVE_SPELLS = 5;
     const currentSpells = Object.keys(player.spells);
     const canAddNewSpell = currentSpells.length < MAX_ACTIVE_SPELLS;
 
@@ -147,30 +154,21 @@ export class ServerScene {
     // Note: This assumes all items in spellDB are 'active' spells.
     const availablePool = canAddNewSpell ? Object.keys(spellDB) : currentSpells;
 
-    for (let lvl = 0; lvl < player.pendingLevels; lvl++) {
-      const choices: UpgradeChoice[] = [];
-      for (let i = 0; i < choiceCount; i++) {
-        // Fallback: If pool is empty (e.g. player has no spells and limit is 0? shouldn't happen),
-        // or something goes wrong, we might pick undefined. chooseRandom handles array.
-        const spellId = chooseRandom(availablePool);
-
-        if (spellId) {
-          const powerUp = randomPowerUp();
-          const id = generateId("upgrade");
-          choices.push({
-            id: id,
-            powerUp,
-            spellId,
-          });
-          logger.info(
-            `Generated upgrade choice for player ${playerId}: ${JSON.stringify(choices[i])}`,
-          );
-        }
+    const choices: UpgradeChoice[] = [];
+    for (let i = 0; i < choiceCount; i++) {
+      const spellId = chooseRandom(availablePool);
+      if (spellId) {
+        choices.push({
+          id: generateId("upgrade"),
+          powerUp: randomPowerUp(),
+          spellId,
+        });
+        logger.info(
+          `Generated upgrade choice for player ${player.id}: ${JSON.stringify(choices[i])}`,
+        );
       }
-      this.playerUpgradeChoices[playerId].push(choices);
     }
-    // Reset pendingLevels after generating choices
-    player.pendingLevels = 0;
+    return choices;
   }
 
   getUpgradeChoices(playerId: string) {

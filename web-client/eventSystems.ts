@@ -58,8 +58,8 @@ export function initServerEventSystem(
     sendUpgradeSelectionMessage(io, selected);
   });
 
-  serverEventSystem.addEventListener("upgradeReroll", () => {
-    sendUpgradeRerollMessage(io);
+  serverEventSystem.addEventListener("upgradeReroll", (levelIndex: number) => {
+    sendUpgradeRerollMessage(io, levelIndex);
   });
 
   io.on("joined", (gameState: ClientGameState) => {

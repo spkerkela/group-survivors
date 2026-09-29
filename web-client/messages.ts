@@ -30,6 +30,7 @@ export function sendJoinMessage(
 
 export function sendUpgradeRerollMessage(
   socket: Socket<FromServerEventMap, ToServerEventMap>,
+  levelIndex: number,
 ) {
-  socket.emit("upgradeReroll");
+  socket.emit("upgradeReroll", levelIndex);
 }
