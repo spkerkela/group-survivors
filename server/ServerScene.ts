@@ -6,11 +6,7 @@ import {
 } from "../common/constants";
 import { spellDB } from "../common/data";
 import QuadTree from "../common/QuadTree";
-import {
-  chooseRandom,
-  randomBetweenExclusive,
-  randomPowerUp,
-} from "../common/random";
+import { chooseRandom, randomBetweenExclusive } from "../common/random";
 import {
   type ClientGameState,
   type GameObject,
@@ -27,6 +23,7 @@ import type { ServerEventSystems } from "./eventSystems";
 import type { LevelData } from "./GameServer";
 import { createPlayer } from "./game-logic/player";
 import { addSpellToPlayer } from "./game-logic/spells";
+import { generateUpgradeChoiceGroup } from "./game-logic/upgrades";
 import { generateId } from "./id-generator";
 import logger from "./logger";
 import type { PlayerMatchState, ServerGameState, ServerPlayer } from "./types";
@@ -47,6 +44,7 @@ export class ServerScene {
   eventSystems: ServerEventSystems;
   lobby: string[];
   readyToJoin: { id: string; screenName: string }[];
+  startingWeapons: { [id: string]: string } = {};
   loadedLevel: LevelData | null = null;
 
   constructor(eventSystems: ServerEventSystems) {
@@ -132,43 +130,11 @@ export class ServerScene {
   generateUpgradeChoices(playerId: string) {
     const player = this.getPlayer(playerId);
     if (!player || player.pendingLevels <= 0) return;
-    if (!this.playerUpgradeChoices[playerId]) {
-      this.playerUpgradeChoices[playerId] = [];
+    if (!this.getUpgradeChoices(playerId).length) {
+      this.playerUpgradeChoices[playerId] = [
+        generateUpgradeChoiceGroup(player),
+      ];
     }
-    for (let lvl = 0; lvl < player.pendingLevels; lvl++) {
-      this.playerUpgradeChoices[playerId].push(
-        this.generateUpgradeChoiceGroup(player),
-      );
-    }
-    player.pendingLevels = 0;
-  }
-
-  generateUpgradeChoiceGroup(player: ServerPlayer): UpgradeChoice[] {
-    const choiceCount = 4;
-    const MAX_ACTIVE_SPELLS = 5;
-    const currentSpells = Object.keys(player.spells);
-    const canAddNewSpell = currentSpells.length < MAX_ACTIVE_SPELLS;
-
-    // If limit reached, available pool is restricted to current spells.
-    // Otherwise, pool is all spells in DB.
-    // Note: This assumes all items in spellDB are 'active' spells.
-    const availablePool = canAddNewSpell ? Object.keys(spellDB) : currentSpells;
-
-    const choices: UpgradeChoice[] = [];
-    for (let i = 0; i < choiceCount; i++) {
-      const spellId = chooseRandom(availablePool);
-      if (spellId) {
-        choices.push({
-          id: generateId("upgrade"),
-          powerUp: randomPowerUp(),
-          spellId,
-        });
-        logger.info(
-          `Generated upgrade choice for player ${player.id}: ${JSON.stringify(choices[i])}`,
-        );
-      }
-    }
-    return choices;
   }
 
   getUpgradeChoices(playerId: string) {

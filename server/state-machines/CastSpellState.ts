@@ -32,9 +32,15 @@ export class CastSpellState implements State<SpellStateData> {
   }
   enter({ spellData, player }: SpellStateData) {
     const powerUps = player.powerUps[spellData.id] || [];
-    this.castCount = powerUps
-      .filter((pu: PowerUp) => pu.type === "additionalCast")
-      .reduce((acc: number, pu: PowerUp) => acc + pu.value, 1);
+    this.castCount =
+      spellData.type === "aura"
+        ? 1
+        : Math.min(
+            3,
+            powerUps
+              .filter((pu: PowerUp) => pu.type === "additionalCast")
+              .reduce((acc: number, pu: PowerUp) => acc + pu.value, 1),
+          );
     this.castsDone = 0;
     this.cooldown = 0;
   }

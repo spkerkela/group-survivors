@@ -9,7 +9,7 @@ import { ServerScene } from "../../server/ServerScene";
 import { createTestConnection } from "./connectionUtils";
 import { levelData } from "./fixtures";
 
-function startUpgrade(playerCount: number) {
+function startUpgrade(playerCount: number, pendingLevels = 1) {
   const scene = new ServerScene({
     gameEventSystem: new EventSystem(),
     connectionSystems: {},
@@ -27,7 +27,7 @@ function startUpgrade(playerCount: number) {
   server.update(0);
   server.update(0);
   for (const player of scene.gameState.players) {
-    player.pendingLevels = 1;
+    player.pendingLevels = pendingLevels;
     player.gold = 10;
   }
   const upgrades: UpgradeEvent[] = [];
@@ -86,6 +86,21 @@ describe("Upgrade timing", () => {
     assert.deepEqual(
       scene.gameState.players.map((player) => player.level),
       [2, 2],
+    );
+  });
+
+  it("applies only the remaining levels on timeout after a partial selection", () => {
+    const { scene, server, confirm } = startUpgrade(2, 3);
+    confirm(0);
+    assert.equal(scene.gameState.players[0].pendingLevels, 2);
+    server.update(60);
+    server.update(0);
+    assert.deepEqual(
+      scene.gameState.players.map((p) => [p.level, p.pendingLevels]),
+      [
+        [4, 0],
+        [4, 0],
+      ],
     );
   });
 

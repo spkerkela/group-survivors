@@ -23,7 +23,8 @@ export type PowerUpType = "additionalCast" | "damage" | "range" | "cooldown";
 export interface UpgradeChoice {
   id: string;
   spellId: string;
-  powerUp: PowerUp;
+  // null unlocks a weapon at its base stats; bonuses require ownership.
+  powerUp: PowerUp | null;
 }
 
 export interface PowerUp {
@@ -142,7 +143,7 @@ export type ToServerEventMap = {
   upgradeSelection: (selected: UpgradeChoice[]) => void;
   upgradeReroll: (levelIndex: number) => void;
   connection: (arg0: unknown) => void;
-  join: (name: string) => void;
+  join: (name: string, startingWeapon?: string) => void;
   move: (moveUpdate: MoveUpdate) => void;
 };
 
@@ -221,6 +222,7 @@ export interface LevelEvent {
 
 export interface UpgradeEvent {
   choices: UpgradeChoice[][];
+  remaining: number;
   rerollCost: number;
   timeLeft: number | null;
 }

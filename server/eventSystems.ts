@@ -81,8 +81,8 @@ export function initConnectedClientEventSystem(
   socket.on("upgradeReroll", (levelIndex) => {
     eventSystem.dispatchEvent("upgradeReroll", levelIndex);
   });
-  socket.on("join", (joinName: string) => {
-    eventSystem.dispatchEvent("join", joinName);
+  socket.on("join", (joinName, startingWeapon) => {
+    eventSystem.dispatchEvent("join", joinName, startingWeapon);
   });
 
   eventSystem.addEventListener("beginMatch", (gameState: ClientGameState) => {

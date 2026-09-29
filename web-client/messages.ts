@@ -24,8 +24,9 @@ export function sendMoveMessage(
 export function sendJoinMessage(
   socket: Socket<FromServerEventMap, ToServerEventMap>,
   name: string,
+  startingWeapon: string,
 ) {
-  socket.emit("join", name);
+  socket.emit("join", name, startingWeapon);
 }
 
 export function sendUpgradeRerollMessage(

@@ -1,5 +1,10 @@
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from "../../common/constants";
-import { auraRadius, type SpellData, spellDB } from "../../common/data";
+import {
+  auraRadius,
+  MAX_ACTIVE_SPELLS,
+  type SpellData,
+  spellDB,
+} from "../../common/data";
 import { distance, normalize } from "../../common/math";
 import type QuadTree from "../../common/QuadTree";
 import type {
@@ -110,7 +115,10 @@ export function addSpellToPlayer(
   player: ServerPlayer,
   level = 1,
 ): boolean {
-  if (player.spells[spellId] != null) {
+  if (
+    player.spells[spellId] != null ||
+    Object.keys(player.spells).length >= MAX_ACTIVE_SPELLS
+  ) {
     return false;
   }
   if (player.spellSMs[spellId] == null) {
@@ -181,7 +189,7 @@ export function tickAura(
   enemies: Enemy[],
   powerUps: PowerUp[] = [],
 ): SpellDamageEvent[] {
-  const radius = auraRadius(spellData, playerLevel);
+  const radius = auraRadius(spellData, playerLevel, powerUps);
   const enemiesInRange = enemies.filter(
     (enemy) => distance(position, enemy) < radius,
   );

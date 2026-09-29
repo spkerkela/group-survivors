@@ -75,16 +75,18 @@ describe("shared games", () => {
     const stop = mock.method(GameServer.prototype, "stop");
     const alice = await connect("group-a");
     const aliceJoined = updateWith(alice, "Alice");
-    alice.emit("join", "Alice");
-    await aliceJoined;
+    alice.emit("join", "Alice", "dagger");
+    assert.deepEqual((await aliceJoined).player?.spells, { dagger: 1 });
 
     const bob = await connect("group-a");
     const bobJoined = updateWith(bob, "Bob");
     const aliceSeesBob = updateWith(alice, "Bob");
-    bob.emit("join", "Bob");
+    bob.emit("join", "Bob", "damageAura");
     const names = (state: ClientGameState) =>
       state.players.map((player) => player.screenName).sort();
-    assert.deepEqual(names(await bobJoined), ["Alice", "Bob"]);
+    const bobState = await bobJoined;
+    assert.deepEqual(bobState.player?.spells, { damageAura: 1 });
+    assert.deepEqual(names(bobState), ["Alice", "Bob"]);
     assert.deepEqual(names(await aliceSeesBob), ["Alice", "Bob"]);
 
     const carol = await connect("group-b");

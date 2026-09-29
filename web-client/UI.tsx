@@ -5,7 +5,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import { spellDB } from "../common/data";
+import { STARTING_WEAPONS, spellDB } from "../common/data";
 import type { PowerUp } from "../common/types";
 import { globalEventSystem } from "./eventSystems";
 import { useAppDispatch, useAppSelector } from "./hooks";
@@ -60,10 +60,20 @@ function SpellPowerUp({
   powerUp,
   spellId,
 }: {
-  powerUp: PowerUp;
+  powerUp: PowerUp | null;
   spellId: string;
 }) {
   const spell = spellDB[spellId];
+  if (!powerUp) {
+    return (
+      <span className="power-up-card">
+        <span className="power-up-card-spell">{spell.name}</span>
+        <span className="power-up-card-title">New weapon</span>
+        <span className="power-up-card-value">Unlock</span>
+        <span className="power-up-card-description">{spell.description}</span>
+      </span>
+    );
+  }
   const powerUpTitle = (() => {
     switch (powerUp.type) {
       case "damage":
@@ -107,57 +117,35 @@ function SpellPowerUp({
 }
 
 function Upgrade() {
-  const { choices, rerollCost, timeLeft } = useAppSelector(
+  const { choices, remaining, rerollCost, timeLeft } = useAppSelector(
     (state) => state.upgradeChoices,
   );
   const { gold } = useAppSelector((state) => state.gold);
   const [confirmed, setConfirmed] = useState(false);
   const [rerolling, setRerolling] = useState(false);
-  const [currentLevel, setCurrentLevel] = useState(0);
   const focusLevel = useCallback((fieldset: HTMLFieldSetElement | null) => {
     fieldset?.focus();
   }, []);
-  const choiceGroup = choices[currentLevel];
-  const [selected, setSelected] = useState<(string | null)[]>(() =>
-    choices.map(() => null),
-  );
+  const choiceGroup = choices[0];
+  const [selected, setSelected] = useState<string | null>(null);
 
   useEffect(() => {
     setSelected((previous) =>
-      choices.map((group, index) =>
-        group.some((choice) => choice.id === previous[index])
-          ? previous[index]
-          : null,
-      ),
+      choices[0]?.some((choice) => choice.id === previous) ? previous : null,
     );
-    setCurrentLevel((level) =>
-      Math.min(level, Math.max(0, choices.length - 1)),
-    );
+    setConfirmed(false);
     setRerolling(false);
   }, [choices]);
 
   function handleSelect(upgradeId: string) {
     if (confirmed || rerolling) return;
-    setSelected((prev) => {
-      const next = [...prev];
-      next[currentLevel] = upgradeId;
-      return next;
-    });
+    setSelected(upgradeId);
   }
 
   function handleConfirm() {
-    if (
-      confirmed ||
-      rerolling ||
-      (choices.length > 0 && !selected[currentLevel])
-    )
-      return;
-    if (currentLevel < choices.length - 1) {
-      setCurrentLevel(currentLevel + 1);
-      return;
-    }
-    const selectedChoices = choices.map((choiceGroup, idx) =>
-      choiceGroup.find((c) => c.id === selected[idx]),
+    if (confirmed || rerolling || (choices.length > 0 && !selected)) return;
+    const selectedChoices = choices.map((group) =>
+      group.find((choice) => choice.id === selected),
     );
     if (selectedChoices.every(Boolean) && serverEventSystem) {
       serverEventSystem.dispatchEvent("upgradeSelection", selectedChoices);
@@ -174,7 +162,7 @@ function Upgrade() {
       gold >= rerollCost
     ) {
       setRerolling(true);
-      serverEventSystem.dispatchEvent("upgradeReroll", currentLevel);
+      serverEventSystem.dispatchEvent("upgradeReroll", 0);
     }
   }
 
@@ -224,26 +212,24 @@ function Upgrade() {
             disabled={confirmed || rerolling}
           >
             <legend className="upgrade-level-title">
-              Upgrade {currentLevel + 1} of {choices.length}
+              {remaining} {remaining === 1 ? "upgrade" : "upgrades"} remaining
             </legend>
             <div className="upgrade-choices-row">
               {choiceGroup.map((data) => (
                 <label
                   key={data.id}
-                  className={`upgrade-choice-wrapper ${selected[currentLevel] === data.id ? "selected" : ""}`}
+                  className={`upgrade-choice-wrapper ${selected === data.id ? "selected" : ""}`}
                 >
                   <input
                     type="radio"
-                    name={`upgrade-${currentLevel}`}
+                    name="upgrade"
                     value={data.id}
-                    checked={selected[currentLevel] === data.id}
+                    checked={selected === data.id}
                     onChange={() => handleSelect(data.id)}
                   />
                   <SpellPowerUp powerUp={data.powerUp} spellId={data.spellId} />
                   <span className="choice-state" aria-hidden="true">
-                    {selected[currentLevel] === data.id
-                      ? "✓ Selected"
-                      : "Select boost"}
+                    {selected === data.id ? "✓ Selected" : "Select boost"}
                   </span>
                 </label>
               ))}
@@ -253,21 +239,22 @@ function Upgrade() {
       </div>
       <footer className="upgrade-footer">
         <div role="status" className="waiting-note">
-          {confirmed && "Waiting for other players…"}
+          {confirmed &&
+            (remaining > 1
+              ? "Loading next upgrade…"
+              : "Waiting for other players…")}
         </div>
         <button
           type="button"
           className="upgrade-confirm-btn button"
-          disabled={
-            confirmed ||
-            rerolling ||
-            (choices.length > 0 && !selected[currentLevel])
-          }
+          disabled={confirmed || rerolling || (choices.length > 0 && !selected)}
           onClick={handleConfirm}
         >
           {confirmed
-            ? "Upgrades Confirmed"
-            : currentLevel < choices.length - 1
+            ? remaining > 1
+              ? "Applying upgrade…"
+              : "Upgrades Confirmed"
+            : remaining > 1
               ? "Next level"
               : choices.length
                 ? "Confirm Upgrades"
@@ -284,6 +271,7 @@ function JoinGame() {
     (state) => state.userName,
   );
   const [isJoinLocked, setIsJoinLocked] = useState(false);
+  const [startingWeapon, setStartingWeapon] = useState(STARTING_WEAPONS[0]);
 
   useEffect(() => {
     const handleDisable = () => {
@@ -313,7 +301,7 @@ function JoinGame() {
     }
 
     if (serverEventSystem) {
-      serverEventSystem.dispatchEvent("join", sanitized);
+      serverEventSystem.dispatchEvent("join", sanitized, startingWeapon);
       globalEventSystem.dispatchEvent("disableJoinUI");
       setIsJoinLocked(true);
     }
@@ -361,6 +349,23 @@ function JoinGame() {
         <div id="error" data-testid="error" aria-live="polite">
           {input.length > 0 && error}
         </div>
+        <label htmlFor="starting-weapon">Starting weapon</label>
+        <select
+          id="starting-weapon"
+          value={startingWeapon}
+          disabled={isJoinLocked}
+          onChange={(event) => setStartingWeapon(event.target.value)}
+          aria-describedby="starting-weapon-description"
+        >
+          {STARTING_WEAPONS.map((id) => (
+            <option key={id} value={id}>
+              {spellDB[id].name}
+            </option>
+          ))}
+        </select>
+        <p id="starting-weapon-description" className="muted">
+          {spellDB[startingWeapon].description}
+        </p>
         <button
           className="button"
           id="start"

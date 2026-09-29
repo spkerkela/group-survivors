@@ -1,3 +1,8 @@
+import type { PowerUp } from "./types";
+
+export const STARTING_WEAPONS = ["missile", "damageAura", "dagger"];
+export const MAX_ACTIVE_SPELLS = 5;
+
 export interface EnemyData {
   hp: number;
   speed: number;
@@ -54,8 +59,17 @@ export interface SpellData {
   multiCastCooldown: number;
 }
 
-export function auraRadius(spell: SpellData, playerLevel: number): number {
-  return spell.range * spell.rangeMultiplier + 0.01 * playerLevel;
+export function auraRadius(
+  spell: SpellData,
+  playerLevel: number,
+  powerUps: PowerUp[] = [],
+): number {
+  const rangeBonus = powerUps
+    .filter((powerUp) => powerUp.type === "range")
+    .reduce((sum, powerUp) => sum + powerUp.value, 0);
+  return (
+    spell.range * spell.rangeMultiplier * (1 + rangeBonus) + 0.01 * playerLevel
+  );
 }
 
 export type SpellDB = { [key: string]: SpellData };

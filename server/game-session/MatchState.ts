@@ -1,5 +1,5 @@
 import type { Logger } from "winston";
-import { spellDB } from "../../common/data";
+import { STARTING_WEAPONS } from "../../common/data";
 import type EventSystem from "../../common/EventSystem";
 import { normalize } from "../../common/math";
 import { chooseRandom } from "../../common/random";
@@ -64,8 +64,7 @@ export class MatchState implements State<StateMachineData> {
         );
         scene.loadMatchState(playerToAdd);
         if (Object.keys(playerToAdd.spells).length === 0) {
-          const spellToAdd = chooseRandom(Object.keys(spellDB));
-          addSpellToPlayer(spellToAdd, playerToAdd);
+          addSpellToPlayer(scene.startingWeapons[player.id], playerToAdd);
         }
         scene.gameState.players.push(playerToAdd);
       }
@@ -181,7 +180,6 @@ export class MatchState implements State<StateMachineData> {
     );
     levelEvents.forEach((e) => {
       scene.pushEvent("level", e.playerId, e);
-      scene.generateUpgradeChoices(e.playerId);
     });
     scene.gameState.players.forEach((p) => {
       if (!p.alive) {
@@ -219,8 +217,17 @@ export class MatchState implements State<StateMachineData> {
   }
   enter({ levelData, scene }: StateMachineData): void {
     this.connectionCallback = (id: string, connection: EventSystem) => {
-      this.callbacks.join[id] = (screenName: string) => {
+      this.callbacks.join[id] = (
+        screenName: string,
+        startingWeapon = STARTING_WEAPONS[0],
+      ) => {
+        if (
+          typeof screenName !== "string" ||
+          !STARTING_WEAPONS.includes(startingWeapon)
+        )
+          return;
         const sanitizedScreenName = sanitizeName(screenName);
+        if (!sanitizedScreenName) return;
         scene.pushEvent("joined", id, scene.createGameStateMessage(id));
         scene.updates.newPlayers.push({ id, screenName: sanitizedScreenName });
         scene.pushEvent("beginMatch", id, scene.createGameStateMessage(id));
@@ -269,7 +276,9 @@ export class MatchState implements State<StateMachineData> {
   }
   connectionCallback!: (id: string, connection: EventSystem) => void;
   callbacks: {
-    join: { [id: string]: (screenName: string) => void };
+    join: {
+      [id: string]: (screenName: string, startingWeapon?: string) => void;
+    };
     move: { [id: string]: (moveUpdate: MoveUpdate) => void };
   } = {
     join: {},

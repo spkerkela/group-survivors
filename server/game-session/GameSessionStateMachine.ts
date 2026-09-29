@@ -1,3 +1,4 @@
+import { STARTING_WEAPONS } from "../../common/data";
 import type EventSystem from "../../common/EventSystem";
 import StateMachine from "../../common/StateMachine";
 import { sanitizeName } from "../../common/shared";
@@ -17,7 +18,9 @@ export default class GameSessionStateMachine {
   stateMachine: StateMachine<StateMachineData>;
   data: StateMachineData;
   callbacks: {
-    join: { [id: string]: (screenName: string) => void };
+    join: {
+      [id: string]: (screenName: string, startingWeapon?: string) => void;
+    };
     move: { [id: string]: (moveUpdate: MoveUpdate) => void };
     disconnect: { [id: string]: () => void };
   } = {
@@ -38,12 +41,23 @@ export default class GameSessionStateMachine {
         (p) => p.id !== id,
       );
       this.data.scene.clearEvents(id);
+      delete this.data.scene.startingWeapons[id];
       delete this.data.scene.eventSystems.connectionSystems[id];
       this.data.scene.updates.playersToRemove.push(id);
       connectionLogger.info("connection closed");
     };
-    this.callbacks.join[id] = (screenName: string) => {
+    this.callbacks.join[id] = (
+      screenName: string,
+      startingWeapon = STARTING_WEAPONS[0],
+    ) => {
+      if (
+        typeof screenName !== "string" ||
+        !STARTING_WEAPONS.includes(startingWeapon)
+      )
+        return;
       const sanitizedName = sanitizeName(screenName);
+      if (!sanitizedName) return;
+      this.data.scene.startingWeapons[id] = startingWeapon;
       this.lobby = this.lobby.filter((x) => x !== id);
       const readyPlayer = this.data.scene.readyToJoin.find((p) => p.id === id);
       if (readyPlayer) {

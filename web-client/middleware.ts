@@ -23,7 +23,7 @@ function updateSpellEmitters(
 
   const aura = instantiated.getData("aura") as Phaser.GameObjects.Graphics;
   const radius = p.spells.damageAura
-    ? auraRadius(spellDB.damageAura, p.level)
+    ? auraRadius(spellDB.damageAura, p.level, p.powerUps.damageAura)
     : 0;
   if (instantiated.getData("auraRadius") === radius) return;
 

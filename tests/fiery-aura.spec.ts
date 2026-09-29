@@ -20,12 +20,13 @@ const script = buildSync({
           create() {
             this.add.tileSprite(240, 180, 480, 360, "background").setDepth(-2);
             this.anims.create({ key: "player", frames: this.anims.generateFrameNumbers("player", { start: 0, end: 1 }) });
-            const player = { id: "test-player", screenName: "Fiery Aura", x: 240, y: 180, level: 1, spells: { damageAura: 1 } };
+            const player = { id: "test-player", screenName: "Fiery Aura", x: 240, y: 180, level: 1, spells: { damageAura: 1 }, powerUps: {} };
             const view = instantiatePlayer(this, player);
             const aura = view.getData("aura");
             const emitter = view.getData("auraEmitter");
             window.auraTest = {
-              update(level, enabled, multiplier = 1) {
+              update(level, enabled, multiplier = 1, rangeBonus = 0) {
+                player.powerUps.damageAura = [{ type: "range", value: rangeBonus }];
                 player.level = level;
                 player.spells = enabled ? { damageAura: 1 } : {};
                 spellDB.damageAura.rangeMultiplier = multiplier;
@@ -45,7 +46,7 @@ const script = buildSync({
                   emitting: emitter.on, particles: emitter.alive.length,
                   localParticles: emitter.manager.parentContainer === view,
                   position: [matrix.tx, matrix.ty],
-                  hits: tickAura(spellDB.damageAura, player, player.id, player.level, enemies).map(event => event.targetId),
+                  hits: tickAura(spellDB.damageAura, player, player.id, player.level, enemies, player.powerUps.damageAura).map(event => event.targetId),
                 };
               },
               destroyed() { return !aura.scene && !emitter.manager.scene; },
@@ -105,6 +106,8 @@ test("fiery aura always shows the real damage area and follows its owner", async
   expect(await state()).toMatchObject({ visible: true, drawn: true });
   await page.evaluate("window.auraTest.update(25, true, 1.5)");
   expect(await state()).toMatchObject({ radius: 60.25, hits: ["inside"] });
+  await page.evaluate("window.auraTest.update(25, true, 1, 0.15)");
+  expect(await state()).toMatchObject({ radius: 46.25, hits: ["inside"] });
   await page.evaluate("window.auraTest.move()");
   expect(await state()).toMatchObject({
     position: [300, 240],

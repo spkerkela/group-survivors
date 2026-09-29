@@ -49,9 +49,12 @@ export function initServerEventSystem(
     sendMoveMessage(io, move);
   });
 
-  serverEventSystem.addEventListener("join", (name: string) => {
-    sendJoinMessage(io, name);
-  });
+  serverEventSystem.addEventListener(
+    "join",
+    (name: string, startingWeapon: string) => {
+      sendJoinMessage(io, name, startingWeapon);
+    },
+  );
 
   // Listen for upgrade selection and send to server
   serverEventSystem.addEventListener("upgradeSelection", (selected: any) => {

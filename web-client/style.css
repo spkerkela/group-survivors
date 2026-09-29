@@ -182,7 +182,8 @@ h2 {
   font-weight: 600;
   margin-bottom: 8px;
 }
-#name {
+#name,
+#starting-weapon {
   width: 100%;
   min-height: 48px;
   border: 2px solid var(--border);
@@ -192,6 +193,10 @@ h2 {
   caret-color: var(--gold);
   padding: 12px 14px;
   color: var(--text);
+}
+#starting-weapon-description {
+  margin: 8px 0 16px;
+  font-size: 12px;
 }
 #name::placeholder {
   color: #a89eb4;
