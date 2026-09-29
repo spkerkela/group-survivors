@@ -8,7 +8,13 @@ import type { StateMachineData } from "./GameSessionStateMachine";
 import { MatchState } from "./MatchState";
 export class UpgradeState implements State<StateMachineData> {
   wave: number;
-  countdown = 30;
+  countdown: number | null = null;
+
+  private get timeLeft(): number | null {
+    return this.countdown === null
+      ? null
+      : Math.max(0, Math.ceil(this.countdown));
+  }
   private readyPlayers: Set<string> = new Set();
   private upgradeSelections: { [id: string]: UpgradeChoice[] } = {};
   private upgradeListeners: {
@@ -28,11 +34,26 @@ export class UpgradeState implements State<StateMachineData> {
     dt: number,
     { levelData, scene }: StateMachineData,
   ): State<StateMachineData> {
+    const playerIds = Object.keys(this.upgradeListeners).filter(
+      (id) => scene.eventSystems.connectionSystems[id],
+    );
+    const previousTimeLeft = this.timeLeft;
+    if (playerIds.length <= 1) {
+      this.countdown = null;
+    } else if (this.countdown !== null) {
+      this.countdown -= dt;
+    }
+    if (this.timeLeft !== previousTimeLeft) {
+      playerIds.forEach((id) => {
+        scene.pushEvent("upgradeTimeLeft", id, this.timeLeft);
+      });
+    }
     scene.sendEvents();
-    const playerIds: string[] = scene.connectionIds();
-    this.countdown -= dt;
-    if (this.readyPlayers.size === playerIds.length || this.countdown <= 0) {
-      // For any players who didn't submit, pick random upgrades
+    if (
+      playerIds.every((id) => this.readyPlayers.has(id)) ||
+      (this.countdown !== null && this.countdown <= 0)
+    ) {
+      // For any players who didn't submit, pick fallback upgrades
       playerIds.forEach((id: string) => {
         if (!this.readyPlayers.has(id)) {
           const choices: UpgradeChoice[][] = scene.getUpgradeChoices(id);
@@ -85,8 +106,14 @@ export class UpgradeState implements State<StateMachineData> {
 
   enter({ scene }: StateMachineData) {
     logger.info("upgrade state entered");
+    const playerIds = scene
+      .connectionIds()
+      .filter((id) =>
+        scene.gameState.players.some((player) => player.id === id),
+      );
+    this.countdown = playerIds.length > 1 ? 60 : null;
     // Listen for upgradeSelection from each player
-    (scene.connectionIds() as string[]).forEach((id: string) => {
+    playerIds.forEach((id) => {
       // Ensure upgrade choices are generated before sending
       scene.generateUpgradeChoices(id);
       const playerUpgradeChoices: UpgradeChoice[][] =
@@ -95,6 +122,7 @@ export class UpgradeState implements State<StateMachineData> {
       scene.pushEvent("upgrade", id, {
         choices: playerUpgradeChoices,
         rerollCost: this.REROLL_COST,
+        timeLeft: this.timeLeft,
       });
       // Remove any previous listener
       if (this.upgradeListeners[id]) {
@@ -136,6 +164,7 @@ export class UpgradeState implements State<StateMachineData> {
           scene.pushEvent("upgrade", id, {
             choices: newChoices,
             rerollCost: this.REROLL_COST,
+            timeLeft: this.timeLeft,
           });
           scene.pushEvent("level", id, { playerId: id, player: player });
         }

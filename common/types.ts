@@ -135,6 +135,7 @@ export type FromServerEventMap = {
   endMatch: () => void;
   gameOver: (data: GameOverData) => void;
   upgrade: (data: UpgradeEvent) => void;
+  upgradeTimeLeft: (timeLeft: number | null) => void;
 };
 
 export type ToServerEventMap = {
@@ -221,4 +222,5 @@ export interface LevelEvent {
 export interface UpgradeEvent {
   choices: UpgradeChoice[][];
   rerollCost: number;
+  timeLeft: number | null;
 }

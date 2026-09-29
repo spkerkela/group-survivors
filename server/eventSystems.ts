@@ -86,5 +86,8 @@ export function initConnectedClientEventSystem(
   eventSystem.addEventListener("upgrade", (choiceData: UpgradeEvent) => {
     socket.emit("upgrade", choiceData);
   });
+  eventSystem.addEventListener("upgradeTimeLeft", (timeLeft: number | null) => {
+    socket.emit("upgradeTimeLeft", timeLeft);
+  });
   return eventSystem;
 }

@@ -221,6 +221,49 @@ describe("Server", () => {
       PreMatchState,
     );
   });
+  it.each(["game over", "lobby"])(
+    "should restart when a late arrival joins during %s and the first player rejoins",
+    (joinDuring) => {
+      beginGame();
+      server!.update(0);
+      const p1Conn = serverScene!.eventSystems.connectionSystems["test-id-0"];
+      const p2Conn = createTestConnection(serverScene!, "late-player");
+      const p1Begin = jest.fn();
+      const p2Begin = jest.fn();
+      p1Conn.addEventListener("beginMatch", p1Begin);
+      p2Conn.addEventListener("beginMatch", p2Begin);
+
+      serverScene!.gameState.players[0].alive = false;
+      server!.update(0);
+      expect(server!.gameStateMachine.stateMachine.state).toBeInstanceOf(
+        EndMatchState,
+      );
+      if (joinDuring === "game over") {
+        p2Conn.dispatchEvent("join", "Late Player");
+      }
+      server!.update(10);
+      expect(server!.gameStateMachine.stateMachine.state).toBeInstanceOf(
+        PreMatchState,
+      );
+      p1Conn.dispatchEvent("join", "Returning Player");
+      if (joinDuring === "lobby") {
+        p2Conn.dispatchEvent("join", "Late Player");
+      }
+      server!.update(0);
+      server!.update(0);
+
+      expect(server!.gameStateMachine.stateMachine.state).toBeInstanceOf(
+        MatchState,
+      );
+      expect(serverScene!.gameState.players.map((p) => p.id).sort()).toEqual([
+        "late-player",
+        "test-id-0",
+      ]);
+      expect(p1Begin).toHaveBeenCalledTimes(1);
+      expect(p2Begin).toHaveBeenCalledTimes(1);
+    },
+  );
+
   it("should move from Retrospective to Lobby state if no players connected", () => {
     const p1Conn = createTestConnection(serverScene!, "test-id");
     const p2Conn = createTestConnection(serverScene!, "test-id-2");

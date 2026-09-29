@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import type { UpgradeChoice } from "../../common/types";
+import type { UpgradeChoice, UpgradeEvent } from "../../common/types";
 
 export type UiState = "lobby" | "match" | "upgrade" | "gameOver";
 
@@ -8,17 +8,20 @@ export const upgradeChoiceSlice = createSlice({
   initialState: {
     choices: [] as UpgradeChoice[][],
     rerollCost: 0,
+    timeLeft: null as number | null,
   },
   reducers: {
-    setUpgradeChoices: (
-      state,
-      action: PayloadAction<{ choices: UpgradeChoice[][]; rerollCost: number }>,
-    ) => {
+    setUpgradeChoices: (state, action: PayloadAction<UpgradeEvent>) => {
       state.choices = action.payload.choices;
       state.rerollCost = action.payload.rerollCost;
+      state.timeLeft = action.payload.timeLeft;
+    },
+    setUpgradeTimeLeft: (state, action: PayloadAction<number | null>) => {
+      state.timeLeft = action.payload;
     },
   },
 });
 
-export const { setUpgradeChoices } = upgradeChoiceSlice.actions;
+export const { setUpgradeChoices, setUpgradeTimeLeft } =
+  upgradeChoiceSlice.actions;
 export default upgradeChoiceSlice.reducer;

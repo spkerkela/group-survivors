@@ -81,6 +81,9 @@ export function initServerEventSystem(
   io.on("upgrade", (data: UpgradeEvent) => {
     serverEventSystem.dispatchEvent("upgrade", data);
   });
+  io.on("upgradeTimeLeft", (timeLeft) => {
+    serverEventSystem.dispatchEvent("upgradeTimeLeft", timeLeft);
+  });
 
   return serverEventSystem;
 }

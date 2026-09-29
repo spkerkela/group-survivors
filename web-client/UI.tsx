@@ -80,10 +80,11 @@ function SpellPowerUp({
 }
 
 function Upgrade() {
-  const { choices, rerollCost } = useAppSelector(
+  const { choices, rerollCost, timeLeft } = useAppSelector(
     (state) => state.upgradeChoices,
   );
   const { gold } = useAppSelector((state) => state.gold);
+  const [confirmed, setConfirmed] = useState(false);
   const [selected, setSelected] = useState<(string | null)[]>(() =>
     choices.map(() => null),
   );
@@ -93,6 +94,7 @@ function Upgrade() {
   }, [choices]);
 
   function handleSelect(levelIdx: number, upgradeId: string) {
+    if (confirmed) return;
     setSelected((prev) => {
       const next = [...prev];
       next[levelIdx] = upgradeId;
@@ -101,16 +103,18 @@ function Upgrade() {
   }
 
   function handleConfirm() {
+    if (confirmed) return;
     const selectedChoices = choices.map((choiceGroup, idx) =>
       choiceGroup.find((c) => c.id === selected[idx]),
     );
     if (selectedChoices.every(Boolean) && serverEventSystem) {
       serverEventSystem.dispatchEvent("upgradeSelection", selectedChoices);
+      setConfirmed(true);
     }
   }
 
   function handleReroll() {
-    if (serverEventSystem && gold >= rerollCost) {
+    if (!confirmed && serverEventSystem && gold >= rerollCost) {
       serverEventSystem.dispatchEvent("upgradeReroll");
     }
   }
@@ -119,10 +123,20 @@ function Upgrade() {
     <div className="upgrade-ui">
       <div className="upgrade-ui-header">
         <div className="upgrade-ui-title">UPGRADE</div>
+        {timeLeft !== null && (
+          <div
+            className="upgrade-level-title"
+            role="timer"
+            aria-label="Upgrade time remaining"
+          >
+            Time remaining: {Math.floor(timeLeft / 60)}:
+            {String(timeLeft % 60).padStart(2, "0")}
+          </div>
+        )}
         <div className="upgrade-ui-gold">Gold: {gold}</div>
         <button
           className="upgrade-reroll-btn"
-          disabled={gold < rerollCost}
+          disabled={confirmed || gold < rerollCost}
           onClick={handleReroll}
         >
           Reroll ({rerollCost} Gold)
@@ -148,11 +162,14 @@ function Upgrade() {
       ))}
       <button
         className="upgrade-confirm-btn"
-        disabled={selected.some((s) => !s)}
+        disabled={confirmed || selected.some((s) => !s)}
         onClick={handleConfirm}
       >
-        Confirm Upgrades
+        {confirmed ? "Upgrades Confirmed" : "Confirm Upgrades"}
       </button>
+      <div role="status" className="upgrade-level-title">
+        {confirmed && "Waiting for other players…"}
+      </div>
     </div>
   );
 }
@@ -238,12 +255,18 @@ function JoinGame() {
 }
 
 function MatchUI() {
+  const currentHealth = useAppSelector((state) => state.health.currentHealth);
   return (
     <div className="match-ui">
       <div className="bars">
         <HealthBar />
         <ExperienceBar />
       </div>
+      {currentHealth <= 0 && (
+        <div role="status" className="death-notice">
+          You died. Please wait until the round is over.
+        </div>
+      )}
       <MatchStatus />
       <ActiveSpells />
     </div>

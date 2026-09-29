@@ -3,7 +3,11 @@ import { io } from "socket.io-client";
 import parser from "socket.io-msgpack-parser";
 import EventSystem from "../common/EventSystem";
 import { experienceRequiredForLevel } from "../common/shared";
-import type { ClientGameState, LevelEvent, UpgradeEvent } from "../common/types";
+import type {
+  ClientGameState,
+  LevelEvent,
+  UpgradeEvent,
+} from "../common/types";
 import ClientStateMachine from "./ClientStateMachine";
 import { initServerEventSystem } from "./eventSystems";
 import { useAppDispatch } from "./hooks";
@@ -15,7 +19,10 @@ import { setState, setTimeLeft, setWave } from "./state/gameSlice";
 import { setGold } from "./state/goldSlice";
 import { setHealth } from "./state/healthSlice";
 import { set } from "./state/levelSlice";
-import { setUpgradeChoices } from "./state/upgradeChoicesSlice";
+import {
+  setUpgradeChoices,
+  setUpgradeTimeLeft,
+} from "./state/upgradeChoicesSlice";
 
 export default function GameContainer() {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -38,6 +45,12 @@ export default function GameContainer() {
         const timeRemaining = Math.floor(waveSecondsRemaining);
         dispatch(setTimeLeft(timeRemaining));
         dispatch(setWave(wave + 1));
+        dispatch(
+          setHealth({
+            currentHealth: player?.hp ?? 0,
+            maxHealth: player?.maxHp ?? 100,
+          }),
+        );
         if (player != null) {
           dispatch(
             set({ level: player.level, pendingLevels: player.pendingLevels }),
@@ -63,12 +76,6 @@ export default function GameContainer() {
             }),
           );
           dispatch(setGold(player.gold));
-          dispatch(
-            setHealth({
-              currentHealth: player.hp,
-              maxHealth: player.maxHp,
-            }),
-          );
         }
       },
     );
@@ -95,6 +102,12 @@ export default function GameContainer() {
       dispatch(setState("upgrade"));
       dispatch(setUpgradeChoices(data));
     });
+    serverEventSystem.addEventListener(
+      "upgradeTimeLeft",
+      (timeLeft: number | null) => {
+        dispatch(setUpgradeTimeLeft(timeLeft));
+      },
+    );
     serverEventSystem.addEventListener("gameOver", () => {
       dispatch(setState("gameOver"));
     });

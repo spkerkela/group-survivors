@@ -42,8 +42,8 @@ describe("Wave Transition", () => {
 
     // 4. Simulate Upgrade Selection (or timeout)
     // We'll just wait for the timeout (countdown)
-    // UpgradeState has a countdown of 30s. We can force it by updating with huge dt.
-    server?.update(31);
+    // Multiplayer upgrades time out after 60 seconds.
+    server?.update(60);
 
     // 5. Verify transition to Wave 2
     expect(server?.gameStateMachine.stateMachine.state).toBeInstanceOf(

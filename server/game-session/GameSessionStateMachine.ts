@@ -45,7 +45,12 @@ export default class GameSessionStateMachine {
     this.callbacks.join[id] = (screenName: string) => {
       const sanitizedName = sanitizeName(screenName);
       this.lobby = this.lobby.filter((x) => x !== id);
-      this.data.scene.readyToJoin.push({ id, screenName: sanitizedName });
+      const readyPlayer = this.data.scene.readyToJoin.find((p) => p.id === id);
+      if (readyPlayer) {
+        readyPlayer.screenName = sanitizedName;
+      } else {
+        this.data.scene.readyToJoin.push({ id, screenName: sanitizedName });
+      }
       this.data.scene.pushEvent(
         "joined",
         id,
