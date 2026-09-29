@@ -42,13 +42,71 @@ describe("Server", () => {
       PreMatchState,
     );
   });
-  it("should remain in pre-match if only some players join", () => {
-    const p1Conn = createTestConnection(serverScene!, "test-id");
-    createTestConnection(serverScene!, "test-id-2");
-    p1Conn.dispatchEvent("join", "Random Name");
-    server?.update(0);
-    expect(server?.gameStateMachine.stateMachine.state).toBeInstanceOf(
+  it("starts for a ready player without waiting for an idle browser", () => {
+    server!.gameStateMachine.data.playersRequired = 1;
+    const player = createTestConnection(serverScene!, "player");
+    const idle = createTestConnection(serverScene!, "idle-browser");
+    const playerBegin = jest.fn();
+    const idleBegin = jest.fn();
+    player.addEventListener("beginMatch", playerBegin);
+    idle.addEventListener("beginMatch", idleBegin);
+    player.dispatchEvent("join", "Ready Player");
+    server!.update(0);
+    server!.update(0);
+
+    expect(server!.gameStateMachine.stateMachine.state).toBeInstanceOf(
+      MatchState,
+    );
+    expect(serverScene!.gameState.players.map((p) => p.id)).toEqual(["player"]);
+    expect(playerBegin).toHaveBeenCalledTimes(1);
+    expect(idleBegin).not.toHaveBeenCalled();
+  });
+
+  it("lets an already-connected idle browser join the running match", () => {
+    const idle = createTestConnection(serverScene!, "idle-browser");
+    const begin = jest.fn();
+    idle.addEventListener("beginMatch", begin);
+    beginGame();
+    server!.update(0);
+    idle.dispatchEvent("join", "Late Player");
+    server!.update(0);
+
+    expect(begin).toHaveBeenCalledTimes(1);
+    expect(serverScene!.gameState.players.map((p) => p.id).sort()).toEqual([
+      "idle-browser",
+      "test-id-0",
+    ]);
+    idle.dispatchEvent("move", {
+      up: false,
+      down: false,
+      left: false,
+      right: true,
+    });
+    expect(serverScene!.updates.moves["idle-browser"]).toEqual({ x: 1, y: 0 });
+  });
+
+  it("counts only distinct connected players who joined toward the required minimum", () => {
+    server!.gameStateMachine.data.playersRequired = 2;
+    const first = createTestConnection(serverScene!, "first");
+    const second = createTestConnection(serverScene!, "second");
+    createTestConnection(serverScene!, "idle-browser");
+    first.dispatchEvent("join", "First Player");
+    first.dispatchEvent("join", "First Player");
+    server!.update(0);
+    expect(server!.gameStateMachine.stateMachine.state).toBeInstanceOf(
       PreMatchState,
+    );
+    second.dispatchEvent("join", "Second Player");
+    second.dispatchEvent("disconnect");
+    server!.update(0);
+    expect(server!.gameStateMachine.stateMachine.state).toBeInstanceOf(
+      PreMatchState,
+    );
+    const replacement = createTestConnection(serverScene!, "replacement");
+    replacement.dispatchEvent("join", "Replacement Player");
+    server!.update(0);
+    expect(server!.gameStateMachine.stateMachine.state).toBeInstanceOf(
+      MatchState,
     );
   });
   it("should send 'joined' event to player in response to 'join' event", () => {

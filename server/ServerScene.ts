@@ -193,24 +193,11 @@ export class ServerScene {
   }
 
   gameCanStart(playersRequired: number): boolean {
-    const connected = this.connectionIds().slice().sort();
-    const readyToJoin = this.readyToJoin
-      .map(({ id }) => id)
-      .slice()
-      .sort();
-    if (
-      connected.length === readyToJoin.length &&
-      connected.length >= playersRequired
-    ) {
-      // check if all players are ready to join
-      for (let i = 0; i < connected.length; i++) {
-        if (connected[i] !== readyToJoin[i]) {
-          return false;
-        }
-      }
-      return true;
-    }
-    return false;
+    const readyIds = new Set(this.readyToJoin.map(({ id }) => id));
+    return (
+      this.connectionIds().filter((id) => readyIds.has(id)).length >=
+      playersRequired
+    );
   }
 
   loadLevel(levelData: LevelData) {

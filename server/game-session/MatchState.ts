@@ -218,29 +218,25 @@ export class MatchState implements State<StateMachineData> {
     return this;
   }
   enter({ levelData, scene }: StateMachineData): void {
+    this.connectionCallback = (id: string, connection: EventSystem) => {
+      this.callbacks.join[id] = (screenName: string) => {
+        const sanitizedScreenName = sanitizeName(screenName);
+        scene.pushEvent("joined", id, scene.createGameStateMessage(id));
+        scene.updates.newPlayers.push({ id, screenName: sanitizedScreenName });
+        scene.pushEvent("beginMatch", id, scene.createGameStateMessage(id));
+      };
+      connection.addEventListener("join", this.callbacks.join[id]);
+      this.setupMoveListener(id, connection, scene);
+    };
     scene.eventSystems.gameEventSystem.addEventListener(
       "connection",
-      (id: string, connection: EventSystem) => {
-        this.callbacks.join[id] = (screenName: string) => {
-          const sanitizedScreenName = sanitizeName(screenName);
-          scene.pushEvent("joined", id, scene.createGameStateMessage(id));
-
-          scene.updates.newPlayers.push({
-            id,
-            screenName: sanitizedScreenName,
-          });
-
-          scene.pushEvent("beginMatch", id, scene.createGameStateMessage(id));
-        };
-        connection.addEventListener("join", this.callbacks.join[id]);
-        this.setupMoveListener(id, connection, scene);
-      },
+      this.connectionCallback,
     );
-    scene.readyToJoin.forEach(({ id, screenName }) => {
+    Object.entries(scene.eventSystems.connectionSystems).forEach(
+      ([id, connection]) => this.connectionCallback(id, connection),
+    );
+    scene.readyToJoin.forEach(({ id }) => {
       scene.pushEvent("beginMatch", id, scene.createGameStateMessage(id));
-      Object.entries(scene.eventSystems.connectionSystems).forEach(
-        ([id, connection]) => this.setupMoveListener(id, connection, scene),
-      );
     });
     this.spawner = new Spawner(levelData.enemyTable);
     scene.loadLevel(levelData);
@@ -250,6 +246,10 @@ export class MatchState implements State<StateMachineData> {
     this.matchLogger.info("Match started");
   }
   exit({ scene }: StateMachineData): void {
+    scene.eventSystems.gameEventSystem.removeEventListener(
+      "connection",
+      this.connectionCallback,
+    );
     scene.connectionIds().forEach((id) => {
       scene.pushEvent("endMatch", id, {});
     });
@@ -267,6 +267,7 @@ export class MatchState implements State<StateMachineData> {
     });
     this.matchLogger.info("Match ended");
   }
+  connectionCallback!: (id: string, connection: EventSystem) => void;
   callbacks: {
     join: { [id: string]: (screenName: string) => void };
     move: { [id: string]: (moveUpdate: MoveUpdate) => void };
