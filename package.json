@@ -9,6 +9,7 @@
     "web-client": "parcel web-client/index.html --dist-dir server/dist --no-cache",
     "pretest": "npm run build-client",
     "test": "playwright test",
+    "verify:tla": "bash formal/check.sh",
     "test-backend": "NODE_ENV=test node --import tsx --test --test-timeout=10000 \"tests/**/*.test.ts\""
   },
   "repository": {
